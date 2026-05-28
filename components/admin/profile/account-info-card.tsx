@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User as UserIcon, Store, Phone, Check, AlertCircle } from "lucide-react";
+import { User as UserIcon, Store, Check, AlertCircle } from "lucide-react";
+import type { CountryIso2 } from "react-international-phone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { SectionCard } from "@/components/admin/profile/section-card";
 import { updateAccountInfoAction } from "@/app/admin/profile/actions";
+
+// Phone is optional; if present must be a sane E.164 (+ then 7–18 digits).
+const E164 = /^\+[1-9]\d{6,17}$/;
 
 const schema = z.object({
   name: z.string().trim().min(2, "الاسم قصير").max(80),
@@ -18,30 +23,50 @@ const schema = z.object({
   phone: z
     .string()
     .trim()
-    .max(20)
-    .regex(/^[+0-9\s-]*$/, "رقم الجوال غير صالح")
+    .refine((v) => v === "" || E164.test(v), "رقم الجوال غير صالح")
     .optional()
-    .or(z.literal("")),
+    .default(""),
+  phoneCountry: z.string().trim().toLowerCase().length(2).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
-/** Edit display name + store name + phone. */
+/** Edit display name + store name + phone (with locked country code). */
 export function AccountInfoCard({
   defaultName,
   defaultStoreName,
   defaultPhone,
+  defaultPhoneCountry,
 }: {
   defaultName: string;
   defaultStoreName: string;
   defaultPhone: string;
+  defaultPhoneCountry: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Track the success-message timeout so we can clear it on unmount AND when
+  // a fresh save fires before the previous flash completes (prevents
+  // "setState on unmounted component" warnings).
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Lock the country if there's already a saved phone — once chosen, the user
+  // can't accidentally swap dial codes when editing other fields.
+  const hadPhone = Boolean(defaultPhone);
+
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isDirty },
     reset,
@@ -51,6 +76,7 @@ export function AccountInfoCard({
       name: defaultName,
       storeName: defaultStoreName,
       phone: defaultPhone,
+      phoneCountry: (defaultPhoneCountry || "sa").toLowerCase(),
     },
   });
 
@@ -66,7 +92,11 @@ export function AccountInfoCard({
       setSuccess(true);
       reset(values);
       router.refresh();
-      setTimeout(() => setSuccess(false), 2500);
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+      successTimeoutRef.current = setTimeout(() => {
+        setSuccess(false);
+        successTimeoutRef.current = null;
+      }, 2500);
     });
   }
 
@@ -139,19 +169,45 @@ export function AccountInfoCard({
 
           <div>
             <Label htmlFor="phone" className="block mb-1.5">
-              رقم الجوال <span className="text-fg-faint font-normal">(اختياري)</span>
+              رقم الجوال{" "}
+              <span className="text-fg-faint font-normal">(اختياري)</span>
+              {hadPhone && (
+                <span className="ms-2 text-[10px] uppercase tracking-widest font-bold text-fg-faint">
+                  · الدولة مقفلة
+                </span>
+              )}
             </Label>
-            <Input
-              id="phone"
-              inputSize="lg"
-              type="tel"
-              dir="ltr"
-              autoComplete="tel"
-              placeholder="+966 5X XXX XXXX"
-              startAdornment={<Phone className="size-4" />}
-              invalid={!!errors.phone}
-              disabled={pending}
-              {...register("phone")}
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <Controller
+                  name="phoneCountry"
+                  control={control}
+                  render={({ field: countryField }) => (
+                    <PhoneInput
+                      id="phone"
+                      value={field.value ?? ""}
+                      onChange={(v, meta) => {
+                        field.onChange(v);
+                        countryField.onChange(meta.country);
+                      }}
+                      defaultCountry={
+                        ((countryField.value || "sa").toLowerCase() as CountryIso2)
+                      }
+                      lockCountry={hadPhone}
+                      lockedTo={
+                        hadPhone
+                          ? ((defaultPhoneCountry || "sa").toLowerCase() as CountryIso2)
+                          : undefined
+                      }
+                      disabled={pending}
+                      invalid={!!errors.phone}
+                      placeholder="5X XXX XXXX"
+                    />
+                  )}
+                />
+              )}
             />
             {errors.phone && (
               <p className="mt-1.5 text-xs text-danger">{errors.phone.message}</p>

@@ -34,7 +34,14 @@ const accountInfoSchema = z.object({
     .string()
     .trim()
     .max(20)
-    .regex(/^[+0-9\s-]*$/, "رقم الجوال غير صالح")
+    .regex(/^(\+[1-9]\d{6,17})?$/, "رقم الجوال غير صالح")
+    .optional()
+    .or(z.literal("")),
+  phoneCountry: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .length(2)
     .optional()
     .or(z.literal("")),
 });
@@ -46,7 +53,7 @@ export async function updateAccountInfoAction(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
-  const { name, storeName, phone } = parsed.data;
+  const { name, storeName, phone, phoneCountry } = parsed.data;
 
   const sb = await createClient();
   const {
@@ -61,9 +68,17 @@ export async function updateAccountInfoAction(
   });
   if (metaErr) return { ok: false, error: "تعذّر تحديث الحساب" };
 
+  const phoneValue = phone || null;
+  const phoneCountryValue = phoneValue ? (phoneCountry || null) : null;
+
   const { error: profileErr } = await sb
     .from("profiles")
-    .update({ name, store_name: storeName, phone: phone || null })
+    .update({
+      name,
+      store_name: storeName,
+      phone: phoneValue,
+      phone_country: phoneCountryValue,
+    })
     .eq("id", user.id);
   if (profileErr) return { ok: false, error: "تعذّر حفظ الملف الشخصي" };
 
@@ -393,6 +408,12 @@ export async function verifyMfaEnrollAction(
 /**
  * Disables 2FA — unenrols ALL TOTP factors AND wipes all backup codes for
  * this user (clean slate).
+ *
+ * Atomicity rule: we only delete backup codes if EVERY unenroll succeeded.
+ * If any factor failed to unenroll, we leave the codes in place so the user
+ * can still recover their account — otherwise a network blip during
+ * "disable" could lock them out (factor still exists, codes deleted → no
+ * way back in).
  */
 export async function disableMfaAction(): Promise<ActionResult> {
   const sb = await createClient();
@@ -403,12 +424,50 @@ export async function disableMfaAction(): Promise<ActionResult> {
   if (!user) return { ok: false, error: "غير مصرّح" };
 
   const { data: factors } = await sb.auth.mfa.listFactors();
-  for (const f of factors?.totp ?? []) {
-    await sb.auth.mfa.unenroll({ factorId: f.id }).catch(() => undefined);
+  const totpFactors = factors?.totp ?? [];
+
+  if (totpFactors.length === 0) {
+    // Nothing to unenroll — but still purge any orphan backup codes.
+    await admin.from("mfa_backup_codes").delete().eq("user_id", user.id);
+    return { ok: true };
+  }
+
+  // Unenroll all factors in parallel and surface failures.
+  const results = await Promise.allSettled(
+    totpFactors.map((f) => sb.auth.mfa.unenroll({ factorId: f.id })),
+  );
+
+  const failed = results.filter((r) => {
+    if (r.status === "rejected") return true;
+    return Boolean(r.value.error);
+  });
+
+  if (failed.length > 0) {
+    console.error("[disableMfaAction] unenroll failed for some factors", {
+      userId: user.id,
+      failedCount: failed.length,
+      totalCount: totpFactors.length,
+    });
+    return {
+      ok: false,
+      error:
+        "تعذّر تعطيل بعض عوامل المصادقة. لم يتم حذف أكواد النسخ الاحتياطي لتجنّب فقد الوصول. حاول مجدداً.",
+    };
   }
 
   // Hard-delete backup codes — service role bypasses RLS.
-  await admin.from("mfa_backup_codes").delete().eq("user_id", user.id);
+  const { error: deleteErr } = await admin
+    .from("mfa_backup_codes")
+    .delete()
+    .eq("user_id", user.id);
+  if (deleteErr) {
+    console.error("[disableMfaAction] backup-code delete failed", {
+      userId: user.id,
+      message: deleteErr.message,
+    });
+    // Factors are gone but codes lingered — non-fatal, return ok=true.
+    // Next regenerate will overwrite anyway.
+  }
 
   return { ok: true };
 }

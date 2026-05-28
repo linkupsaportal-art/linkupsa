@@ -61,9 +61,7 @@ export function StatCard({
           >
             <Icon className="size-4" strokeWidth={2} />
           </span>
-          <span className={cn("text-sm font-semibold", isAccent ? "text-fg" : "text-fg")}>
-            {label}
-          </span>
+          <span className="text-sm font-semibold text-fg">{label}</span>
         </div>
         <button
           type="button"

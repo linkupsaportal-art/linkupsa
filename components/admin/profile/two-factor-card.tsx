@@ -394,7 +394,10 @@ function BackupCodesGrid({ codes }: { codes: string[] }) {
     a.href = url;
     a.download = `linkup-backup-codes-${Date.now()}.txt`;
     a.click();
-    URL.revokeObjectURL(url);
+    // Defer revocation so the browser has time to start the download.
+    // Revoking immediately can cancel the in-flight download in some
+    // browsers (Safari, older Firefox).
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return (

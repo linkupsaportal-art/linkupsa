@@ -501,3 +501,102 @@ body.menu-open {
   background: transparent;
   border: 1.5px dashed hsl(var(--fg) / 0.20);
 }
+
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Phone input (react-international-phone) — admin theme overrides
+ *  Reskins the library's default flat look to match our rounded inputs.
+ *  Flags are rendered from the library's bundled CSS sprite.
+ * ──────────────────────────────────────────────────────────────────────── */
+.linkup-phone-input {
+  --react-international-phone-height: 48px;
+  --react-international-phone-background-color: hsl(var(--surface));
+  --react-international-phone-border-color: hsl(var(--hairline-strong));
+  --react-international-phone-border-radius: 12px;
+  --react-international-phone-text-color: hsl(var(--fg));
+  --react-international-phone-disabled-background-color: hsl(var(--surface-2));
+  --react-international-phone-country-selector-background-color-hover: hsl(var(--surface-2));
+  --react-international-phone-dropdown-item-background-color: hsl(var(--surface));
+  --react-international-phone-dropdown-item-background-color-focus: hsl(var(--surface-2));
+  --react-international-phone-dropdown-shadow: 0 24px 60px -30px hsl(220 30% 8% / 0.45),
+    0 2px 6px -2px hsl(220 30% 8% / 0.10);
+  --react-international-phone-disabled-text-color: hsl(var(--fg-muted));
+}
+.linkup-phone-input .react-international-phone-input-container {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--hairline-strong));
+  background: hsl(var(--surface));
+  transition: border-color 150ms, box-shadow 150ms;
+  overflow: hidden;
+}
+.linkup-phone-input .react-international-phone-input-container:focus-within {
+  border-color: hsl(var(--accent));
+  box-shadow: 0 0 0 3px hsl(var(--accent) / 0.25);
+}
+.linkup-phone-input.is-invalid .react-international-phone-input-container {
+  border-color: hsl(var(--danger));
+}
+.linkup-phone-input.is-invalid .react-international-phone-input-container:focus-within {
+  box-shadow: 0 0 0 3px hsl(var(--danger) / 0.20);
+}
+.linkup-phone-input .react-international-phone-input,
+.linkup-phone-input .react-international-phone-country-selector-button {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  height: 48px;
+}
+.linkup-phone-input .react-international-phone-input {
+  flex: 1;
+  font-family: var(--font-num), var(--font-cairo), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--fg));
+  padding: 0 14px;
+}
+.linkup-phone-input .react-international-phone-input::placeholder {
+  color: hsl(var(--fg-faint));
+  font-weight: 500;
+}
+.linkup-phone-input .react-international-phone-country-selector-button {
+  padding: 0 10px;
+  border-inline-end: 1px solid hsl(var(--hairline-strong));
+  gap: 6px;
+}
+.linkup-phone-input .react-international-phone-country-selector-button__button-content {
+  gap: 6px;
+}
+.linkup-phone-input .react-international-phone-country-selector-button__dropdown-arrow {
+  color: hsl(var(--fg-muted));
+}
+.linkup-phone-dropdown {
+  border-radius: 16px !important;
+  border: 1px solid hsl(220 18% 14% / 0.10) !important;
+  background: white !important;
+  padding: 6px !important;
+}
+.linkup-phone-dropdown .react-international-phone-country-selector-dropdown__list-item {
+  border-radius: 10px;
+  padding: 8px 10px;
+  color: hsl(222 30% 6%);
+  font-size: 13px;
+}
+.linkup-phone-dropdown .react-international-phone-country-selector-dropdown__list-item-country-name {
+  color: hsl(222 30% 6%);
+  font-weight: 600;
+}
+.linkup-phone-dropdown .react-international-phone-country-selector-dropdown__list-item-dial-code {
+  color: hsl(220 8% 52%);
+  font-family: var(--font-num);
+}
+.linkup-phone-input.is-disabled .react-international-phone-input-container {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* RTL — keep digits LTR but flip the flag to the visual left edge.
+   The library uses an internal flex container so this is just inheritance. */
+[dir="rtl"] .linkup-phone-input .react-international-phone-input-container {
+  direction: ltr;
+}

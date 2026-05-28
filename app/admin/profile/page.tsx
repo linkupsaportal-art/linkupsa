@@ -28,7 +28,7 @@ export default async function ProfilePage() {
   const sb = await createClient();
   const { data: profile } = await sb
     .from("profiles")
-    .select("name, store_name, phone, avatar_url")
+    .select("name, store_name, phone, phone_country, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -61,6 +61,7 @@ export default async function ProfilePage() {
               defaultName={profile?.name ?? ""}
               defaultStoreName={profile?.store_name ?? ""}
               defaultPhone={profile?.phone ?? ""}
+              defaultPhoneCountry={profile?.phone_country ?? ""}
             />
           </section>
 

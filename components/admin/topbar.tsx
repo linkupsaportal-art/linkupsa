@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
+import Link from "next/link";
 import { Bell, Menu, Plus, Search, Settings as SettingsIcon } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { StoreSwitcher } from "@/components/admin/store-switcher";
@@ -56,16 +58,20 @@ export function AdminTopbar({
         <div className="flex-1 md:hidden" />
 
         <div className="flex items-center gap-2">
-          <IconButton ariaLabel="الإعدادات">
-            <SettingsIcon className="size-4" />
+          <IconButton ariaLabel="الإعدادات" asChild>
+            <Link href="/admin/settings">
+              <SettingsIcon className="size-4" />
+            </Link>
           </IconButton>
-          <IconButton ariaLabel="الإشعارات" dot>
-            <Bell className="size-4" />
+          <IconButton ariaLabel="الإشعارات" dot asChild>
+            <Link href="/admin/notifications">
+              <Bell className="size-4" />
+            </Link>
           </IconButton>
 
           {/* Primary CTA — black pill, lime icon */}
-          <button
-            type="button"
+          <Link
+            href="/admin/stores"
             className={cn(
               "hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full font-semibold text-sm",
               "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] transition-all",
@@ -74,7 +80,7 @@ export function AdminTopbar({
           >
             <Plus className="size-4 text-accent" strokeWidth={2.5} />
             متجر جديد
-          </button>
+          </Link>
 
           <ProfileMenu userEmail={userEmail} userName={userName} avatarUrl={avatarUrl} />
         </div>
@@ -90,15 +96,21 @@ export function AdminTopbar({
             )}
           />
           <Dialog.Content
+            // Close the drawer when the user picks a nav item — uses
+            // onClickCapture so we run before <Link> initiates the route
+            // change. Keeping the listener on the Dialog.Content keeps the
+            // markup accessible (no fake-button div).
+            onClickCapture={(e) => {
+              const target = e.target as HTMLElement;
+              if (target.closest("a[href]")) setDrawer(false);
+            }}
             className={cn(
               "fixed inset-y-0 start-0 z-50 w-[260px] flex flex-col outline-none",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
             )}
           >
             <Dialog.Title className="sr-only">قائمة التنقل</Dialog.Title>
-            <div className="flex-1" onClick={() => setDrawer(false)}>
-              <AdminSidebar userName={userName} userEmail={userEmail} isMobile />
-            </div>
+            <AdminSidebar userName={userName} userEmail={userEmail} isMobile />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -110,25 +122,46 @@ function IconButton({
   children,
   ariaLabel,
   dot,
+  onClick,
+  asChild,
 }: {
   children: React.ReactNode;
   ariaLabel: string;
   dot?: boolean;
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  /** When true, render the styles on the child element (e.g. <Link>)
+   *  instead of wrapping in a <button>. Useful for navigation-only
+   *  icon controls. */
+  asChild?: boolean;
 }) {
+  const cls = cn(
+    "relative inline-flex items-center justify-center size-10 rounded-full",
+    "bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors",
+    "border border-[hsl(var(--hairline))] focus-visible:outline-none",
+    "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+  );
+
+  const dotEl = dot && (
+    <span className="absolute top-2 end-2 size-1.5 rounded-full bg-accent ring-2 ring-bg" />
+  );
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+      "aria-label": ariaLabel,
+      className: cn(cls, (children.props as { className?: string }).className),
+      children: (
+        <>
+          {(children.props as { children?: React.ReactNode }).children}
+          {dotEl}
+        </>
+      ),
+    });
+  }
+
   return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      className={cn(
-        "relative inline-flex items-center justify-center size-10 rounded-full",
-        "bg-surface text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors",
-        "border border-[hsl(var(--hairline))]",
-      )}
-    >
+    <button type="button" aria-label={ariaLabel} onClick={onClick} className={cls}>
       {children}
-      {dot && (
-        <span className="absolute top-2 end-2 size-1.5 rounded-full bg-accent ring-2 ring-bg" />
-      )}
+      {dotEl}
     </button>
   );
 }

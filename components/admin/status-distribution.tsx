@@ -1,18 +1,27 @@
 import { cn } from "@/lib/utils";
 
-type Slice = { label: string; value: number; cls: string; dotCls: string };
+export type Slice = { label: string; value: number; cls: string; dotCls: string };
 
-const SLICES: Slice[] = [
+const DEFAULT_SLICES: Slice[] = [
   { label: "مكتمل", value: 6874, cls: "stroke-fg", dotCls: "bg-fg" },
   { label: "قيد التنفيذ", value: 102, cls: "stroke-warn", dotCls: "bg-warn" },
   { label: "ملغى", value: 0, cls: "stroke-danger", dotCls: "bg-danger" },
   { label: "أخرى", value: 10599, cls: "stroke-accent", dotCls: "bg-accent" },
 ];
 
-const TOTAL = SLICES.reduce((a, s) => a + s.value, 0);
-
-/** Donut chart of order statuses — pure SVG, no chart library. */
-export function StatusDistribution() {
+/**
+ * Donut chart of order statuses — pure SVG, no chart library.
+ *
+ * Pass a `slices` array to drive the chart with real data; falls back to
+ * demo numbers so the dashboard renders during the design phase. The total
+ * is computed from the slice values.
+ */
+export function StatusDistribution({
+  slices = DEFAULT_SLICES,
+}: {
+  slices?: Slice[];
+}) {
+  const total = slices.reduce((a, s) => a + s.value, 0);
   const radius = 56;
   const circumference = 2 * Math.PI * radius;
 
@@ -38,9 +47,9 @@ export function StatusDistribution() {
               strokeWidth={20}
               className="stroke-[hsl(var(--surface-2))]"
             />
-            {SLICES.map((slice, i) => {
+            {slices.map((slice, i) => {
               if (slice.value === 0) return null;
-              const len = (slice.value / TOTAL) * circumference;
+              const len = (slice.value / total) * circumference;
               const dasharray = `${len} ${circumference - len}`;
               const node = (
                 <circle
@@ -62,7 +71,7 @@ export function StatusDistribution() {
           </svg>
           <div className="absolute inset-0 grid place-content-center text-center">
             <p className="font-num text-2xl font-extrabold text-fg leading-none">
-              {TOTAL.toLocaleString("en-US")}
+              {total.toLocaleString("en-US")}
             </p>
             <p className="text-[10px] text-fg-muted mt-1">طلب</p>
           </div>
@@ -70,8 +79,8 @@ export function StatusDistribution() {
 
         {/* Legend */}
         <ul className="flex-1 min-w-0 space-y-2">
-          {SLICES.map((slice) => {
-            const pct = TOTAL ? Math.round((slice.value / TOTAL) * 100) : 0;
+          {slices.map((slice) => {
+            const pct = total ? Math.round((slice.value / total) * 100) : 0;
             return (
               <li key={slice.label} className="flex items-center justify-between gap-3 text-xs">
                 <span className="flex items-center gap-2 min-w-0">

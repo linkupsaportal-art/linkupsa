@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ShoppingBag, Database, Sparkles, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { DashboardTabs } from "@/components/admin/dashboard-tabs";
@@ -151,12 +152,12 @@ function UpgradeCard() {
         </h3>
       </div>
 
-      <button
-        type="button"
+      <Link
+        href="/admin/billing"
         className="relative mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-bg text-fg text-sm font-bold hover:bg-accent hover:text-accent-fg active:scale-[0.98] transition-all"
       >
         ترقية الخطة ▶
-      </button>
+      </Link>
     </article>
   );
 }

@@ -2,17 +2,19 @@ import Link from "next/link";
 import { ArrowUpLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type OrderStatus = "completed" | "pending" | "failed";
+export type OrderStatus = "completed" | "pending" | "failed";
 
-type Order = {
+export type Order = {
   id: string;
   date: string;
   customer: string;
-  amount: string; // formatted
+  /** Pre-formatted amount string (the table is presentational only). */
+  amount: string;
   status: OrderStatus;
 };
 
-const ORDERS: Order[] = [
+/** Demo data — used as a fallback when no orders prop is provided. */
+const DEFAULT_ORDERS: Order[] = [
   { id: "262887900", date: "2026-05-28", customer: "Hamad Al Farhan", amount: "299.00", status: "completed" },
   { id: "262883328", date: "2026-05-28", customer: "رهف", amount: "299.00", status: "completed" },
   { id: "262828462", date: "2026-05-28", customer: "عبدالعزيز الغامدي", amount: "49.00", status: "completed" },
@@ -32,8 +34,18 @@ const STATUS_CLS: Record<OrderStatus, string> = {
   failed: "bg-danger/10 text-danger",
 };
 
-/** Recent orders block — used on the dashboard overview. */
-export function RecentOrdersTable() {
+/**
+ * Recent orders block — used on the dashboard overview.
+ *
+ * Pass `orders` from a server component (e.g. fetched from Supabase) to wire
+ * production data. When omitted, falls back to demo data so the dashboard
+ * still renders during the design phase.
+ */
+export function RecentOrdersTable({
+  orders = DEFAULT_ORDERS,
+}: {
+  orders?: Order[];
+}) {
   return (
     <article className="rounded-3xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft">
       <header className="flex items-center justify-between p-5 border-b border-[hsl(var(--hairline))]">
@@ -64,43 +76,51 @@ export function RecentOrdersTable() {
             </tr>
           </thead>
           <tbody>
-            {ORDERS.map((order) => (
-              <tr
-                key={order.id}
-                className="border-b border-[hsl(var(--hairline))] last:border-0 hover:bg-surface-2 transition-colors"
-              >
-                <Td>
-                  <span className="font-mono text-xs font-bold text-fg" dir="ltr">
-                    #{order.id}
-                  </span>
-                </Td>
-                <Td>
-                  <span className="text-xs text-fg-muted font-num" dir="ltr">
-                    {order.date}
-                  </span>
-                </Td>
-                <Td>
-                  <span className="text-fg font-medium">{order.customer}</span>
-                </Td>
-                <Td align="end">
-                  <span className="font-num font-bold text-fg">
-                    {order.amount}
-                  </span>{" "}
-                  <span className="text-xs text-fg-muted">ر.س</span>
-                </Td>
-                <Td align="end">
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold",
-                      STATUS_CLS[order.status],
-                    )}
-                  >
-                    <span className="size-1.5 rounded-full bg-current" />
-                    {STATUS_LABEL[order.status]}
-                  </span>
-                </Td>
+            {orders.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-12 text-center text-sm text-fg-muted">
+                  لا توجد طلبات بعد
+                </td>
               </tr>
-            ))}
+            ) : (
+              orders.map((order) => (
+                <tr
+                  key={order.id}
+                  className="border-b border-[hsl(var(--hairline))] last:border-0 hover:bg-surface-2 transition-colors"
+                >
+                  <Td>
+                    <span className="font-mono text-xs font-bold text-fg" dir="ltr">
+                      #{order.id}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="text-xs text-fg-muted font-num" dir="ltr">
+                      {order.date}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="text-fg font-medium">{order.customer}</span>
+                  </Td>
+                  <Td align="end">
+                    <span className="font-num font-bold text-fg">
+                      {order.amount}
+                    </span>{" "}
+                    <span className="text-xs text-fg-muted">ر.س</span>
+                  </Td>
+                  <Td align="end">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold",
+                        STATUS_CLS[order.status],
+                      )}
+                    >
+                      <span className="size-1.5 rounded-full bg-current" />
+                      {STATUS_LABEL[order.status]}
+                    </span>
+                  </Td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
