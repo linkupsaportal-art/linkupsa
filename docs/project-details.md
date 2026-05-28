@@ -2,7 +2,7 @@
 Digital Product Delivery Platform
 
 وصف المشروع:
-أحتاج تطوير منصة خاصة لتسليم المنتجات الرقمية بشكل تلقائي واحترافي، مرتبطة بمنصة سلة، مع لوحة تحكم كاملة
+أحتاج تطوير منصة خاصة لتسليم المنتجات الرقمية بشكل تلقائي واحترافي، مستقلة بالكامل، مع لوحة تحكم كاملة
 
 ملاحظة مهمة:
 المشروع يجب أن يكون مملوك لي بالكامل بعد التسليم، مع تسليم السورس كود وقاعدة البيانات وجميع الصلاحيات وملفات الإعداد، بحيث أستطيع التعديل والتطوير عليه مستقبلاً .
@@ -26,7 +26,7 @@ delivery.domain.com
 - آخر 4 أرقام من رقم الجوال
 
 بعد التحقق:
-يقوم النظام بجلب بيانات الطلب المرتبط من سلة.
+يقوم النظام بجلب بيانات الطلب المرتبط من قاعدة البيانات أو بوابة المتجر.
 
 ثم يعرض المنتج حسب نوعه.
 
@@ -275,13 +275,13 @@ delivery.domain.com/code-limit
 - سجل التعديلات
 
 ========================================
-ربط سلة Salla Integration
+ربط المتجر المستقل Storefront Integration
 
-الربط مع سلة أساسي من البداية.
+الربط مع بوابة المتجر أو الدفع أساسي من البداية.
 
 المطلوب:
 
-- ربط Salla API
+- ربط Storefront API
 - ربط Webhooks
 - استقبال الطلبات تلقائياً
 - جلب بيانات الطلب تلقائياً
@@ -307,17 +307,17 @@ delivery.domain.com/code-limit
 
 طريقة العمل:
 
-عند إنشاء طلب جديد في سلة:
+عند إنشاء طلب جديد في المتجر:
 ↓
 يصل Webhook للنظام
 ↓
-النظام يجلب تفاصيل الطلب من Salla API
+النظام يجلب تفاصيل الطلب من Storefront API أو قاعدة البيانات
 ↓
-يتحقق من حالة الدفع
+يتأكد من حالة الدفع
 ↓
-يتحقق من المنتج وخيار المنتج
+يتأكد من المنتج وخيار المنتج
 ↓
-يتحقق هل رقم الجوال ممنوع من المنتج أم لا
+يتأكد هل رقم الجوال ممنوع من المنتج أم لا
 ↓
 يختار الحساب أو الكود المناسب
 ↓
@@ -330,7 +330,7 @@ delivery.domain.com/code-limit
 تظهر له بيانات المنتج
 
 إذا دخل العميل رقم الطلب ولم يكن محفوظاً:
-يقوم النظام بجلبه مباشرة من Salla API ثم تنفيذه إذا كان صحيحاً ومدفوعاً.
+يقوم النظام بجلبه مباشرة من Storefront API ثم تنفيذه إذا كان صحيحاً ومدفوعاً.
 
 ========================================
 الإشعارات والقنوات
@@ -399,7 +399,7 @@ Backend / Compute:
 - Supabase Edge Functions (Deno) — منطق الأعمال، توزيع الحسابات، توليد TOTP
 - Supabase Database Functions (PL/pgSQL) — Round Robin atomic مع SELECT FOR UPDATE SKIP LOCKED
 - Supabase Cron (pg_cron) — أرشفة، تنظيف OTP Logs، نسخ احتياطي يومي
-- Cloudflare Workers — استقبال Salla Webhooks، Rate Limiting، Bot Protection على edge
+- Cloudflare Workers — استقبال Webhooks، Rate Limiting، Bot Protection على edge
 - Cloudflare KV — caching للجلسات والـ rate limiters
 - Cloudflare Queues — طابور إشعارات (WhatsApp/SMS/Email/Telegram)
 - نظام Queue/Workers مخصص (custom) — مبني فوق Supabase + Cloudflare بدون خدمات خارجية
@@ -439,10 +439,10 @@ Notifications Channels:
 - SMS عبر مزود محلي سعودي (Unifonic / Mobily — يحتاج تأكيد العميل)
 - Telegram Bot API الرسمي
 
-Salla Integration:
+Storefront Integration:
 
-- Salla App مسجل في Salla Partners
-- OAuth2 + Webhooks مع HMAC signature verification
+- ربط مباشر عبر API مستقل وبوابات الدفع
+- Webhooks مؤمنة مع HMAC signature verification
 - Cloudflare Worker كـ webhook receiver أمام Supabase (cold-start ~10ms)
 
 Observability:

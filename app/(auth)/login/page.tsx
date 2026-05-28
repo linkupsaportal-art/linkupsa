@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,19 +10,7 @@ import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { OAuthRow } from "@/components/auth/oauth-buttons";
-import { AuthDivider } from "@/components/auth/auth-divider";
-
-/**
- * Login page — Shopify-style minimal form, RTL Arabic.
- *
- * Flow:
- *   - OAuth row at the top (the modern preference for sign-in surfaces)
- *   - Hairline divider with "أو"
- *   - Email + password (with show/hide toggle) + remember + forgot link
- *   - Submit button (loading state with spinner)
- *   - Footer: "ليس لديك حساب؟ إنشاء حساب"
- */
+import { loginAction } from "@/app/(auth)/actions";
 
 const schema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
@@ -31,8 +20,20 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [showPwd, setShowPwd] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const search = useSearchParams();
+  const next = search.get("next") ?? "/dashboard";
 
   const {
     register,
@@ -43,9 +44,17 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "", remember: true },
   });
 
-  function onSubmit(_values: FormValues) {
-    setSubmitting(true);
-    setTimeout(() => setSubmitting(false), 900); // wire to API later
+  function onSubmit(values: FormValues) {
+    setServerError(null);
+    startTransition(async () => {
+      const res = await loginAction(values);
+      if (!res.ok) {
+        setServerError(res.error);
+        return;
+      }
+      router.replace(next);
+      router.refresh();
+    });
   }
 
   return (
@@ -66,11 +75,13 @@ export default function LoginPage() {
         </p>
       </header>
 
-      <OAuthRow disabled={submitting} />
-      <AuthDivider />
+      {serverError && (
+        <div className="mb-5 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {serverError}
+        </div>
+      )}
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email */}
         <div>
           <Label htmlFor="email" className="block mb-1.5">
             البريد الإلكتروني
@@ -83,6 +94,7 @@ export default function LoginPage() {
             placeholder="you@store.sa"
             startAdornment={<Mail className="size-4" />}
             invalid={!!errors.email}
+            disabled={pending}
             {...register("email")}
           />
           {errors.email && (
@@ -90,7 +102,6 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <Label htmlFor="password">كلمة المرور</Label>
@@ -119,6 +130,7 @@ export default function LoginPage() {
               </button>
             }
             invalid={!!errors.password}
+            disabled={pending}
             {...register("password")}
           />
           {errors.password && (
@@ -126,16 +138,16 @@ export default function LoginPage() {
           )}
         </div>
 
-        <Checkbox label="ابقني مسجَّلاً" {...register("remember")} />
+        <Checkbox label="ابقني مسجَّلاً" disabled={pending} {...register("remember")} />
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={pending}
           className="group/btn relative w-full overflow-hidden rounded-md h-12 px-6 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest bg-accent text-accent-fg hover:bg-accent-hi transition-colors shadow-[0_8px_28px_-8px_hsl(var(--accent)/0.6)] disabled:opacity-60 disabled:pointer-events-none"
         >
           <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-l from-transparent via-white/25 to-transparent" />
           <span className="relative z-10 flex items-center gap-2">
-            {submitting ? (
+            {pending ? (
               <>
                 <span className="size-3 rounded-full border-2 border-accent-fg border-t-transparent animate-spin" />
                 جاري الدخول…

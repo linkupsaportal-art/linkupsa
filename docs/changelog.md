@@ -5,6 +5,14 @@
 
 ---
 
+# 2026-05-28 14:15
+
+- 🛡️ **Total Decoupling of Salla Integrations & Global Clean-up — Razex Xelite completed visual & spec sweep**
+  - **Global Metadata Sweep**: Removed all "سلة" and "Salla" keywords and references from the root Next.js layout (`app/layout.tsx`) description and keyword attributes to enforce an independent storefront model.
+  - **Visual Elements Clean-up**: Refactored `components/landing/recognition.tsx` to replace the "Salla Partner" card with an elite "ربط برميوم متكامل" (Integrated Premium Sync) trust item, shifting focus to high-speed independent storefront APIs.
+  - **System Specifications Sync**: Conducted a thorough documentation pass across `docs/architecture.md`, `docs/project-details.md`, and `docs/project_structure.md` to completely eliminate Salla database mappings and integration flows, replacing them with generic independent Storefront webhook and API sync references.
+  - **Prise & Audit**: Verified that no lingering Salla references remain in any environment `.env` or application code configs.
+
 # 2026-05-27 23:35
 
 - 🔑 **Modular Cyberpunk Auth Portal Refactoring & Navigation Access — Razex Xelite completed implementation**

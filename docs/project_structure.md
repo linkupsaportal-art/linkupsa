@@ -11,7 +11,7 @@
 digital-delivery-platform/
 │
 ├── 📄 conversation.md               ( محادثة WhatsApp مع العميل — تفاوض الميزانية والاتفاق على الستاك Vercel + Supabase + Cloudflare بدون VPS )
-├── 📄 project-details.md            ( المواصفات الكاملة بالعربية — الواجهات الثلاث، 6 أنواع منتجات، الأمان، Salla integration، الستاك المعتمد )
+├── 📄 project-details.md            ( المواصفات الكاملة بالعربية — الواجهات الثلاث، 6 أنواع منتجات، الأمان، الربط المستقل، الستاك المعتمد )
 │
 ├── 📁 docs/                         ( مصدر الحقيقة الموثق — يجب أن يطابق الواقع دائماً )
 │   ├── 📄 project_structure.md      ( هذا الملف — شجرة الملفات + وصف لكل عنصر + metadata المشروع )
@@ -58,7 +58,7 @@ digital-delivery-platform/
     │   │   ├── 📄 navbar.tsx        ( هيدر فاخر snapped مع قائمة ملء الشاشة الفخمة بـ GSAP، زر تحكم 3-bar متحرك، ومنع إزاحة التمرير )
     │   │   ├── 📄 order-form.tsx    ( نموذج استلام الطلب برقم الطلب وآخر 4 أرقام جوال محمي بـ Turnstile )
     │   │   ├── 📄 process.tsx       ( تبويبات دراسة الحالة الورشة والمنصة، عداد إحصائيات بـ GSAP )
-    │   │   └── 📄 recognition.tsx   ( قسم ثقة التجار وشارات التشفير و Salla Partner و 12 ألف طلب )
+    │   │   └── 📄 recognition.tsx   ( قسم ثقة التجار وشارات التشفير وربط المتجر المستقل و 12 ألف طلب )
     │   │
     │   ├── 📁 providers/            ( client-side providers تُلف حول الـ tree )
     │   │   └── 📄 smooth-scroll-provider.tsx  ( Lenis smooth-scroll مربوط بـ GSAP ticker + ScrollTrigger.update، يحترم prefers-reduced-motion )
@@ -155,14 +155,14 @@ digital-delivery-platform/
 ### Architecture Style
 - **Serverless / Edge-first** — لا VPS، لا PM2، لا Nginx manual
 - **Multi-zone Next.js:** `delivery.domain.com`, `/admin`, `/code-limit` كـ route groups مع RBAC على مستوى middleware + RLS
-- **Webhook-driven:** Salla → CF Worker → Supabase Edge Function → DB → Notification Queue
+- **Webhook-driven:** Storefront → CF Worker → Supabase Edge Function → DB → Notification Queue
 - **Atomic distribution:** Round Robin via Postgres `SELECT FOR UPDATE SKIP LOCKED`
-- **Idempotent everywhere:** كل mutation له idempotency key، الـ webhooks بـ `salla_event_id` unique
+- **Idempotent everywhere:** كل mutation له idempotency key، الـ webhooks بـ `event_id` unique
 
 ### Security Posture
 - pgsodium encryption للحقول الحساسة (passwords, 2FA secrets, Steam shared_secret)
 - RLS policies صارمة لكل جدول
-- HMAC verification على Salla webhooks
+- HMAC verification على webhooks المتجر السحابي
 - Rate limiting على Cloudflare edge قبل الوصول للـ origin
 - Turnstile (Captcha) على واجهة العميل
 - Audit logging لكل عملية privileged (who/what/when/where)

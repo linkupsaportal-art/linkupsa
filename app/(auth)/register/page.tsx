@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,14 +10,7 @@ import { Mail, Lock, User, Store, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { OAuthRow } from "@/components/auth/oauth-buttons";
-import { AuthDivider } from "@/components/auth/auth-divider";
-
-/**
- * Register page — same architecture as login, plus a name + store-name field.
- * Password strength is communicated via Zod min-length only (UI-level meter
- * can be added later if desired).
- */
+import { registerAction } from "@/app/(auth)/actions";
 
 const schema = z.object({
   name: z.string().min(2, "الاسم قصير"),
@@ -31,7 +25,9 @@ type FormValues = z.infer<typeof schema>;
 
 export default function RegisterPage() {
   const [showPwd, setShowPwd] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const {
     register,
@@ -39,18 +35,19 @@ export default function RegisterPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: "",
-      storeName: "",
-      email: "",
-      password: "",
-      agree: false,
-    },
+    defaultValues: { name: "", storeName: "", email: "", password: "", agree: false },
   });
 
-  function onSubmit(_values: FormValues) {
-    setSubmitting(true);
-    setTimeout(() => setSubmitting(false), 900);
+  function onSubmit(values: FormValues) {
+    setServerError(null);
+    startTransition(async () => {
+      const res = await registerAction(values);
+      if (!res.ok) {
+        setServerError(res.error);
+        return;
+      }
+      router.replace(`/verify-email?email=${encodeURIComponent(res.email)}`);
+    });
   }
 
   return (
@@ -71,8 +68,11 @@ export default function RegisterPage() {
         </p>
       </header>
 
-      <OAuthRow disabled={submitting} />
-      <AuthDivider />
+      {serverError && (
+        <div className="mb-5 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+          {serverError}
+        </div>
+      )}
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
@@ -87,6 +87,7 @@ export default function RegisterPage() {
               placeholder="عبدالله الراشد"
               startAdornment={<User className="size-4" />}
               invalid={!!errors.name}
+              disabled={pending}
               {...register("name")}
             />
             {errors.name && (
@@ -104,6 +105,7 @@ export default function RegisterPage() {
               placeholder="متجري على سلة"
               startAdornment={<Store className="size-4" />}
               invalid={!!errors.storeName}
+              disabled={pending}
               {...register("storeName")}
             />
             {errors.storeName && (
@@ -124,6 +126,7 @@ export default function RegisterPage() {
             placeholder="you@store.sa"
             startAdornment={<Mail className="size-4" />}
             invalid={!!errors.email}
+            disabled={pending}
             {...register("email")}
           />
           {errors.email && (
@@ -153,6 +156,7 @@ export default function RegisterPage() {
               </button>
             }
             invalid={!!errors.password}
+            disabled={pending}
             {...register("password")}
           />
           {errors.password && (
@@ -163,6 +167,7 @@ export default function RegisterPage() {
         <div>
           <Checkbox
             id="agree"
+            disabled={pending}
             label={
               <>
                 أوافق على{" "}
@@ -184,15 +189,15 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={pending}
           className="group/btn relative w-full overflow-hidden rounded-md h-12 px-6 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest bg-accent text-accent-fg hover:bg-accent-hi transition-colors shadow-[0_8px_28px_-8px_hsl(var(--accent)/0.6)] disabled:opacity-60 disabled:pointer-events-none"
         >
           <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 ease-out bg-gradient-to-l from-transparent via-white/25 to-transparent" />
           <span className="relative z-10 flex items-center gap-2">
-            {submitting ? (
+            {pending ? (
               <>
                 <span className="size-3 rounded-full border-2 border-accent-fg border-t-transparent animate-spin" />
-                جاري إنشاء الحساب…
+                جاري الإنشاء…
               </>
             ) : (
               <>إنشاء الحساب</>

@@ -6,7 +6,7 @@
 
 ## 1. North Star
 
-> **منصة تسليم منتجات رقمية تلقائية، مرتبطة بـ Salla، صفر VPS، صفر صيانة سيرفر، ملكية كاملة للعميل.**
+> **منصة تسليم منتجات رقمية تلقائية مستقلة تماماً، صفر VPS، صفر صيانة سيرفر، ملكية كاملة للعميل.**
 
 Three guiding principles:
 
@@ -46,7 +46,7 @@ Three guiding principles:
 │  ─ DNS + WAF + DDoS                                              │
 │  ─ Turnstile (captcha)                                           │
 │  ─ Rate Limiter (KV-backed)                                      │
-│  ─ Worker: /salla/webhook  (HMAC verify → enqueue)               │
+│  ─ Worker: /storefront/webhook  (HMAC verify → enqueue)          │
 │  ─ Worker: /api/notifications/dispatch  (consumer)               │
 │  ─ Cloudflare Queues (notification fan-out)                      │
 └──────────────────────┬──────────────────────────────────────────┘
@@ -69,7 +69,7 @@ Three guiding principles:
 │       • generate-totp   (returns TOTP from encrypted secret)     │
 │       • generate-steam-guard                                     │
 │       • generate-email-code                                      │
-│       • salla-fetch-order                                        │
+│       • storefront-fetch-order                                   │
 │  ─ pg_cron jobs:                                                 │
 │       • archive-old-orders          @ 03:00 UTC daily            │
 │       • cleanup-otp-logs            @ 03:30 UTC daily            │
@@ -81,7 +81,7 @@ Three guiding principles:
         ┌──────────────┴──────────────┐
         ▼                             ▼
 ┌────────────────┐           ┌─────────────────────┐
-│  RESEND        │           │  SALLA API          │
+│  RESEND        │           │  STOREFRONT API     │
 │  email         │           │  OAuth2 + Webhooks  │
 └────────────────┘           └─────────────────────┘
         │
@@ -93,10 +93,10 @@ Three guiding principles:
 └────────────────────────────────────────────┘
 ```
 
-### 2.3 Why Cloudflare Workers receive Salla webhooks (not Vercel)
+### 2.3 Why Cloudflare Workers receive Storefront webhooks (not Vercel)
 
 - Cold start ~10ms vs Vercel Functions ~500ms
-- Salla retries aggressively — fast 200 response prevents duplicate retries
+- Storefront retries aggressively — fast 200 response prevents duplicate retries
 - HMAC verification + idempotency check happen at the edge before any DB write
 - Cheaper at scale (CF Workers free tier: 100k req/day)
 
@@ -124,7 +124,7 @@ accounts              (id, product_id, label, email, password_enc, instructions,
 account_options       (account_id, option_id)                -- which options each account serves
 
 -- Orders
-orders                (id, salla_order_id UNIQUE, salla_event_id UNIQUE,
+orders                (id, storefront_order_id UNIQUE, webhook_event_id UNIQUE,
                        phone_last4, customer_email, customer_phone,
                        product_id, option_id, account_id, status,
                        payment_status, code_requests_used, code_requests_limit,
@@ -150,7 +150,7 @@ archived_otp_logs     (mirrors otp_logs, retention 90d)
 ### Key Constraints
 
 - `orders.account_id` once set is **immutable** (enforced via trigger) — except by explicit admin action via `admin_change_account()` RPC which logs to `audit_logs`
-- `orders.salla_event_id` UNIQUE — webhook idempotency
+- `orders.webhook_event_id` UNIQUE — webhook idempotency
 - Encrypted columns use `pgsodium.create_key()` → encrypted with column-level keys
 - All tables have RLS enabled, default policy is DENY
 
@@ -158,17 +158,17 @@ archived_otp_logs     (mirrors otp_logs, retention 90d)
 
 ## 4. Key Flows
 
-### 4.1 Salla Webhook → Order Creation
+### 4.1 Storefront Webhook → Order Creation
 
 ```
-Salla → POST https://delivery.domain.com/salla/webhook
+Storefront → POST https://delivery.domain.com/storefront/webhook
       → Cloudflare Worker
-        ├─ Verify X-Salla-Signature (HMAC-SHA256)
+        ├─ Verify X-Storefront-Signature (HMAC-SHA256)
         ├─ Check idempotency (event_id in CF KV, 24h TTL)
         ├─ Enqueue to Supabase via Edge Function
         └─ Return 200 immediately (always, even on dedup)
-      → Supabase Edge Function `process-salla-event`
-        ├─ Insert into orders (ON CONFLICT salla_event_id DO NOTHING)
+      → Supabase Edge Function `process-storefront-event`
+        ├─ Insert into orders (ON CONFLICT webhook_event_id DO NOTHING)
         ├─ Verify payment_status IN ('paid', 'completed')
         ├─ Verify phone NOT banned for product
         ├─ Call assign_account_atomic(product_id, option_value)
@@ -208,8 +208,8 @@ Customer → POST /api/lookup { order_no, phone_last4 }
         → Server Action
           ├─ Turnstile verify
           ├─ Rate limit (5 attempts / 10 min / IP)
-          ├─ SELECT from orders WHERE salla_order_id=? AND phone_last4=?
-          ├─ If not found → call salla-fetch-order Edge Function (fallback)
+          ├─ SELECT from orders WHERE storefront_order_id=? AND phone_last4=?
+          ├─ If not found → call storefront-fetch-order Edge Function (fallback)
           ├─ Issue short-lived signed JWT (15 min) → returned in HttpOnly cookie
           └─ Redirect to /order/[token]
 ```
@@ -229,7 +229,7 @@ Customer → POST /api/lookup { order_no, phone_last4 }
 
 - Separate Supabase Auth user role: `code_limit_operator`
 - RLS policies allow:
-  - `SELECT (id, salla_order_id, code_requests_used, code_requests_limit)` from orders
+  - `SELECT (id, storefront_order_id, code_requests_used, code_requests_limit)` from orders
   - `UPDATE code_requests_limit` only — via stored procedure that audit-logs
 - Cannot read passwords, secrets, accounts table at all
 - 2FA enforced at login
@@ -241,7 +241,7 @@ Customer → POST /api/lookup { order_no, phone_last4 }
 1. **Cloudflare WAF** — generic OWASP rules + custom rules for `/admin`
 2. **Turnstile** — on customer lookup form + admin login
 3. **Rate Limiting** — CF Workers + KV (per-IP, per-order-no, per-phone)
-4. **Webhook HMAC** — Salla signature verification
+4. **Webhook HMAC** — Storefront signature verification
 5. **RLS** — database-level access control, default DENY
 6. **pgsodium encryption** — at-rest for sensitive columns
 7. **Signed URLs** — Storage access ≤5 min TTL
@@ -258,7 +258,7 @@ Customer → POST /api/lookup { order_no, phone_last4 }
 | ADR-001 | WhatsApp BSP: Meta Cloud API direct vs Wati/UltraMsg | Client | ❓ |
 | ADR-002 | SMS Provider: Unifonic vs Mobily vs Twilio | Client | ❓ |
 | ADR-003 | Domain: subdomain of متجر vs new domain | Client | ❓ |
-| ADR-004 | Salla App: existing Partner account or register new | Client | ❓ |
+| ADR-004 | Storefront Integration: webhook sync and API sync keys | Client | ❓ |
 | ADR-005 | External backup mirror beyond Supabase PITR (S3?) | Razex | 💭 |
 | ADR-006 | Sentry vs Supabase logs only for error tracking | Razex | 💭 |
 
