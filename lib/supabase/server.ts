@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { env } from "@/lib/env";
 
 /**
@@ -27,6 +28,21 @@ export async function createClient() {
     },
   });
 }
+
+/**
+ * Cached `getUser()` per request — React cache deduplicates calls within the
+ * same render tree so multiple Server Components can call this without each
+ * one hitting Supabase Auth's REST API.
+ *
+ * Used by the admin layout + any page/component that needs the current user.
+ */
+export const getCurrentUser = cache(async () => {
+  const sb = await createClient();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  return user;
+});
 
 /**
  * Privileged client used ONLY in trusted server contexts (server actions,

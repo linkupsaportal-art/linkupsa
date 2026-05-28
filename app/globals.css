@@ -82,7 +82,7 @@
 html, body {
   background: hsl(var(--bg));
   color: hsl(var(--fg));
-  font-family: var(--font-body), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  font-family: var(--font-cairo), "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -305,3 +305,199 @@ body.menu-open {
 
 
 
+
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Admin dashboard — Lime · Black · Cream palette (reference-matched)
+ *  Light canvas with near-black icon-rail sidebar and bright lime accent.
+ *  Scoped via the `.theme-admin` class so the public landing keeps its
+ *  own dark theme.
+ * ──────────────────────────────────────────────────────────────────────── */
+.theme-admin {
+  /* Surfaces — workspace card is bright white so content stands out crisply
+     against the blue-grey outer canvas defined in app/admin/layout.tsx. */
+  --bg: 0 0% 100%;             /* workspace card = pure white */
+  --surface: 200 14% 97%;      /* faint blue-tinted card surface */
+  --surface-2: 200 14% 94%;    /* nested / hover */
+  --surface-3: 222 22% 9%;     /* near-black SIDEBAR / dark card #0F1320 */
+  --surface-4: 220 18% 14%;    /* dark card hover */
+
+  /* Foreground — strong ink for readability against the cool surfaces */
+  --fg: 222 30% 6%;            /* near-black, blue-tinted */
+  --fg-muted: 220 16% 26%;     /* darker than before for stronger labels */
+  --fg-subtle: 220 12% 38%;
+  --fg-faint: 220 10% 48%;
+
+  /* Borders — slightly cool, more visible against tinted surface */
+  --border: 200 12% 84% / 0.9;
+  --border-strong: 200 12% 74%;
+  --hairline: 220 18% 14% / 0.08;
+  --hairline-strong: 220 18% 14% / 0.16;
+
+  /* Force ink color on the workspace itself so any unstyled child element
+     inside the admin shell inherits the dark text color (instead of the
+     near-white `--fg` from the public landing theme on <body>). */
+  color: hsl(var(--fg));
+
+  /* Brand accent — bright electric lime (#D4F542) */
+  --accent: 72 86% 62%;
+  --accent-hi: 72 86% 70%;
+  --accent-bg: 72 80% 90%;
+  --accent-fg: 222 18% 8%;     /* black on lime */
+
+  /* Dark surfaces (sidebar / dark cards) — tokens for nested children */
+  --dark-fg: 60 12% 96%;
+  --dark-fg-muted: 220 6% 70%;
+  --dark-fg-faint: 220 6% 45%;
+  --dark-hairline: 0 0% 100% / 0.08;
+
+  /* Semantic */
+  --success: 142 60% 42%;
+  --warn: 38 95% 56%;
+  --danger: 0 75% 56%;
+
+  --ring: 72 86% 62%;
+  --radius: 18px;
+}
+
+/* Reset scrollbars to match cream canvas inside the admin shell */
+.theme-admin ::-webkit-scrollbar { width: 10px; height: 10px; }
+.theme-admin ::-webkit-scrollbar-track { background: transparent; }
+.theme-admin ::-webkit-scrollbar-thumb {
+  background: hsl(220 8% 70%);
+  border: 2px solid hsl(var(--bg));
+  border-radius: 999px;
+}
+.theme-admin ::-webkit-scrollbar-thumb:hover { background: hsl(220 8% 55%); }
+
+/* Sidebar / dark-card surface helper. Apply on the dark areas. */
+.theme-admin .surface-dark {
+  background: hsl(var(--surface-3));
+  color: hsl(var(--dark-fg));
+  border-color: hsl(var(--dark-hairline));
+}
+.theme-admin .surface-dark *::selection {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-fg));
+}
+
+/* Lime "pill" — used for accent stats / labels in the reference */
+.theme-admin .pill-accent {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-fg));
+}
+
+/* Soft card shadow (matches reference: low blur, near-zero spread) */
+.theme-admin .card-soft {
+  box-shadow:
+    0 1px 0 hsl(220 12% 12% / 0.04),
+    0 8px 24px -16px hsl(220 12% 12% / 0.10);
+}
+
+/* Heavy "lifted" card shadow — for primary content blocks like the chart */
+.theme-admin .card-lift {
+  box-shadow:
+    0 1px 0 hsl(220 12% 12% / 0.04),
+    0 4px 10px -4px hsl(220 30% 8% / 0.08),
+    0 18px 40px -12px hsl(220 30% 8% / 0.18),
+    0 32px 56px -24px hsl(220 30% 8% / 0.22);
+}
+
+/* Soft tinted background for the inner content area (under topbar) */
+.theme-admin .canvas-tint {
+  background:
+    radial-gradient(80% 60% at 50% 0%, hsl(196 22% 96%), transparent 70%),
+    hsl(var(--bg));
+}
+
+/* Number font — Manrope. Use `.font-num` on any element rendering numerals
+   so they always pop with crisp tabular figures, even when the surrounding
+   text uses Cairo for Arabic. */
+.theme-admin .font-num,
+.theme-admin .tabular-nums {
+  font-family: var(--font-num), var(--font-cairo), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Stronger admin typography — Cairo with tighter tracking on display */
+.theme-admin {
+  font-family: var(--font-cairo), "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+}
+.theme-admin h1, .theme-admin h2, .theme-admin h3, .theme-admin h4,
+.theme-admin .font-display {
+  font-family: var(--font-cairo), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+/* Block-row visualisation used inside stat cards (the small black squares) */
+.theme-admin .block-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.theme-admin .block-row > i {
+  display: block;
+  height: 22px;
+  border-radius: 4px;
+  background: hsl(var(--fg));
+}
+.theme-admin .block-row > i.empty {
+  background: transparent;
+  border: 1.5px dashed hsl(var(--fg) / 0.18);
+}
+.theme-admin .block-row.on-accent > i {
+  background: hsl(var(--fg));
+}
+.theme-admin .block-row.on-accent > i.empty {
+  background: transparent;
+  border: 1.5px dashed hsl(var(--fg) / 0.35);
+}
+
+/* Smoother focus ring + selection */
+.theme-admin ::selection {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-fg));
+}
+
+/* Tubular bar chart helpers ------------------------------------------------ */
+.theme-admin .bar-tube {
+  position: relative;
+  width: 28px;
+  border-radius: 999px;
+  background: hsl(var(--fg));
+  overflow: hidden;
+  box-shadow: inset 0 -1px 0 hsl(0 0% 100% / 0.06);
+}
+.theme-admin .bar-tube .fill {
+  position: absolute;
+  inset-inline: 3px;
+  bottom: 3px;
+  border-radius: 999px;
+  background: hsl(var(--accent));
+}
+.theme-admin .bar-tube .dot-top {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: hsl(var(--bg));
+}
+.theme-admin .bar-tube .dot-bot {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: hsl(var(--fg));
+}
+.theme-admin .bar-tube.empty {
+  background: transparent;
+  border: 1.5px dashed hsl(var(--fg) / 0.20);
+}

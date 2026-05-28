@@ -5,6 +5,18 @@
 
 ---
 
+# 2026-05-28 17:30
+
+- 🧭 **Dynamic Admin Sidebar Hover-Mode Spacer & Rounded Gap Patch — Razex Xelite fixed layout bugs**
+  - **Fluid Sidebar Expansions**: Resolved the sidebar overlap bug on the admin dashboard where the hovered expanded panel (width `260px` in `"hover"` mode) covered the middle main content container.
+  - **Synchronized Transition Spacer**: Replaced the static `72px` spacer inside `components/admin/sidebar.tsx` with a dynamic container that smooth-transitions its width (`w-[72px]` to `w-[260px]`) in perfect lock-step synchronicity with the sidebar expansions. This ensures the main canvas shifts smoothly and is never covered on sidebar hover.
+  - **Rounded Top-Left Gap & Bottom Blend Patch**: Fixed the empty background showing through behind the rounded corners of the sidebar by:
+    - Wrapping `AdminSidebar` inside a dedicated, flexible parent container inside `app/admin/layout.tsx` and styling its background with a top-only linear gradient using explicit `#fff` (`linear-gradient(to bottom, #fff 64px, transparent 64px)`), completely bypassing CSS variable fallback conflicts.
+    - Appending the same linear gradient to the hover-mode spacer inside `components/admin/sidebar.tsx` and `h-full` to the sidebar `aside`.
+    - This beautifully fills the top-left rounded corner curve with the clean white header background to continue the navbar flush with the sidebar across all modes (including collapsed state), while keeping the bottom-left corner transparent to seamlessly blend into the page canvas.
+  - **Smooth Label Transitions**: Re-engineered sidebar DOM rendering from dynamic component swaps to a unified single element layout (`UnifiedNavItem`). Added fluid, synchronized transitions (`transition-all duration-300`) for text opacities, badges, widths, profile metrics, and the brand title (`LinkUp`), avoiding sudden visual jumps when shifting between collapsed, expanded, and hover modes.
+  - **Mobile RTL Premium Sidebar Drawer**: Replaced the simple mobile-only `NavList` inside `AdminTopbar` with our gorgeous premium `AdminSidebar` component (in `isMobile` mode). Positioned the drawer layout to correctly align to the right (`start-0` under `dir="rtl"`) so it slides in/out fluidly from the right side of the viewport, preserving absolute architectural visual sync across all screens.
+
 # 2026-05-28 14:15
 
 - 🛡️ **Total Decoupling of Salla Integrations & Global Clean-up — Razex Xelite completed visual & spec sweep**

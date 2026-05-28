@@ -20,8 +20,11 @@ export const env = {
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   ),
-  // Server-only — empty string at build time is fine; runtime callers throw if missing.
+  // Server-only secrets — empty string at build time is fine; runtime callers
+  // (createServiceClient, sendOtpEmail) throw if these are still empty when
+  // actually invoked.
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
+  // Optional — has a sensible default sender, override per environment.
   RESEND_FROM: process.env.RESEND_FROM ?? "LinkUp <noreply@portaliosa.com>",
 } as const;

@@ -4,7 +4,7 @@ import { updateSession } from "@/lib/supabase/session";
 /**
  * Renamed from `middleware` per Next.js 16: same API, runs for every matched
  * request before it reaches a route handler. Refreshes the Supabase session
- * cookie + gates `/dashboard/*`.
+ * cookie + gates `/admin/*`.
  */
 export async function proxy(request: NextRequest) {
   return await updateSession(request);

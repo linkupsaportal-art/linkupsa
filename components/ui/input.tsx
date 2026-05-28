@@ -2,7 +2,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Editorial Input — flat, hairline border, sharp corners, no glow.
+ * Input — clean white surface, hairline border, lime focus ring.
+ * Theme-aware: works on both the public (dark) theme and admin (cream) theme
+ * via the shared CSS tokens.
  */
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   inputSize?: "md" | "lg";
@@ -17,15 +19,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div
         className={cn(
-          "group relative flex items-center gap-2.5 border bg-surface px-4 transition-colors rounded-md",
-          "border-[hsl(var(--hairline-strong))] focus-within:border-accent",
-          invalid && "border-danger focus-within:border-danger",
+          "group relative flex items-center gap-2.5 border bg-surface px-4 transition-colors rounded-xl",
+          "border-[hsl(var(--hairline-strong))] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/30",
+          invalid && "border-danger focus-within:border-danger focus-within:ring-danger/30",
           heightCls,
           className,
         )}
       >
         {startAdornment ? (
-          <span className="text-fg-faint group-focus-within:text-accent transition-colors">
+          <span className="text-fg-faint group-focus-within:text-fg transition-colors">
             {startAdornment}
           </span>
         ) : null}

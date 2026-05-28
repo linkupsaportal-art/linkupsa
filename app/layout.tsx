@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic, Inter, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Inter, Geist_Mono, Cairo, Manrope } from "next/font/google";
 import "./globals.css";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import { PageTransition } from "@/components/effects/page-transition";
+
+const cairo = Cairo({
+  variable: "--font-cairo",
+  subsets: ["arabic", "latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+});
 
 const plexArabic = IBM_Plex_Sans_Arabic({
   variable: "--font-display",
@@ -20,6 +27,15 @@ const inter = Inter({
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Dedicated number font — Manrope has excellent tabular numerals with
+// rounded apertures that read clearly at any size. Used via `.font-num`.
+const manrope = Manrope({
+  variable: "--font-num",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -49,7 +65,7 @@ export default function RootLayout({
     <html
       lang="ar"
       dir="rtl"
-      className={`${plexArabic.variable} ${inter.variable} ${geistMono.variable}`}
+      className={`${cairo.variable} ${plexArabic.variable} ${inter.variable} ${geistMono.variable} ${manrope.variable}`}
     >
       <body className="min-h-svh bg-bg text-fg antialiased font-sans selection:bg-accent selection:text-accent-fg">
         <SmoothScrollProvider>

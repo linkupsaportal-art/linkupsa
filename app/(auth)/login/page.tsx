@@ -19,6 +19,28 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
+const DEFAULT_NEXT = "/admin";
+
+/**
+ * Sanitize the `?next=` query param so attackers can't craft a login URL that
+ * redirects out to evil.com after sign-in. Anything that isn't a same-origin
+ * relative path falls back to the dashboard.
+ *
+ * Rejects:
+ *   - empty / non-string values
+ *   - protocol-relative URLs ("//evil.com/path")
+ *   - absolute URLs ("https://evil.com", "javascript:…", "data:…")
+ *   - paths starting with "/\" which some browsers normalize to "//"
+ */
+function safeNext(raw: string | null | undefined): string {
+  if (!raw || typeof raw !== "string") return DEFAULT_NEXT;
+  if (!raw.startsWith("/")) return DEFAULT_NEXT;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return DEFAULT_NEXT;
+  // Strip out any sneaky control chars / whitespace before the slash heuristic.
+  if (/[\x00-\x1f\x7f]/.test(raw)) return DEFAULT_NEXT;
+  return raw;
+}
+
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
@@ -33,7 +55,7 @@ function LoginForm() {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const search = useSearchParams();
-  const next = search.get("next") ?? "/dashboard";
+  const next = safeNext(search.get("next"));
 
   const {
     register,
@@ -50,6 +72,14 @@ function LoginForm() {
       const res = await loginAction(values);
       if (!res.ok) {
         setServerError(res.error);
+        return;
+      }
+      if (res.mfaRequired) {
+        // Pass `next` through so the MFA page can resume the original target.
+        const params = new URLSearchParams();
+        if (next !== DEFAULT_NEXT) params.set("next", next);
+        router.replace(`/login/mfa${params.size ? `?${params}` : ""}`);
+        router.refresh();
         return;
       }
       router.replace(next);

@@ -59,10 +59,9 @@ export function OtpInput({
         refs.current[idx - 1]?.focus();
       }
     } else if (e.key === "ArrowLeft" && idx > 0) {
-      // RTL ⇒ "left" arrow moves to the next visual cell (which is index+1)
-      refs.current[idx + 1]?.focus();
-    } else if (e.key === "ArrowRight" && idx < length - 1) {
       refs.current[idx - 1]?.focus();
+    } else if (e.key === "ArrowRight" && idx < length - 1) {
+      refs.current[idx + 1]?.focus();
     }
   }
 

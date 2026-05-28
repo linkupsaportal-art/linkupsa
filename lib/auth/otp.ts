@@ -117,13 +117,21 @@ export async function verifyOtp(
     return { ok: false, error: "invalid_code" };
   }
 
-  // Burn the code so it can't be replayed.
-  const { error: consumeError } = await sb
+  // Burn the code so it can't be replayed. The `.is("consumed_at", null)`
+  // filter makes this atomic at the DB layer — if a concurrent verify already
+  // consumed the row, this UPDATE affects 0 rows and we reject.
+  const { data: consumed, error: consumeError } = await sb
     .from("email_otps")
     .update({ consumed_at: new Date().toISOString() })
-    .eq("id", row.id);
+    .eq("id", row.id)
+    .is("consumed_at", null)
+    .select("id");
 
   if (consumeError) return { ok: false, error: "internal" };
+  if (!consumed || consumed.length === 0) {
+    // Row was consumed by another request between our SELECT and UPDATE.
+    return { ok: false, error: "internal" };
+  }
 
   return { ok: true, userId: row.user_id };
 }

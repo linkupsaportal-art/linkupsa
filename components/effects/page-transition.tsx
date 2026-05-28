@@ -1,65 +1,48 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { gsap } from "@/lib/gsap";
 
 /**
- * Subtle route-aware fade transition.
+ * Snappy route transition — fade-IN only, scoped to public routes.
  *
- *   - When `pathname` changes, the wrapper fades the OUTGOING DOM out (8px lift),
- *     then fades the INCOMING DOM in. No overlay, no flashy stuff.
- *   - 240ms each phase. Total ~360ms with overlap.
- *   - Honors prefers-reduced-motion (skips animation entirely).
+ * Admin routes get NO transition because:
+ *  - Next.js nested layouts already keep the sidebar/topbar mounted between
+ *    sub-routes, so animating the whole tree would re-fade the shell every
+ *    time and feel like a full refresh.
+ *  - The dashboard navigates between sibling routes constantly; we want
+ *    Shopify-style instant tab snaps, not a fade.
  *
- * Wrap once at the root layout level. Don't wrap individual pages.
+ * Public/landing routes still get a tiny 180ms cubic fade-in for polish.
  */
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const [renderedKey, setRenderedKey] = useState(pathname);
-  const isFirstRender = useRef(true);
+  const firstRender = useRef(true);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      setRenderedKey(pathname);
+    if (firstRender.current) {
+      firstRender.current = false;
       return;
     }
-
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setRenderedKey(pathname);
-      return;
-    }
+    // Skip the transition entirely on admin routes — nested layout handles
+    // shell persistence and sub-routes should snap instantly.
+    if (pathname.startsWith("/admin")) return;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const node = ref.current;
-    if (!node) {
-      setRenderedKey(pathname);
-      return;
-    }
-
-    // Phase 1 — fade out the current tree
-    gsap.to(node, {
-      opacity: 0,
-      y: 8,
-      duration: 0.24,
-      ease: "power2.in",
-      onComplete: () => {
-        // Swap subtree (React renders the new pathname's children)
-        setRenderedKey(pathname);
-        // Phase 2 — fade the new tree in
-        gsap.fromTo(
-          node,
-          { opacity: 0, y: 8 },
-          { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" },
-        );
-      },
-    });
+    if (!node) return;
+    gsap.fromTo(
+      node,
+      { opacity: 0, y: 6 },
+      { opacity: 1, y: 0, duration: 0.18, ease: "power2.out", overwrite: true },
+    );
   }, [pathname]);
 
   return (
-    <div ref={ref} key={renderedKey} className="will-change-transform">
+    <div ref={ref} className="will-change-transform">
       {children}
     </div>
   );
