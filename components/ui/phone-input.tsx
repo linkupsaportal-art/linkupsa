@@ -61,7 +61,7 @@ export function PhoneInput({
       <RIPhoneInput
         defaultCountry={lockedTo ?? defaultCountry}
         value={value}
-        onChange={(v, meta) => onChange(v, meta)}
+        onChange={(v, meta) => onChange(v, { country: meta.country.iso2 })}
         disabled={disabled}
         forceDialCode
         disableDialCodeAndPrefix={false}

@@ -23,10 +23,8 @@ const schema = z.object({
   phone: z
     .string()
     .trim()
-    .refine((v) => v === "" || E164.test(v), "رقم الجوال غير صالح")
-    .optional()
-    .default(""),
-  phoneCountry: z.string().trim().toLowerCase().length(2).optional().or(z.literal("")),
+    .refine((v) => v === "" || E164.test(v), "رقم الجوال غير صالح"),
+  phoneCountry: z.string().trim().toLowerCase().length(2).or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -187,7 +185,7 @@ export function AccountInfoCard({
                   render={({ field: countryField }) => (
                     <PhoneInput
                       id="phone"
-                      value={field.value ?? ""}
+                      value={field.value}
                       onChange={(v, meta) => {
                         field.onChange(v);
                         countryField.onChange(meta.country);
