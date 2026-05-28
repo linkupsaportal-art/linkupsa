@@ -1,0 +1,1761 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "digital-delivery-platform",
+    "languages": [
+      "json",
+      "markdown",
+      "typescript",
+      "css",
+      "javascript"
+    ],
+    "frameworks": [
+      "React",
+      "Next.js",
+      "Zod"
+    ],
+    "description": "digital-delivery-platform — json, markdown, typescript, css, javascript project with 51 files",
+    "analyzedAt": "2026-05-27T22:30:14.226Z",
+    "gitCommitHash": "unknown"
+  },
+  "nodes": [
+    {
+      "id": "file:.vscode/settings.json",
+      "type": "file",
+      "name": "settings.json",
+      "filePath": ".vscode/settings.json",
+      "summary": "settings.json — json source file",
+      "tags": [
+        "json",
+        "json"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:conversation.md",
+      "type": "file",
+      "name": "conversation.md",
+      "filePath": "conversation.md",
+      "summary": "conversation.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/architecture.md",
+      "type": "file",
+      "name": "architecture.md",
+      "filePath": "docs/architecture.md",
+      "summary": "architecture.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/changelog.md",
+      "type": "file",
+      "name": "changelog.md",
+      "filePath": "docs/changelog.md",
+      "summary": "changelog.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/plans/auth-page.md",
+      "type": "file",
+      "name": "auth-page.md",
+      "filePath": "docs/plans/auth-page.md",
+      "summary": "auth-page.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/plans/full-screen-menu.md",
+      "type": "file",
+      "name": "full-screen-menu.md",
+      "filePath": "docs/plans/full-screen-menu.md",
+      "summary": "full-screen-menu.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/plans/hero-form-redesign.md",
+      "type": "file",
+      "name": "hero-form-redesign.md",
+      "filePath": "docs/plans/hero-form-redesign.md",
+      "summary": "hero-form-redesign.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/plans/landing-page-refactor.md",
+      "type": "file",
+      "name": "landing-page-refactor.md",
+      "filePath": "docs/plans/landing-page-refactor.md",
+      "summary": "landing-page-refactor.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:docs/project_structure.md",
+      "type": "file",
+      "name": "project_structure.md",
+      "filePath": "docs/project_structure.md",
+      "summary": "project_structure.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:project-details.md",
+      "type": "file",
+      "name": "project-details.md",
+      "filePath": "project-details.md",
+      "summary": "project-details.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:template.md",
+      "type": "file",
+      "name": "template.md",
+      "filePath": "template.md",
+      "summary": "template.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/app/auth/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "web/app/auth/page.tsx",
+      "summary": "page.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/app/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "filePath": "web/app/globals.css",
+      "summary": "globals.css — css source file",
+      "tags": [
+        "css",
+        "css"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/app/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "web/app/layout.tsx",
+      "summary": "layout.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/app/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "web/app/page.tsx",
+      "summary": "page.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/brand/logo.tsx",
+      "type": "file",
+      "name": "logo.tsx",
+      "filePath": "web/components/brand/logo.tsx",
+      "summary": "logo.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/brand/logo.tsx#Logo",
+      "type": "function",
+      "name": "Logo",
+      "filePath": "web/components/brand/logo.tsx",
+      "lineRange": [
+        8,
+        12
+      ],
+      "summary": "Logo({, glyphOnly, label, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/brand/logo.tsx#LogoGlyph",
+      "type": "function",
+      "name": "LogoGlyph",
+      "filePath": "web/components/brand/logo.tsx",
+      "lineRange": [
+        31,
+        31
+      ],
+      "summary": "LogoGlyph({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/effects/divider-draw.tsx",
+      "type": "file",
+      "name": "divider-draw.tsx",
+      "filePath": "web/components/effects/divider-draw.tsx",
+      "summary": "divider-draw.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/effects/divider-draw.tsx#DividerDraw",
+      "type": "function",
+      "name": "DividerDraw",
+      "filePath": "web/components/effects/divider-draw.tsx",
+      "lineRange": [
+        12,
+        12
+      ],
+      "summary": "DividerDraw({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/effects/magnetic.tsx",
+      "type": "file",
+      "name": "magnetic.tsx",
+      "filePath": "web/components/effects/magnetic.tsx",
+      "summary": "magnetic.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/effects/magnetic.tsx#Magnetic",
+      "type": "function",
+      "name": "Magnetic",
+      "filePath": "web/components/effects/magnetic.tsx",
+      "lineRange": [
+        22,
+        29
+      ],
+      "summary": "Magnetic({, className, strength, lift, as, rest)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/effects/page-reveal.tsx",
+      "type": "file",
+      "name": "page-reveal.tsx",
+      "filePath": "web/components/effects/page-reveal.tsx",
+      "summary": "page-reveal.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/effects/page-reveal.tsx#PageReveal",
+      "type": "function",
+      "name": "PageReveal",
+      "filePath": "web/components/effects/page-reveal.tsx",
+      "lineRange": [
+        13,
+        55
+      ],
+      "summary": "PageReveal()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/effects/reveal.tsx",
+      "type": "file",
+      "name": "reveal.tsx",
+      "filePath": "web/components/effects/reveal.tsx",
+      "summary": "reveal.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/effects/reveal.tsx#Reveal",
+      "type": "function",
+      "name": "Reveal",
+      "filePath": "web/components/effects/reveal.tsx",
+      "lineRange": [
+        24,
+        33
+      ],
+      "summary": "Reveal({, className, direction, delay, duration, start, once, as, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/effects/scroll-progress.tsx",
+      "type": "file",
+      "name": "scroll-progress.tsx",
+      "filePath": "web/components/effects/scroll-progress.tsx",
+      "summary": "scroll-progress.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/effects/scroll-progress.tsx#ScrollProgress",
+      "type": "function",
+      "name": "ScrollProgress",
+      "filePath": "web/components/effects/scroll-progress.tsx",
+      "lineRange": [
+        10,
+        35
+      ],
+      "summary": "ScrollProgress()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/components/effects/spotlight-cursor.tsx",
+      "type": "file",
+      "name": "spotlight-cursor.tsx",
+      "filePath": "web/components/effects/spotlight-cursor.tsx",
+      "summary": "spotlight-cursor.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/effects/spotlight-cursor.tsx#SpotlightCursor",
+      "type": "function",
+      "name": "SpotlightCursor",
+      "filePath": "web/components/effects/spotlight-cursor.tsx",
+      "lineRange": [
+        12,
+        45
+      ],
+      "summary": "SpotlightCursor()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/components/landing/background-grid.tsx",
+      "type": "file",
+      "name": "background-grid.tsx",
+      "filePath": "web/components/landing/background-grid.tsx",
+      "summary": "background-grid.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/background-grid.tsx#BackgroundGrid",
+      "type": "function",
+      "name": "BackgroundGrid",
+      "filePath": "web/components/landing/background-grid.tsx",
+      "lineRange": [
+        10,
+        69
+      ],
+      "summary": "BackgroundGrid()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/exploration.tsx",
+      "type": "file",
+      "name": "exploration.tsx",
+      "filePath": "web/components/landing/exploration.tsx",
+      "summary": "exploration.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/exploration.tsx#Exploration",
+      "type": "function",
+      "name": "Exploration",
+      "filePath": "web/components/landing/exploration.tsx",
+      "lineRange": [
+        66,
+        285
+      ],
+      "summary": "Exploration()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/footer.tsx",
+      "type": "file",
+      "name": "footer.tsx",
+      "filePath": "web/components/landing/footer.tsx",
+      "summary": "footer.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/footer.tsx#InstagramIcon",
+      "type": "function",
+      "name": "InstagramIcon",
+      "filePath": "web/components/landing/footer.tsx",
+      "lineRange": [
+        19,
+        27
+      ],
+      "summary": "InstagramIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/footer.tsx#XTwitterIcon",
+      "type": "function",
+      "name": "XTwitterIcon",
+      "filePath": "web/components/landing/footer.tsx",
+      "lineRange": [
+        28,
+        34
+      ],
+      "summary": "XTwitterIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/footer.tsx#DiscordIcon",
+      "type": "function",
+      "name": "DiscordIcon",
+      "filePath": "web/components/landing/footer.tsx",
+      "lineRange": [
+        35,
+        41
+      ],
+      "summary": "DiscordIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/footer.tsx#Footer",
+      "type": "function",
+      "name": "Footer",
+      "filePath": "web/components/landing/footer.tsx",
+      "lineRange": [
+        52,
+        249
+      ],
+      "summary": "Footer()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/hero-lookup-form.tsx",
+      "type": "file",
+      "name": "hero-lookup-form.tsx",
+      "filePath": "web/components/landing/hero-lookup-form.tsx",
+      "summary": "hero-lookup-form.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/hero-lookup-form.tsx#HeroLookupForm",
+      "type": "function",
+      "name": "HeroLookupForm",
+      "filePath": "web/components/landing/hero-lookup-form.tsx",
+      "lineRange": [
+        21,
+        225
+      ],
+      "summary": "HeroLookupForm()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/components/landing/hero-lookup-form.tsx#FormField",
+      "type": "function",
+      "name": "FormField",
+      "filePath": "web/components/landing/hero-lookup-form.tsx",
+      "lineRange": [
+        227,
+        232
+      ],
+      "summary": "FormField({, icon, isFieldFocused, inputProps, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/landing/hero.tsx",
+      "type": "file",
+      "name": "hero.tsx",
+      "filePath": "web/components/landing/hero.tsx",
+      "summary": "hero.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/hero.tsx#Hero",
+      "type": "function",
+      "name": "Hero",
+      "filePath": "web/components/landing/hero.tsx",
+      "lineRange": [
+        27,
+        267
+      ],
+      "summary": "Hero()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/journal.tsx",
+      "type": "file",
+      "name": "journal.tsx",
+      "filePath": "web/components/landing/journal.tsx",
+      "summary": "journal.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/components/landing/journal.tsx#Code3D",
+      "type": "function",
+      "name": "Code3D",
+      "filePath": "web/components/landing/journal.tsx",
+      "lineRange": [
+        15,
+        15
+      ],
+      "summary": "Code3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/journal.tsx#Lock3D",
+      "type": "function",
+      "name": "Lock3D",
+      "filePath": "web/components/landing/journal.tsx",
+      "lineRange": [
+        96,
+        96
+      ],
+      "summary": "Lock3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/journal.tsx#Tag3D",
+      "type": "function",
+      "name": "Tag3D",
+      "filePath": "web/components/landing/journal.tsx",
+      "lineRange": [
+        149,
+        149
+      ],
+      "summary": "Tag3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/journal.tsx#Journal",
+      "type": "function",
+      "name": "Journal",
+      "filePath": "web/components/landing/journal.tsx",
+      "lineRange": [
+        225,
+        397
+      ],
+      "summary": "Journal()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/marquee-ribbon.tsx",
+      "type": "file",
+      "name": "marquee-ribbon.tsx",
+      "filePath": "web/components/landing/marquee-ribbon.tsx",
+      "summary": "marquee-ribbon.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/marquee-ribbon.tsx#MarqueeRibbon",
+      "type": "function",
+      "name": "MarqueeRibbon",
+      "filePath": "web/components/landing/marquee-ribbon.tsx",
+      "lineRange": [
+        23,
+        77
+      ],
+      "summary": "MarqueeRibbon()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/components/landing/marquee-ribbon.tsx#Star",
+      "type": "function",
+      "name": "Star",
+      "filePath": "web/components/landing/marquee-ribbon.tsx",
+      "lineRange": [
+        80,
+        94
+      ],
+      "summary": "Star()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/landing/methodology.tsx",
+      "type": "file",
+      "name": "methodology.tsx",
+      "filePath": "web/components/landing/methodology.tsx",
+      "summary": "methodology.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/methodology.tsx#Methodology",
+      "type": "function",
+      "name": "Methodology",
+      "filePath": "web/components/landing/methodology.tsx",
+      "lineRange": [
+        38,
+        215
+      ],
+      "summary": "Methodology()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/navbar.tsx",
+      "type": "file",
+      "name": "navbar.tsx",
+      "filePath": "web/components/landing/navbar.tsx",
+      "summary": "navbar.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/components/landing/navbar.tsx#Navbar",
+      "type": "function",
+      "name": "Navbar",
+      "filePath": "web/components/landing/navbar.tsx",
+      "lineRange": [
+        28,
+        315
+      ],
+      "summary": "Navbar()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/process.tsx",
+      "type": "file",
+      "name": "process.tsx",
+      "filePath": "web/components/landing/process.tsx",
+      "summary": "process.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/process.tsx#Process",
+      "type": "function",
+      "name": "Process",
+      "filePath": "web/components/landing/process.tsx",
+      "lineRange": [
+        43,
+        232
+      ],
+      "summary": "Process()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/recognition.tsx",
+      "type": "file",
+      "name": "recognition.tsx",
+      "filePath": "web/components/landing/recognition.tsx",
+      "summary": "recognition.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/components/landing/recognition.tsx#Trophy3D",
+      "type": "function",
+      "name": "Trophy3D",
+      "filePath": "web/components/landing/recognition.tsx",
+      "lineRange": [
+        14,
+        14
+      ],
+      "summary": "Trophy3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/recognition.tsx#Badge3D",
+      "type": "function",
+      "name": "Badge3D",
+      "filePath": "web/components/landing/recognition.tsx",
+      "lineRange": [
+        67,
+        67
+      ],
+      "summary": "Badge3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/recognition.tsx#Security3D",
+      "type": "function",
+      "name": "Security3D",
+      "filePath": "web/components/landing/recognition.tsx",
+      "lineRange": [
+        131,
+        131
+      ],
+      "summary": "Security3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/recognition.tsx#Serverless3D",
+      "type": "function",
+      "name": "Serverless3D",
+      "filePath": "web/components/landing/recognition.tsx",
+      "lineRange": [
+        192,
+        192
+      ],
+      "summary": "Serverless3D({, props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/recognition.tsx#Recognition",
+      "type": "function",
+      "name": "Recognition",
+      "filePath": "web/components/landing/recognition.tsx",
+      "lineRange": [
+        270,
+        379
+      ],
+      "summary": "Recognition()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/social-rail.tsx",
+      "type": "file",
+      "name": "social-rail.tsx",
+      "filePath": "web/components/landing/social-rail.tsx",
+      "summary": "social-rail.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/social-rail.tsx#InstagramIcon",
+      "type": "function",
+      "name": "InstagramIcon",
+      "filePath": "web/components/landing/social-rail.tsx",
+      "lineRange": [
+        17,
+        25
+      ],
+      "summary": "InstagramIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/social-rail.tsx#XTwitterIcon",
+      "type": "function",
+      "name": "XTwitterIcon",
+      "filePath": "web/components/landing/social-rail.tsx",
+      "lineRange": [
+        26,
+        32
+      ],
+      "summary": "XTwitterIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/social-rail.tsx#DiscordIcon",
+      "type": "function",
+      "name": "DiscordIcon",
+      "filePath": "web/components/landing/social-rail.tsx",
+      "lineRange": [
+        33,
+        39
+      ],
+      "summary": "DiscordIcon(props)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/landing/social-rail.tsx#SocialRail",
+      "type": "function",
+      "name": "SocialRail",
+      "filePath": "web/components/landing/social-rail.tsx",
+      "lineRange": [
+        50,
+        150
+      ],
+      "summary": "SocialRail()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/landing/top-nav.tsx",
+      "type": "file",
+      "name": "top-nav.tsx",
+      "filePath": "web/components/landing/top-nav.tsx",
+      "summary": "top-nav.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/components/landing/top-nav.tsx#TopNav",
+      "type": "function",
+      "name": "TopNav",
+      "filePath": "web/components/landing/top-nav.tsx",
+      "lineRange": [
+        22,
+        126
+      ],
+      "summary": "TopNav()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/components/providers/smooth-scroll-provider.tsx",
+      "type": "file",
+      "name": "smooth-scroll-provider.tsx",
+      "filePath": "web/components/providers/smooth-scroll-provider.tsx",
+      "summary": "smooth-scroll-provider.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/components/providers/smooth-scroll-provider.tsx#SmoothScrollProvider",
+      "type": "function",
+      "name": "SmoothScrollProvider",
+      "filePath": "web/components/providers/smooth-scroll-provider.tsx",
+      "lineRange": [
+        13,
+        13
+      ],
+      "summary": "SmoothScrollProvider({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/components/ui/button.tsx",
+      "type": "file",
+      "name": "button.tsx",
+      "filePath": "web/components/ui/button.tsx",
+      "summary": "button.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/components/ui/image-or-placeholder.tsx",
+      "type": "file",
+      "name": "image-or-placeholder.tsx",
+      "filePath": "web/components/ui/image-or-placeholder.tsx",
+      "summary": "image-or-placeholder.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/components/ui/input.tsx",
+      "type": "file",
+      "name": "input.tsx",
+      "filePath": "web/components/ui/input.tsx",
+      "summary": "input.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "web/eslint.config.mjs",
+      "summary": "eslint.config.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/lib/gsap.ts",
+      "type": "file",
+      "name": "gsap.ts",
+      "filePath": "web/lib/gsap.ts",
+      "summary": "gsap.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/lib/images.ts",
+      "type": "file",
+      "name": "images.ts",
+      "filePath": "web/lib/images.ts",
+      "summary": "images.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/lib/split-text.ts",
+      "type": "file",
+      "name": "split-text.ts",
+      "filePath": "web/lib/split-text.ts",
+      "summary": "split-text.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:web/lib/split-text.ts#splitChars",
+      "type": "function",
+      "name": "splitChars",
+      "filePath": "web/lib/split-text.ts",
+      "lineRange": [
+        8,
+        64
+      ],
+      "summary": "splitChars(el): HTMLElement[]",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:web/lib/split-text.ts#splitWords",
+      "type": "function",
+      "name": "splitWords",
+      "filePath": "web/lib/split-text.ts",
+      "lineRange": [
+        69,
+        94
+      ],
+      "summary": "splitWords(el): HTMLElement[]",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:web/lib/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "filePath": "web/lib/utils.ts",
+      "summary": "utils.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:web/lib/utils.ts#cn",
+      "type": "function",
+      "name": "cn",
+      "filePath": "web/lib/utils.ts",
+      "lineRange": [
+        5,
+        7
+      ],
+      "summary": "cn(inputs): string",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/next-env.d.ts",
+      "type": "file",
+      "name": "next-env.d.ts",
+      "filePath": "web/next-env.d.ts",
+      "summary": "next-env.d.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/next.config.ts",
+      "type": "file",
+      "name": "next.config.ts",
+      "filePath": "web/next.config.ts",
+      "summary": "next.config.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/package-lock.json",
+      "type": "file",
+      "name": "package-lock.json",
+      "filePath": "web/package-lock.json",
+      "summary": "package-lock.json — json source file",
+      "tags": [
+        "json",
+        "json"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:web/package.json",
+      "type": "file",
+      "name": "package.json",
+      "filePath": "web/package.json",
+      "summary": "package.json — json source file",
+      "tags": [
+        "json",
+        "json"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/postcss.config.mjs",
+      "type": "file",
+      "name": "postcss.config.mjs",
+      "filePath": "web/postcss.config.mjs",
+      "summary": "postcss.config.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/public/images/README.md",
+      "type": "file",
+      "name": "README.md",
+      "filePath": "web/public/images/README.md",
+      "summary": "README.md — markdown source file",
+      "tags": [
+        "markdown",
+        "md"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:web/tsconfig.json",
+      "type": "file",
+      "name": "tsconfig.json",
+      "filePath": "web/tsconfig.json",
+      "summary": "tsconfig.json — json source file",
+      "tags": [
+        "json",
+        "json"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:web/components/brand/logo.tsx",
+      "target": "fn:web/components/brand/logo.tsx#Logo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/brand/logo.tsx",
+      "target": "fn:web/components/brand/logo.tsx#LogoGlyph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/divider-draw.tsx",
+      "target": "fn:web/components/effects/divider-draw.tsx#DividerDraw",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/magnetic.tsx",
+      "target": "fn:web/components/effects/magnetic.tsx#Magnetic",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/page-reveal.tsx",
+      "target": "fn:web/components/effects/page-reveal.tsx#PageReveal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/reveal.tsx",
+      "target": "fn:web/components/effects/reveal.tsx#Reveal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/scroll-progress.tsx",
+      "target": "fn:web/components/effects/scroll-progress.tsx#ScrollProgress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/effects/spotlight-cursor.tsx",
+      "target": "fn:web/components/effects/spotlight-cursor.tsx#SpotlightCursor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/background-grid.tsx",
+      "target": "fn:web/components/landing/background-grid.tsx#BackgroundGrid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/exploration.tsx",
+      "target": "fn:web/components/landing/exploration.tsx#Exploration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/footer.tsx",
+      "target": "fn:web/components/landing/footer.tsx#InstagramIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/footer.tsx",
+      "target": "fn:web/components/landing/footer.tsx#XTwitterIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/footer.tsx",
+      "target": "fn:web/components/landing/footer.tsx#DiscordIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/footer.tsx",
+      "target": "fn:web/components/landing/footer.tsx#Footer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/hero-lookup-form.tsx",
+      "target": "fn:web/components/landing/hero-lookup-form.tsx#HeroLookupForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/hero-lookup-form.tsx",
+      "target": "fn:web/components/landing/hero-lookup-form.tsx#FormField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/hero.tsx",
+      "target": "fn:web/components/landing/hero.tsx#Hero",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/journal.tsx",
+      "target": "fn:web/components/landing/journal.tsx#Code3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/journal.tsx",
+      "target": "fn:web/components/landing/journal.tsx#Lock3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/journal.tsx",
+      "target": "fn:web/components/landing/journal.tsx#Tag3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/journal.tsx",
+      "target": "fn:web/components/landing/journal.tsx#Journal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/marquee-ribbon.tsx",
+      "target": "fn:web/components/landing/marquee-ribbon.tsx#MarqueeRibbon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/marquee-ribbon.tsx",
+      "target": "fn:web/components/landing/marquee-ribbon.tsx#Star",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/methodology.tsx",
+      "target": "fn:web/components/landing/methodology.tsx#Methodology",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/navbar.tsx",
+      "target": "fn:web/components/landing/navbar.tsx#Navbar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/process.tsx",
+      "target": "fn:web/components/landing/process.tsx#Process",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/recognition.tsx",
+      "target": "fn:web/components/landing/recognition.tsx#Trophy3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/recognition.tsx",
+      "target": "fn:web/components/landing/recognition.tsx#Badge3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/recognition.tsx",
+      "target": "fn:web/components/landing/recognition.tsx#Security3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/recognition.tsx",
+      "target": "fn:web/components/landing/recognition.tsx#Serverless3D",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/recognition.tsx",
+      "target": "fn:web/components/landing/recognition.tsx#Recognition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/social-rail.tsx",
+      "target": "fn:web/components/landing/social-rail.tsx#InstagramIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/social-rail.tsx",
+      "target": "fn:web/components/landing/social-rail.tsx#XTwitterIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/social-rail.tsx",
+      "target": "fn:web/components/landing/social-rail.tsx#DiscordIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/social-rail.tsx",
+      "target": "fn:web/components/landing/social-rail.tsx#SocialRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/landing/top-nav.tsx",
+      "target": "fn:web/components/landing/top-nav.tsx#TopNav",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/components/providers/smooth-scroll-provider.tsx",
+      "target": "fn:web/components/providers/smooth-scroll-provider.tsx#SmoothScrollProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/lib/split-text.ts",
+      "target": "fn:web/lib/split-text.ts#splitChars",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/lib/split-text.ts",
+      "target": "fn:web/lib/split-text.ts#splitWords",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:web/lib/utils.ts",
+      "target": "fn:web/lib/utils.ts#cn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:config",
+      "name": "Config",
+      "description": "Configuration, environment setup, and constants",
+      "nodeIds": [
+        "file:web/eslint.config.mjs",
+        "file:web/next.config.ts",
+        "file:web/postcss.config.mjs"
+      ]
+    },
+    {
+      "id": "layer:types",
+      "name": "Types",
+      "description": "Type definitions, interfaces, and enums",
+      "nodeIds": [
+        "file:web/next-env.d.ts"
+      ]
+    },
+    {
+      "id": "layer:middleware",
+      "name": "Middleware",
+      "description": "Middleware, guards, interceptors, and auth",
+      "nodeIds": [
+        "file:web/app/auth/page.tsx"
+      ]
+    },
+    {
+      "id": "layer:ui",
+      "name": "UI",
+      "description": "React components, pages, layouts, and views",
+      "nodeIds": [
+        "file:web/components/brand/logo.tsx",
+        "file:web/components/effects/divider-draw.tsx",
+        "file:web/components/effects/magnetic.tsx",
+        "file:web/components/effects/page-reveal.tsx",
+        "file:web/components/effects/reveal.tsx",
+        "file:web/components/effects/scroll-progress.tsx",
+        "file:web/components/effects/spotlight-cursor.tsx",
+        "file:web/components/landing/background-grid.tsx",
+        "file:web/components/landing/exploration.tsx",
+        "file:web/components/landing/footer.tsx",
+        "file:web/components/landing/hero-lookup-form.tsx",
+        "file:web/components/landing/hero.tsx",
+        "file:web/components/landing/journal.tsx",
+        "file:web/components/landing/marquee-ribbon.tsx",
+        "file:web/components/landing/methodology.tsx",
+        "file:web/components/landing/navbar.tsx",
+        "file:web/components/landing/process.tsx",
+        "file:web/components/landing/recognition.tsx",
+        "file:web/components/landing/social-rail.tsx",
+        "file:web/components/landing/top-nav.tsx",
+        "file:web/components/providers/smooth-scroll-provider.tsx",
+        "file:web/components/ui/button.tsx",
+        "file:web/components/ui/image-or-placeholder.tsx",
+        "file:web/components/ui/input.tsx"
+      ]
+    },
+    {
+      "id": "layer:styles",
+      "name": "Styles",
+      "description": "CSS, SCSS, styling files, and design tokens",
+      "nodeIds": [
+        "file:web/app/globals.css"
+      ]
+    },
+    {
+      "id": "layer:utils",
+      "name": "Utils",
+      "description": "Utility functions, helpers, and shared code",
+      "nodeIds": [
+        "file:web/lib/gsap.ts",
+        "file:web/lib/images.ts",
+        "file:web/lib/split-text.ts",
+        "file:web/lib/utils.ts"
+      ]
+    },
+    {
+      "id": "layer:core",
+      "name": "Core",
+      "description": "Core layer",
+      "nodeIds": [
+        "file:.vscode/settings.json",
+        "file:conversation.md",
+        "file:docs/architecture.md",
+        "file:docs/changelog.md",
+        "file:docs/plans/auth-page.md",
+        "file:docs/plans/full-screen-menu.md",
+        "file:docs/plans/hero-form-redesign.md",
+        "file:docs/plans/landing-page-refactor.md",
+        "file:docs/project_structure.md",
+        "file:project-details.md",
+        "file:template.md",
+        "file:web/app/layout.tsx",
+        "file:web/app/page.tsx",
+        "file:web/package-lock.json",
+        "file:web/package.json",
+        "file:web/public/images/README.md",
+        "file:web/tsconfig.json"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Config Layer",
+      "description": "Explore the config layer: eslint.config.mjs, next.config.ts, postcss.config.mjs",
+      "nodeIds": [
+        "file:web/eslint.config.mjs",
+        "file:web/next.config.ts",
+        "file:web/postcss.config.mjs"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Types Layer",
+      "description": "Explore the types layer: next-env.d.ts",
+      "nodeIds": [
+        "file:web/next-env.d.ts"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "Middleware Layer",
+      "description": "Explore the middleware layer: page.tsx",
+      "nodeIds": [
+        "file:web/app/auth/page.tsx"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "UI Layer",
+      "description": "Explore the ui layer: logo.tsx, divider-draw.tsx, magnetic.tsx, page-reveal.tsx, reveal.tsx (+19 more)",
+      "nodeIds": [
+        "file:web/components/brand/logo.tsx",
+        "file:web/components/effects/divider-draw.tsx",
+        "file:web/components/effects/magnetic.tsx",
+        "file:web/components/effects/page-reveal.tsx",
+        "file:web/components/effects/reveal.tsx",
+        "file:web/components/effects/scroll-progress.tsx",
+        "file:web/components/effects/spotlight-cursor.tsx",
+        "file:web/components/landing/background-grid.tsx",
+        "file:web/components/landing/exploration.tsx",
+        "file:web/components/landing/footer.tsx",
+        "file:web/components/landing/hero-lookup-form.tsx",
+        "file:web/components/landing/hero.tsx",
+        "file:web/components/landing/journal.tsx",
+        "file:web/components/landing/marquee-ribbon.tsx",
+        "file:web/components/landing/methodology.tsx",
+        "file:web/components/landing/navbar.tsx",
+        "file:web/components/landing/process.tsx",
+        "file:web/components/landing/recognition.tsx",
+        "file:web/components/landing/social-rail.tsx",
+        "file:web/components/landing/top-nav.tsx",
+        "file:web/components/providers/smooth-scroll-provider.tsx",
+        "file:web/components/ui/button.tsx",
+        "file:web/components/ui/image-or-placeholder.tsx",
+        "file:web/components/ui/input.tsx"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "Styles Layer",
+      "description": "Explore the styles layer: globals.css",
+      "nodeIds": [
+        "file:web/app/globals.css"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Utils Layer",
+      "description": "Explore the utils layer: gsap.ts, images.ts, split-text.ts, utils.ts",
+      "nodeIds": [
+        "file:web/lib/gsap.ts",
+        "file:web/lib/images.ts",
+        "file:web/lib/split-text.ts",
+        "file:web/lib/utils.ts"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Core Layer",
+      "description": "Explore the core layer: settings.json, conversation.md, architecture.md, changelog.md, auth-page.md (+12 more)",
+      "nodeIds": [
+        "file:.vscode/settings.json",
+        "file:conversation.md",
+        "file:docs/architecture.md",
+        "file:docs/changelog.md",
+        "file:docs/plans/auth-page.md",
+        "file:docs/plans/full-screen-menu.md",
+        "file:docs/plans/hero-form-redesign.md",
+        "file:docs/plans/landing-page-refactor.md",
+        "file:docs/project_structure.md",
+        "file:project-details.md",
+        "file:template.md",
+        "file:web/app/layout.tsx",
+        "file:web/app/page.tsx",
+        "file:web/package-lock.json",
+        "file:web/package.json",
+        "file:web/public/images/README.md",
+        "file:web/tsconfig.json"
+      ]
+    }
+  ]
+}

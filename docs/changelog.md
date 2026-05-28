@@ -1,0 +1,216 @@
+# 📜 Changelog — Digital Product Delivery Platform
+
+> Reverse-chronological history of meaningful project changes.
+> Hard cap: 500 lines. Trim to 400–450 when exceeded.
+
+---
+
+# 2026-05-27 23:35
+
+- 🔑 **Modular Cyberpunk Auth Portal Refactoring & Navigation Access — Razex Xelite completed implementation**
+  - **Auth Routing Integrations**: Programmed direct entry paths to the administrator dashboard portal `/auth` inside:
+    - **Header Sticky Navbar**: Appended a sleek, neon-themed cyan CTA button next to the hamburger menu on screen widths `sm` and up using Next.js `<Link>` components to maintain smooth client-side routing.
+    - **Full-Screen Menu Overlay**: Embedded a premium portal card with the decoupled brand metadata and an interactive, pulse-animated "بوابة الإدارة" Link.
+    - **Footer Site Navigation**: Updated the platform column and bottom social rows to completely omit legacy "سلة" references and point to the secure Portaliosa admin hub.
+  - **Ultra Clean Modular Splitting (Zero Lints & Warnings)**: Refactored the monolithic `web/app/auth/page.tsx` file (from 509 lines down to 179 lines) into cohesive modules:
+    - Created [schemas.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/schemas.ts) containing Zod typing models.
+    - Created [login-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/login-form.tsx) for Sign In operations.
+    - Created [register-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/register-form.tsx) for Sign Up operations.
+    - Created [two-factor-setup.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/two-factor-setup.tsx) for the Google 2FA Authenticator setups.
+  - **Outstanding Build Health**: Executed the `react_doctor_diagnose` sweep, successfully passing with **0 compiling errors** and raising our diagnostics quality index score to **92/100 (Great)**!
+
+# 2026-05-27 22:50
+
+- 🛡️ **Premium Portaliosa Brand Shield & Hero Polish — Razex Xelite completed visual overhaul**
+  - **Salla-Free Architectural Pivot**: Decoupled the landing page layout from old Salla dependencies. Updated the main subhead text to reflect the brand's new independent, self-hosted automated delivery model.
+  - **Interactive Brand Shield Card**: Removed the lookup form card from the hero section and replaced it with a highly animated, floating **Portaliosa Brand Shield** layout featuring:
+    - Translucent glassmorphism panel (`bg-surface/40 backdrop-blur-xl`) with a cybernetic dot-matrix tech grid.
+    - Double-layer neon ambient aurora gradient behind the shield, breathing with infinite pulse transitions.
+    - High-fidelity, optimized Next.js `<Image>` utilizing the newly generated `linkup-logo.webp` WebP asset with automatic layout bounding (`fill`), responsiveness (`sizes`), and instant prefetching (`priority`).
+    - Glowing cyberpunk retro corner brackets and personalized `PORTALIOSA SYSTEM` brand status tags.
+  - **Zero Compiler Warnings**: Cleaned up all unused React component imports (`HeroLookupForm`) and fully validated a diagnostics index score of **93/100** with **0 compile errors** on React Doctor!
+
+# 2026-05-27 22:45
+
+- ⚡ **Insanely Premium Cyberpunk Hero Form Redesign — Razex Xelite completed UI polish**
+  - **Dynamic Neon Card Container**: Upgraded the card wrapper to utilize a glowing dual-layer border structure that expands its shadow box and brightens its border using active blurple colors upon input focus.
+  - **Retro-Cyber Corner Brackets**: Constructed 4 sharp geometric SVGs at the card corners that scale outward (`scale-105`) and shift colors dynamically to latch around the active container.
+  - **Glow-Pin Input Indicators**: Appended digital indicator status dots next to each form field label that pulse actively (`animate-pulse`) when their corresponding input field is focused.
+  - **Laser Sweep Shimmer & Glow CTA**: Added an infinite diagonal skewed laser glare sweep (`animate-laser`) on the submit button, supported by moving gradient transitions and massive blurple drop shadows.
+  - **Advanced Colorful Physics Blast**: Re-engineered the success submit burst function using GSAP to project 24 colorful, glowing physics particles of varying sizes (blurple, white, cyan) with custom radial offsets and box-shadow backlighting.
+  - **Clean Build Sweep**: Resolved all long-linter class warnings and verified a Great score of **94/100** with **0 compile errors** on React Doctor!
+
+# 2026-05-27 22:40
+
+- 🏷️ **Official Logo Integration & Favicon Generation — Razex Xelite completed brand assets**
+  - **High-Performance WebP Converter**: Processed the original `linkup-logo.png` (1.5MB) using `sharp-cli` to produce an optimized, highly scalable `linkup-logo.webp` (WebP format, 80 quality) saved inside `web/public/`.
+  - **Next.js App Router Favicon**: Created a resized `32x32` pixel `icon.png` in `web/app/` using sharp-cli resize filters, and removed legacy `favicon.ico` to let Next.js natively render the official brand icon.
+  - **Centralized Logo Propagation**: Updated `web/components/brand/logo.tsx` to utilize the new WebP asset via `next/image` with `fill` layouts and LCP `priority` prefetching. This automatically updated the header navbar, overlay details card, and bottom footer elements seamlessly.
+  - **Build Integrity Sweep**: Performed full diagnostics checking showing 0 TypeScript/ESLint errors and compiled Next.js static output in record time.
+
+# 2026-05-27 22:30
+
+- 🧭 **Premium Full-Screen Navigation & Morphing Trigger — Razex Xelite completed navigation polish**
+  - **3-Bar Morphing SVG Trigger**: Replaced standard icon with a premium custom 3-bar SVG button that morphs into a clean "X" using synchronized transitions.
+  - **GSAP Screen-Peel Transition**: Implemented a highly optimized GSAP clip-path polygon wipe sequence. Built the timeline once on mount and controlled it via play/reverse triggers to avoid any stuck states.
+  - **Dynamic Scrollbar Hiding & Layout Shift Fix**: Programmatically calculated scrollbar width on the document and appended a body lock class with custom HSL properties, ensuring zero visual layout shifts on open/close.
+  - **No-Scrollbar & Glow Utilities**: Applied a `no-scrollbar` styling wrapper to ensure a clean, distraction-free overlay and added an interactive cursor spotlight following the mouse.
+  - **TypeScript Verification**: Resolved the TS2339 index parameter compiler error in `NAV_LINKS` and secured 100% build compatibility with a React Doctor score of **93/100**.
+
+# 2026-05-27 23:25
+
+- 💎 **Premium Landing Page Refactoring — Razex Xelite completed visual polish, custom animations, and layout fixes**
+- 🎨 **CSS Animation Keyframes (`globals.css`)**: Appended utility classes and infinite CSS keyframe definitions for both `spin-clockwise` (rotating circle badge text) and `marquee-ltr` (endless marquee ribbon).
+- 🧭 **Editorial Header Navigation (`navbar.tsx`)**: Fully re-designed the navbar into a premium editorial top bar:
+  - Sticky glass header with smooth-scrolling border and backdrop transition.
+  - Logo placement (right) and elegant nav links with hairline hover reveals.
+  - CTAs with sliding chevron animations.
+  - Full-screen glassmorphic mobile menu overlay with GSAP staggered link entrances.
+- 🎬 **Responsive 12-Column Hero Section (`hero.tsx`)**: Solved all image squeezing and text overlapping layout issues across all viewports.
+  - Reconfigured to a beautiful 12-column grid (`lg:grid-cols-12`) on desktop (5 cols details, 4 cols carousel, 3 cols counter & badge).
+  - Designed a high-end luxury crossfade image carousel with absolute layout opacity transition (eliminating translate bugs in RTL/LTR).
+  - Integrated a floating **rotating circular SVG text badge** ("• وَصَل • تسليم رقمي فوري • آمن و موثوق •").
+  - Encapsulated GSAP `SplitText` functions inside robust checks to prevent strict-mode runtime type errors.
+- 🎗️ **Endless Scrolling Ticker (`marquee-ribbon.tsx`)**: Created a gorgeous, seamless marquee ribbon separating Hero and Exploration sections. Implemented stroked-text Tech highlights and solid monospace Arabic text in an LTR-isolated container (immune to RTL flexbox layout conflicts).
+- 📐 **RTL-Calibrated Column Dividers (`recognition.tsx` & `journal.tsx`)**: Corrected standard border dividers in multi-column RTL layouts using logical `divide-x-reverse` instead of standard `divide-x` to ensure proper right-to-left visual lines.
+- ⚙️ **Successful Next.js Build & Type Verification**:
+  - Ran full `react-doctor` diagnostics with zero errors and a project index score of **95/100 (Great)**.
+  - Proactively executed `next build` which compiled successfully with static prerender generation in 5.2s!
+
+# 2026-05-27 16:30
+
+- 🟢 Initial documentation pass — Razex Xelite created `docs/` folder as source of truth
+- 📝 Created `docs/project_structure.md` with full workspace tree + metadata footer
+- 📝 Created `docs/changelog.md` (this file) for historical tracking
+- 📝 Created `docs/architecture.md` capturing the agreed stack and ADRs
+- 🔧 Updated `project-details.md` — replaced legacy "VPS + Nginx + PM2" stack section with the **authoritative serverless stack** agreed in WhatsApp conversation:
+  - Next.js 15 + shadcn/ui + Tailwind on Vercel
+  - Supabase (Postgres + Edge Functions + pg_cron + Storage + Auth + pgsodium)
+  - Cloudflare (Workers + KV + Queues + Turnstile + WAF + DNS)
+  - Resend for transactional email
+  - Custom queue system on Supabase + CF (no third-party queue service)
+  - Meta Cloud API for WhatsApp (pending client confirmation)
+  - Local SA SMS provider (Unifonic / Mobily — pending confirmation)
+- 📌 Documented ownership guarantee: source code + DB + credentials all under client's accounts, portable to any Postgres + Node host
+- ⚠️ Open questions logged for client follow-up: WhatsApp BSP choice, SMS provider, domain decision, Salla Partner account status, expected admin user count, backup strategy beyond Supabase native
+- 🎯 Next: collect client credentials (Gmail, then Vercel/Supabase/Cloudflare/GitHub/Resend accounts) before scaffolding code
+
+
+# 2026-05-27 18:45
+
+- 🚀 **Landing page MVP shipped — first scaffold of the entire customer-facing UI.**
+- 🛠 Scaffolded `web/` directory with Next.js 16 + React 19 + Tailwind 4 + Turbopack via `create-next-app`
+- 📦 Installed runtime deps: `gsap`, `@gsap/react`, `lenis`, `lucide-react`, `clsx`, `tailwind-merge`, `class-variance-authority`, `tailwindcss-animate`, `@radix-ui/react-{slot,accordion,dialog,label}`, `react-hook-form`, `zod`, `@hookform/resolvers`, `next-themes` (405 packages total)
+- 🎨 **Brand identity created:** name **وَصَل / Wasel** ("arrived/delivered"), custom SVG logo (W-as-envelope/arrow with cyan→sapphire gradient), tagline "استلم منتجك الرقمي خلال ثوانٍ"
+- 🎨 **Design tokens** defined as HSL CSS variables in `globals.css` and exposed to Tailwind via `@theme inline`: surface ladder (bg → surface-3), foreground ladder (fg → fg-subtle), brand triad (brand / brand-lo / brand-hi), semantic states, and helpers `.aurora` / `.bg-grid` / `.bg-grain` / `.glass` / `.text-gradient` / `.slat`
+- 🌐 **Layout configured RTL+ar+dark** by default, with `next/font/google` loading IBM Plex Sans Arabic + Inter + JetBrains Mono via CSS variables; viewport theme color set to zinc-950
+- ⚙️ **Centralized GSAP singleton** at `lib/gsap.ts` registering `ScrollTrigger` + `useGSAP` once, avoiding double-registration warnings
+- ⚙️ **Lenis smooth-scroll provider** wired to GSAP ticker so all ScrollTrigger pins/scrubs stay perfectly in sync; respects `prefers-reduced-motion`
+- 🧱 **shadcn-pattern primitives** built locally (no shadcn CLI to keep tokens fully custom): `button.tsx` (CVA variants × 5, sizes × 5, asChild), `input.tsx` (with start/end adornments + invalid state), `accordion.tsx` (Radix-themed)
+- 🧭 **Navbar** — sticky glass capsule, GSAP scrub compresses height/blur on scroll, 3-bar → X morph via GSAP timeline, mobile sheet via Radix Dialog sliding in from the right (RTL-aware), desktop CTA "استلم طلبك"
+- 🎬 **Hero section** — kicker chip → word-by-word headline reveal → subhead → lookup form (order number + last 4 phone digits) directly inline (no scroll-to-find friction) → trust strip; aurora gradient + grid mask + film grain + 2 floating brand blobs animated infinite
+- 🎬 **HowItWorks** — 3 steps scroll-pinned horizontally on ≥900px screens via GSAP+ScrollTrigger, graceful vertical-stack fallback on mobile / reduced-motion, giant outline numbers with parallax driven by `containerAnimation` of the master horizontal tween
+- 🎬 **Products** — bento grid of 6 product types (2FA / Steam Guard / Email Code / Normal / Recharge Card / Digital File), each card has a cursor-following spotlight (CSS vars updated on mousemove), accent gradient blob, hover lift, reveal stagger
+- 🎬 **Security** — 4 pillars (encryption / no-secret-leak / audit logs / defense-in-depth), sticky-header layout on desktop, reveal stagger on enter
+- 🎬 **FAQ** — 6 questions via Radix Accordion, chevron rotation, item-by-item reveal stagger
+- 🚪 **GarageFooter** — the showpiece. 14 metallic slats stacked top-to-bottom, ScrollTrigger pins the section, slats peel up with a stagger, an amber lamp glow ignites, drifting tools (Wrench/Cog/Zap) animate in from the sides, and the workshop content (logo + 4 link columns + neon "وصلنا. تشرفنا." sign) rises up from below. Mobile / reduced-motion fallback keeps the same effect via simple intersection trigger
+- 🚧 **Build verified** — `next build` passes clean: `Compiled successfully in 3.0s`, TypeScript clean, route `/` prerendered as static. Two issues found and fixed during verification:
+  - `lucide-react` no longer exports `Github` in current version → replaced with inline SVG `GitHubMark` in the footer
+  - `ScrollTrigger.getAll().slice(-1)[0]` returned `ScrollTrigger` instead of `gsap.core.Tween` for `containerAnimation` → refactored to keep the master tween in scope and pass it directly
+- 🧹 **Removed scaffold noise:** deleted `web/AGENTS.md`, `web/CLAUDE.md`, `web/README.md` and the default `next.svg / vercel.svg / globe.svg / file.svg / window.svg` from `public/`
+- 📝 Updated `docs/project_structure.md` with the full new tree + animation stack + brand identity sections
+- ⚠️ **Note:** nano-banana-pro image generation MCP returned "Insufficient credits" → pivoted entirely to CSS gradients + inline SVG art, which is faster, themable, infinitely scalable, and lighter on the bundle. No raster assets needed
+- 🎯 Next: dev-server smoke test on the user's machine; then move to scaffolding `/admin` and `/code-limit` zones, plus the Supabase project + initial schema migrations
+
+
+# 2026-05-27 19:40
+
+- 🔄 **Full landing-page redesign** — pivoted from "premium dark tech" to **editorial light/B&W minimalism inspired by `template.md` (LUMEN photography portfolio)**, adapted for Wasel's Arabic/RTL digital-delivery context.
+- 🗑 **Removed all 7 old landing components** (`navbar`, `hero`, `how-it-works`, `products`, `security`, `faq`, `garage-footer`) and the old `accordion` primitive.
+- 🎨 **New design tokens** in `globals.css` — light editorial palette: zinc-50 background, deep ink ladder for text, sky-600 accent (LUMEN blue), zero border-radius (sharp editorial corners), hairline border vars (`--hairline` / `--hairline-strong`).
+- 🧱 **Editorial Button** — square corners, hairline border, ink-on-paper hover (`bg-fg text-bg`). Variants: primary / outline / ghost / accent / link. All sizes uppercase tracking-wider for editorial cap-style.
+- 🧱 **Editorial Input** — hairline border + sharp corners, accent-blue focus state.
+- 🪪 **New logo** — black-square monogram with the Arabic letter "و" (waw) inside, matching LUMEN's `L` square + wordmark pattern.
+- 🌐 **`<BackgroundGrid>`** — fixed-position fullscreen layer with 4-column hairline guides + two animated SVG neon-blue traveling lines (horizontal at 25%, vertical at 75%, slow infinite crawl with Gaussian-blur glow).
+- 🧠 **Free SplitText replacement** in `lib/split-text.ts` — uses `Intl.Segmenter` (Arabic-grapheme-aware) to wrap each char in `<span class="char">` for GSAP staggers; falls back to `Array.from` on older runtimes.
+- 🖼 **Image registry** in `lib/images.ts` — single source of truth mapping every named asset to its `/public/images/*.webp` path. Components import via `IMG.heroSlide1` etc., never hard-code.
+- 🖼 **`<ImageOrPlaceholder>`** — renders `next/image` when the file resolves, otherwise shows a shimmer placeholder with the asset label, so the layout is never broken before the AI-generated webps land.
+- 🧱 **`/public/images/README.md`** — full spec sheet for the image-generation agent: file → section mapping, format (WebP @ q80), color (B&W neutral, page applies grayscale on top), aspect (3:4 or 4:3), long edge 1600px, no overlays.
+- 🖌 **7 new sections built (LUMEN structure adapted to Wasel):**
+  1. **`Navbar`** — hairline-bottom blur, brand right (RTL), single editorial dropdown trigger ("القائمة" / "إغلاق") with stagger-revealed menu items, scroll-trigger soft shadow drop.
+  2. **`Hero`** — 3-column grid: right (kicker + huge "وَصَل +" headline with char-split reveal + 2 mini cards + CTAs), center (image carousel with caption + arrows + auto-advance every 5.5s), left (giant counter `0 → 12,408` tweened on scroll-in via GSAP).
+  3. **`Exploration`** — left dual-image gallery with vertical-offset (RTL preserved), right huge type ("حسابات", "Steam", "أكواد", "ملفات") + subtitle + description + slide indicator + chevron nav. Crossfade animation between projects.
+  4. **`Process`** — tabbed case study ("الورشة" / "الاستوديو"). Left huge heading mask-reveal, body, 3 stats with **counter tweens on scroll**. Right full-bleed parallax image. Tabs swap content + retrigger animations.
+  5. **`Methodology`** — left visual + floating data card with stack info, right philosophy headline ("آلي، آمن، و موثوق") + 4-step interactive list with on-hover detail expansion (LUMEN's `Pre-Visualization / Capture / Post-Production` pattern adapted to webhook → payment-check → round-robin → notify).
+  6. **`Recognition`** — 4-card grid replacing LUMEN's "Awards" with Wasel's trust signals (12k orders / Salla Partner / pgsodium encryption / zero-VPS edge). Icons scale-in with `back.out`, headline mask-reveals.
+  7. **`Journal`** — left featured large article with parallax-scrub image and headline reveal ("كيف يصل الطلب في ٣ ثوانٍ"), right 3-item editorial list with right-edge accent bar that slides in on hover.
+  - **`OrderForm`** — pre-footer CTA section ("رقم الطلب، و آخر ٤ من جوالك") with the actual lookup form. Identifier `#hero-form` preserved so navbar deep-link still works.
+  - **`Footer`** — letter-spread "WASEL" monogram with `from: "edges"` stagger reveal, 4-column block (newsletter signup / products / platform / contact), bottom legal bar.
+- 🎬 **GSAP scroll-driven everywhere:** char/word splits, scroll-trigger reveals, parallax scrubs (image scale on scroll), counter tweens, scroll-pinned tabs, hover-h-grow detail expansions, edge-stagger on letter spread.
+- 🌍 **Layout updated:** removed forced `dark` class, kept RTL + Arabic + Plex Sans Arabic, switched theme-color to `#FAFAFA` (light), color-scheme to `light`. Replaced JetBrains Mono with Geist Mono for editorial mono-feel.
+- 🐛 **Build issues fixed during verification:**
+  - `lucide-react` doesn't export `Instagram`/`Twitter` brand icons → replaced with inline SVG `InstagramIcon` / `TwitterIcon` in footer.
+- ✅ **`next build` passes clean** — `Compiled successfully in 3.1s`, TypeScript 3.7s, prerendered as static.
+- 🎯 Next: AI agent generates the 16 referenced WebP files into `web/public/images/` per the registry + README; placeholders auto-disappear once files land.
+
+
+# 2026-05-27 21:10
+
+- 🖼 **AI Image Generation & Optimization Completed — Razex Xelite generated and optimized all 17 WebP images**
+- 🎨 **Editorial Visuals Created:** Designed custom high-fidelity prompts following the Leica medium-format B&W chiaroscuro baseline.
+- ⚡ **Optimized Web Assets:**
+  - Generated all 3 Hero Carousel slides (`hero-slide-1.webp`, `hero-slide-2.webp`, `hero-slide-3.webp`) at `1600x1200` (4:3)
+  - Generated all 8 Exploration slides (`prod-2fa-a.webp`, `prod-2fa-b.webp`, `prod-steam-a.webp`, `prod-steam-b.webp`, `prod-email-a.webp`, `prod-email-b.webp`, `prod-files-a.webp`, `prod-files-b.webp`) at `1600x1200` (4:3)
+  - Generated full-bleed Case Study/Process view (`process.webp`) at `1600x1200` (4:3)
+  - Generated data-flow architecture landscape (`methodology.webp`) at `1600x1200` (4:3)
+  - Generated cover article visual (`journal-hero.webp`) at `1600x1200` (4:3)
+  - Generated all 3 Blog item thumbnails (`journal-1.webp`, `journal-2.webp`, `journal-3.webp`) at `1600x1067` (3:2)
+- ⚙️ **Process Automation:** Developed and executed an automated Node.js processing script utilizing the high-performance `sharp` library to:
+  - Resize the long edge of all assets to exactly `1600px`.
+  - Convert generated PNGs to high-efficiency WebP format at exactly quality 80.
+  - Save all images directly inside `web/public/images/` with exact matching names.
+- 📝 **Updated System Documentation:** Synced `docs/project_structure.md` to reflect the newly populated public assets directory and its structure.
+
+
+# 2026-05-27 21:35
+
+- 🎨 **3D Icon Redesign — Razex Xelite implemented beautiful 3D Blender-style SVG icons**
+- 🧱 **High-Fidelity Visual Components:** Replaced the simple Lucide outline icons (`Trophy`, `BadgeCheck`, `Award`, `Sparkles`) inside the trust indicators section (`recognition.tsx`) with highly customized inline SVG illustrations:
+  - **Trophy3D:** Abstract geometric cup in a dark titanium gradient, supported by dynamic side handles and a polished glass core illuminated by an active cyan pulsing light.
+  - **Badge3D:** 12-pointed verification seal crafted from heavy brushed titanium and layered frosted glass, housing a brilliant glowing cyan checkmark.
+  - **Security3D:** Premium geometric padlock with a sleek, polished steel shackle, frosted glass body, dark inner core, and an glowing active-cyan indicator.
+  - **Serverless3D:** Three floating translucent glass prisms with fine glowing borders, cascading vertically with independent floating animations (`animate-bounce`).
+- ⚡ **Zero Overhead Performance:** Leveraging pure SVG gradients, shadows, masks, and CSS keyframe animations, ensuring stunning 3D depth and premium aesthetics without loading heavy image assets or adding bundle weight.
+- 📐 **Visual Scaling:** Scaled the rendering dimensions inside the cards from `size-16` (64px) to `size-28` (112px) to maximize the visual presence of the 3D details inside the `h-40` layout blocks.
+
+
+# 2026-05-27 21:45
+
+- 🎨 **Journal 3D Icon Redesign — Razex Xelite implemented beautiful 3D Blender-style SVG icons for list items**
+- 🧱 **High-Fidelity Visual Components:** Replaced the simple Lucide outline icons (`Code2`, `Lock`, `Tag`) inside the editorial articles list (`journal.tsx`) with highly customized inline SVG illustrations matching the Wasel design system:
+  - **Code3D:** Glowing 3D serverless code brackets `</>` crafted in a dark metal gradient with glowing cyan neon borders and a heavy slash divider.
+  - **Lock3D:** Premium 3D cylindrical database lock with a polished chrome shackle, a frosted glass core, and an active pulsing blue indicator.
+  - **Tag3D:** Futuristic 3D store/price tag in isometric perspective featuring a frosted glass body, brushed titanium border, sleek silver loop thread, and an active neon connection bolt.
+- 📐 **Visual Scaling:** Scaled the rendering dimensions inside the editorial rows from `size-6` (24px) to a prominent **`size-16` (64px)** to fill the list item containers and maximize the high-fidelity 3D visual presence.
+
+
+# 2026-05-27 21:50
+
+- 🐛 **Arabic Typography Connection Bug Fixed — Razex Xelite resolved the broken Arabic ligatures layout bug**
+- 🧠 **Smart Ligature Protection:** Updated `splitChars` inside the text splitting library (`split-text.ts`) to automatically detect Arabic characters (`/[\u0600-\u06FF]/`) using a robust regex scan.
+- 📐 **Cursive-Safe Animation Fallback:**
+  - When Arabic cursive text (like `"حسابات"` in `exploration.tsx` or `"العملية"` in `process.tsx`) is detected, `splitChars` automatically falls back to `splitWords` (word-by-word wrapping).
+  - This ensures that characters inside words stay together as continuous, properly ligatured cursive Arabic letters instead of breaking into isolated glyphs like `"ح س ا ب ا ت"` and `"ال ع م ل ي ة"`.
+  - Stagger animations still work perfectly at the word level, keeping a premium motion aesthetic while maintaining strict typographic correctness.
+- ⚡ **Cohesive Typography Check:** Verified all other page headings ("اليوميات", "موثوق") and verified that the Latin/English headline ("LinkUp") retains its character-level staggered entry because it contains no Arabic letters.
+
+
+# 2026-05-27 22:25
+
+- 🧭 **Navbar Redesigned — Razex Xelite updated navigation layout to match minimal snapped template style**
+- 📐 **Full-Width Edge Snap:** Switched position from a floating capsule (`sticky top-9` spacing) to a full-width header (`sticky top-0 z-50 w-full`) snapped directly to the top viewport edge to match `template.md` (LUMEN).
+- 🎨 **Editorial Styling:**
+  - Standardized background styling using HSL tokens to a refined, translucent `bg-bg/80` with a sharp `backdrop-blur-md` for maximum legibility.
+  - Set a clean bottom hairline border (`border-b border-[hsl(var(--hairline))]`).
+  - Standardized scroll-bound shadow activation using a self-referential class trigger `[&.nav-scrolled]:shadow-[0_1px_0_hsl(0_0%_0%/0.05),0_8px_24px_-16px_hsl(0_0%_0%/0.1)]`.
+- 🗑 **Layout Simplification:** Removed the dismissible top announcement strip (`TopNav`) from `app/page.tsx` to ensure absolute visual cleanliness and snap the main navigation directly to the top edge.

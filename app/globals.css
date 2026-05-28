@@ -1,0 +1,307 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  وَصَل / Wasel — Editorial Light Theme
+ *  Inspired by LUMEN: minimal, B&W imagery, sky-500 accent, large type.
+ *  RTL-first for Arabic.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Surfaces — Discord-inspired blue-grey ladder (dark but not black) */
+  --bg-from: 220 7% 23%;       /* discord secondary #313338 */
+  --bg-via: 220 7% 21%;
+  --bg-to: 225 8% 18%;         /* tertiary */
+  --bg: 220 7% 23%;            /* primary surface */
+  --surface: 220 7% 19%;       /* card "secondary-bg" #2B2D31 */
+  --surface-2: 222 7% 16%;     /* nested */
+  --surface-3: 225 8% 13%;     /* deepest panel #1E1F22 */
+
+  /* Foreground — Discord text ladder */
+  --fg: 210 9% 96%;            /* near-white #F2F3F5 */
+  --fg-muted: 215 9% 78%;      /* secondary text #B5BAC1 */
+  --fg-subtle: 217 8% 60%;     /* tertiary #949BA4 */
+  --fg-faint: 220 6% 45%;
+
+  /* Borders — subtle on dark */
+  --border: 220 6% 28% / 0.8;
+  --border-strong: 220 6% 35%;
+  --hairline: 220 6% 50% / 0.12;
+  --hairline-strong: 220 6% 60% / 0.22;
+
+  /* Brand — Discord blurple #5865F2 */
+  --accent: 235 86% 65%;       /* blurple */
+  --accent-hi: 235 86% 72%;    /* hover */
+  --accent-bg: 235 50% 25%;    /* tinted bg chip */
+  --accent-fg: 0 0% 100%;
+
+  /* Semantic — Discord-flavored */
+  --success: 139 47% 44%;      /* green #23A55A */
+  --warn: 38 95% 50%;
+  --danger: 359 82% 60%;       /* red #F23F43 */
+
+  --ring: 235 86% 65%;
+  --radius: 8px;               /* Discord uses gentle rounding */
+}
+
+@theme inline {
+  --color-bg: hsl(var(--bg));
+  --color-surface: hsl(var(--surface));
+  --color-surface-2: hsl(var(--surface-2));
+  --color-surface-3: hsl(var(--surface-3));
+  --color-border: hsl(var(--border));
+  --color-border-strong: hsl(var(--border-strong));
+
+  --color-fg: hsl(var(--fg));
+  --color-fg-muted: hsl(var(--fg-muted));
+  --color-fg-subtle: hsl(var(--fg-subtle));
+  --color-fg-faint: hsl(var(--fg-faint));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-hi: hsl(var(--accent-hi));
+  --color-accent-bg: hsl(var(--accent-bg));
+  --color-accent-fg: hsl(var(--accent-fg));
+
+  --color-success: hsl(var(--success));
+  --color-warn: hsl(var(--warn));
+  --color-danger: hsl(var(--danger));
+
+  --color-ring: hsl(var(--ring));
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Base
+ * ──────────────────────────────────────────────────────────────────────── */
+
+html, body {
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+  font-family: var(--font-body), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html { scroll-behavior: auto; color-scheme: dark; }
+
+::selection { background: hsl(var(--accent) / 0.95); color: white; }
+
+/* Scrollbar — Discord-style thin */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: hsl(var(--surface-3)); }
+::-webkit-scrollbar-thumb { background: hsl(220 7% 13%); border: 2px solid hsl(var(--surface-3)); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--accent)); }
+
+/* Reduced motion — honor */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Editorial Helpers
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* Hairline grid — subtle vertical column dividers behind the page */
+.bg-grid-lines {
+  background-image:
+    linear-gradient(to right, hsl(0 0% 100% / 0.025) 1px, transparent 1px);
+  background-size: 25% 100%;
+}
+
+/* Photo treatment — keep colors but boost depth slightly */
+.editorial-img {
+  filter: contrast(1.05) saturate(0.85) brightness(0.92);
+}
+
+/* Outline/stroked text used for huge background numbers */
+.text-stroke {
+  -webkit-text-stroke: 1px hsl(0 0% 100% / 0.18);
+  color: transparent;
+}
+
+/* Animated neon accent lines that crawl across the bg */
+.accent-line {
+  pointer-events: none;
+  position: absolute;
+  background: linear-gradient(to right, transparent, hsl(var(--accent) / 0.6), transparent);
+  filter: blur(0.5px);
+}
+.accent-line-v {
+  pointer-events: none;
+  position: absolute;
+  background: linear-gradient(to bottom, transparent, hsl(var(--accent) / 0.6), transparent);
+  filter: blur(0.5px);
+}
+@keyframes crawl-h {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(120vw); }
+}
+@keyframes crawl-v {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(120vh); }
+}
+
+/* GSAP-friendly char wrapper used by SplitText polyfill */
+.char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Image placeholder shimmer until the real webp loads */
+.img-placeholder {
+  background:
+    linear-gradient(110deg, hsl(220 7% 19%) 0%, hsl(220 7% 25%) 40%, hsl(220 7% 19%) 80%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+
+/* Navbar — scrolled state (toggled by ScrollTrigger in components/landing/navbar.tsx) */
+nav.nav-scrolled {
+  box-shadow: 0 1px 0 hsl(0 0% 0% / 0.4), 0 8px 24px -16px hsl(0 0% 0% / 0.5);
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Premium Circular Spinning & Endless Scrolling Marquee Animations
+ * ──────────────────────────────────────────────────────────────────────── */
+@keyframes spin-clockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-clockwise 20s linear infinite;
+}
+
+@keyframes marquee-ltr {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-ltr 25s linear infinite;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  No-Scrollbar & Scroll Lock Prevention Utilities
+ * ──────────────────────────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+body.menu-open {
+  overflow: hidden !important;
+  padding-right: var(--scrollbar-width, 0px) !important;
+}
+
+@keyframes laser-sweep {
+  0% { transform: translateX(-150%) skewX(-15deg); }
+  50%, 100% { transform: translateX(250%) skewX(-15deg); }
+}
+.animate-laser {
+  animation: laser-sweep 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ *  Portaliosa Premium Luxury Cyberpunk Auth Backdrop
+ * ──────────────────────────────────────────────────────────────────────── */
+.portaliosa-auth-bg {
+  position: relative;
+  background-color: #060608; /* Ultra-dark obsidian */
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(249, 115, 22, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(20, 20, 25, 0.5) 0%, #060608 100%);
+  overflow: hidden;
+}
+
+/* Cybernetic floating dust particles / stars */
+.cyber-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(249, 115, 22, 0.08) 1px, transparent 0);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 70%);
+  opacity: 0.45;
+}
+
+/* Floating interactive ambient auroras (Breathing motion) */
+@keyframes breathing-aurora-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(8%, -6%) scale(1.1); }
+}
+@keyframes breathing-aurora-2 {
+  0%, 100% { transform: translate(0, 0) scale(1.1); }
+  50% { transform: translate(-10%, 8%) scale(0.95); }
+}
+
+.aurora-copper {
+  position: absolute;
+  top: -15%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.03) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  animation: breathing-aurora-1 8s ease-in-out infinite;
+}
+
+.aurora-amethyst {
+  position: absolute;
+  bottom: -20%;
+  left: -15%;
+  width: 700px;
+  height: 700px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(168, 85, 247, 0.04) 50%, transparent 70%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  animation: breathing-aurora-2 10s ease-in-out infinite;
+}
+
+/* Glass panel premium overlay grid lines */
+.portaliosa-cyber-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Sophisticated noise/film-grain texture */
+.portaliosa-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+
+
