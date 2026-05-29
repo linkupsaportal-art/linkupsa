@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAccount, deleteAccount, updateAccountStatus, type Account } from "@/lib/db/accounts";
-import type { HandlerType } from "@/lib/db/products";
+import type { HandlerType } from "@/lib/db/products-types";
 
 export async function createAccountAction(formData: FormData) {
   const product_id = formData.get("product_id") as string;

@@ -1,5 +1,6 @@
+import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
-import type { HandlerType } from "./products";
+import type { HandlerType } from "./products-types";
 
 export type Account = {
   id: string;
@@ -18,7 +19,7 @@ export type Account = {
   created_at: string;
   updated_at: string;
   // Joined
-  product_name?: string;
+  product_name?: string | null;
 };
 
 export type AccountCreateInput = {
@@ -121,7 +122,7 @@ export async function getAccountSecret(
     .from("accounts")
     .select(field)
     .eq("id", id)
-    .single();
+    .single<Record<string, unknown>>();
 
   if (error || !data) return null;
   const raw = data[field] as Buffer | null;

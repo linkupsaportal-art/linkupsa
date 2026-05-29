@@ -25,8 +25,8 @@ export type Order = {
   created_at: string;
   updated_at: string;
   // Joined
-  product_name?: string;
-  account_label?: string;
+  product_name?: string | null;
+  account_label?: string | null;
 };
 
 export async function listOrders(opts?: {

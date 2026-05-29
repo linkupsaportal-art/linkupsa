@@ -273,11 +273,9 @@ import { sendOrderReadyEmail } from "@/lib/notifications/email";
 
 /** Resolves the public origin for pickup links. */
 function getOrigin(): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ??
-    "https://www.portaliosa.com"
-  );
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "https://www.portaliosa.com";
 }
 
 async function sendNotification(args: {

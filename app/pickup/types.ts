@@ -1,4 +1,4 @@
-import type { HandlerType } from "@/lib/db/products";
+import type { HandlerType } from "@/lib/db/products-types";
 
 export type PickupResult = {
   orderId: string;

@@ -1,53 +1,9 @@
+import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
+import type { HandlerType, Product, ProductOption } from "./products-types";
 
-export type HandlerType =
-  | "2fa_account"
-  | "steam_guard_account"
-  | "email_code_account"
-  | "normal_account"
-  | "recharge_card"
-  | "digital_file";
-
-export type Product = {
-  id: string;
-  name: string;
-  name_ar: string | null;
-  description: string | null;
-  image_url: string | null;
-  handler_type: HandlerType;
-  status: "active" | "inactive";
-  salla_product_id: number | null;
-  notification_channels: {
-    email: boolean;
-    whatsapp: boolean;
-    sms: boolean;
-    telegram: boolean;
-  };
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-  options?: ProductOption[];
-  account_count?: number;
-};
-
-export type ProductOption = {
-  id: string;
-  product_id: string;
-  name: string;
-  name_ar: string | null;
-  salla_option_value: string | null;
-  sort_order: number;
-  created_at: string;
-};
-
-export const HANDLER_LABELS: Record<HandlerType, string> = {
-  "2fa_account": "حساب 2FA",
-  steam_guard_account: "Steam Guard",
-  email_code_account: "كود إيميل",
-  normal_account: "حساب عادي",
-  recharge_card: "بطاقة شحن",
-  digital_file: "ملف رقمي",
-};
+export type { HandlerType, Product, ProductOption };
+export { HANDLER_LABELS } from "./products-types";
 
 export async function listProducts(): Promise<Product[]> {
   const sb = createServiceClient();
@@ -154,29 +110,4 @@ export async function deleteProductOption(id: string): Promise<void> {
   const sb = createServiceClient();
   const { error } = await sb.from("product_options").delete().eq("id", id);
   if (error) throw new Error(error.message);
-}
-
-/** Fetch Salla products from the merchant's store for the mapping dropdown. */
-export async function listSallaProducts(storeId: number): Promise<
-  Array<{ id: number; name: string; sku: string | null }>
-> {
-  const sb = createServiceClient();
-  const { data: store } = await sb
-    .from("salla_stores")
-    .select("access_token")
-    .eq("store_id", storeId)
-    .single();
-
-  if (!store?.access_token) return [];
-
-  const r = await fetch("https://api.salla.dev/admin/v2/products?per_page=50", {
-    headers: { Authorization: `Bearer ${store.access_token}` },
-  });
-  if (!r.ok) return [];
-  const json = await r.json();
-  return (json.data ?? []).map((p: { id: number; name: string; sku?: string }) => ({
-    id: p.id,
-    name: p.name,
-    sku: p.sku ?? null,
-  }));
 }

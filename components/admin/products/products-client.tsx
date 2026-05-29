@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package } from "lucide-react";
-import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products";
+import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products-types";
 import {
   createProductAction,
   updateProductAction,

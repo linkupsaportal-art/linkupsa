@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import { Plus, Trash2, Eye, EyeOff, Database, ShieldCheck, Flame, Pause, Play } from "lucide-react";
 import type { Account } from "@/lib/db/accounts";
-import type { Product } from "@/lib/db/products";
-import { HANDLER_LABELS } from "@/lib/db/products";
+import type { Product } from "@/lib/db/products-types";
+import { HANDLER_LABELS } from "@/lib/db/products-types";
 import {
   createAccountAction,
   deleteAccountAction,

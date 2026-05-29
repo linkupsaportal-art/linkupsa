@@ -7,8 +7,8 @@ import {
   deleteProduct,
   deleteProductOption,
   updateProduct,
-  type HandlerType,
 } from "@/lib/db/products";
+import type { HandlerType } from "@/lib/db/products-types";
 
 export async function createProductAction(formData: FormData) {
   const name = formData.get("name") as string;
