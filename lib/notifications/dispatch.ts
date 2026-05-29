@@ -85,30 +85,37 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     r.ok ? result.succeeded.push("email") : result.failed.push({ channel: "email", error: r.error ?? "unknown" });
   }
 
-  // ─── WhatsApp via Karzoun (Meta Cloud API) ─────────────────────────────
+  // ─── WhatsApp via Karzoun Chat ──────────────────────────────────────────
   if (channels.includes("whatsapp") && args.customerMobile) {
     result.attempted.push("whatsapp");
     const cfg = configByChannel.get("whatsapp");
-    const accessToken = cfg?.access_token as string | undefined;
-    const phoneNumberId = cfg?.phone_number_id as string | undefined;
-    const defaultTemplate = (cfg?.default_template as string | undefined) ?? "order_ready";
+    const appToken = cfg?.app_token as string | undefined;
+    const integrationId = cfg?.integration_id as string | undefined;
+    const host = cfg?.host as string | undefined;
+    const defaultTemplate = (cfg?.default_template as string | undefined) ?? "order_cancel";
+    const language = (cfg?.language as string | undefined) ?? "ar";
 
-    if (cfg?.provider !== "karzoun" || !accessToken || !phoneNumberId) {
-      result.failed.push({ channel: "whatsapp", error: "Karzoun (Cloud API) not configured for this store" });
+    if (cfg?.provider !== "karzoun" || !appToken || !integrationId) {
+      result.failed.push({ channel: "whatsapp", error: "Karzoun Chat not configured for this store" });
     } else {
       const r = await sendKarzounWhatsApp({
         to: args.customerMobile,
-        // Template variables, in the order Meta will substitute them.
-        // Default template "order_ready" expects:  param_1 = customer name,
-        //   param_2 = order #, param_3 = product name, url_button = pickup link path.
-        params: [args.customerName, args.orderNumber, args.productName],
-        urlButton: extractUrlButtonPath(args.pickupUrl),
+        // Positional body params for the merchant's template. The default
+        // 'order_ready' template should expect 5 params in this order:
+        //   1. customer name
+        //   2. order number
+        //   3. product name
+        //   4. store name
+        //   5. pickup link
+        params: [
+          args.customerName,
+          args.orderNumber,
+          args.productName,
+          "PortalIosa",
+          args.pickupUrl,
+        ],
         template: defaultTemplate,
-        config: {
-          accessToken,
-          phoneNumberId,
-          defaultTemplate,
-        },
+        config: { host, appToken, integrationId, defaultTemplate, language },
       });
       r.ok ? result.succeeded.push("whatsapp") : result.failed.push({ channel: "whatsapp", error: r.error });
     }
@@ -140,30 +147,9 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
 }
 
 /**
- * Meta URL buttons substitute a *suffix path*, not a full URL — the base URL
- * is fixed at template approval time. We pass just the path segment so any
- * approved template like `https://www.portaliosa.com/{{1}}` resolves to the
- * correct deep-link.
- */
-function extractUrlButtonPath(fullUrl: string): string {
-  try {
-    const u = new URL(fullUrl);
-    const path = u.pathname.replace(/^\/+/, "") + (u.search || "");
-    return path || "pickup";
-  } catch {
-    return "pickup";
-  }
-}
-
-/**
- * Localized WhatsApp body — short, scannable, pickup link as the CTA.
- * Mirrors the merchant's Salla Sync template (the one in his audio note:
- * "إشعار للعميل بالطلب بالتفاصيل على الواتساب").
- *
- * NOTE: This renderer is no longer wired into the Karzoun Cloud API path
- * (which uses pre-approved Meta templates). It's kept around for future
- * free-text providers (Twilio, 360dialog, etc.) so we have one canonical
- * Arabic rendering of the order-ready notification.
+ * Localized WhatsApp body — kept for reference if we wire a free-text
+ * provider later. Karzoun Chat's GraphQL API only accepts pre-approved
+ * templates with positional params, so this body isn't sent today.
  */
 function renderWhatsAppText(args: {
   customerName: string;
