@@ -51,7 +51,7 @@ export function AccountsClient({
   // Modern UI states
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [viewAccountDetails, setViewAccountDetails] = useState<Account | null>(null);
-  const [viewSecrets, setViewSecrets] = useState<{ password?: string; totpSecret?: string; steamSharedSecret?: string; cardCode?: string } | null>(null);
+  const [viewSecrets, setViewSecrets] = useState<{ password?: string | null; totpSecret?: string | null; steamSharedSecret?: string | null; cardCode?: string | null } | null>(null);
   const [loadingSecrets, setLoadingSecrets] = useState(false);
 
   function refresh() { window.location.reload(); }
@@ -89,7 +89,7 @@ export function AccountsClient({
     try {
       const res = await revealAccountSecretsAction(account.id);
       if ("error" in res) {
-        setError(res.error);
+        setError(res.error ?? "حدث خطأ أثناء تحميل البيانات");
       } else {
         setViewSecrets(res);
       }

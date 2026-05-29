@@ -5,7 +5,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Bell, Menu, Plus, Search, Settings as SettingsIcon } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { StoreSwitcher } from "@/components/admin/store-switcher";
 import { ProfileMenu } from "@/components/admin/profile-menu";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { Logo } from "@/components/brand/logo";
@@ -47,8 +46,6 @@ export function AdminTopbar({
         >
           <Menu className="size-4" />
         </button>
-
-        <StoreSwitcher />
 
         {/* Search */}
         <div className="hidden md:flex flex-1 max-w-lg mx-auto">

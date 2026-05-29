@@ -41,6 +41,9 @@ export type KarzounChatConfig = {
   integrationId: string;
   /** Pre-approved template name. */
   defaultTemplate: string;
+  /** Optional: Meta template_id. Karzoun resolves it from name; passing it
+   *  in is purely a hint that mirrors what the Karzoun UI does. */
+  templateId?: string;
   /** Template language code (default `ar`). */
   language?: string;
 };
@@ -62,6 +65,7 @@ export type KarzounSendResult =
 const SEND_MUTATION = `
 mutation Send(
   $integrationId: String!,
+  $templateId: String,
   $templateName: String!,
   $recipient: String!,
   $language: String!,
@@ -69,6 +73,7 @@ mutation Send(
 ) {
   whatsappSendTemplateMessage(
     integrationId: $integrationId,
+    templateId: $templateId,
     templateName: $templateName,
     recipient: $recipient,
     language: $language,
@@ -87,12 +92,24 @@ export async function sendKarzounWhatsApp(args: KarzounSendArgs): Promise<Karzou
     return { ok: false, error: "Karzoun config incomplete (appToken / integrationId / template)" };
   }
 
+  // Karzoun's `whatsappSendTemplateMessage` mutation expects `params` as a
+  // JSON object keyed by `BODY_{{N}}` where N is the placeholder position
+  // for templates with `parameter_format: POSITIONAL`. The keys MUST include
+  // the literal `{{` and `}}` characters. Discovered by inspecting the
+  // `mapping[].name` field returned by `whatsappGetTemplates` and by reverse
+  // engineering the SendTemplateDrawer chunk in the Karzoun frontend bundle.
+  const keyedParams = params.reduce<Record<string, string>>((acc, value, idx) => {
+    acc[`BODY_{{${idx + 1}}}`] = value;
+    return acc;
+  }, {});
+
   const variables = {
     integrationId: config.integrationId,
+    templateId: config.templateId ?? null,
     templateName: tpl,
     recipient: cleanTo,
     language: lang,
-    params,
+    params: keyedParams,
   };
 
   try {

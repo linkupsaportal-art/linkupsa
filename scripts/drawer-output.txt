@@ -1,0 +1,73 @@
+﻿const e=`
+  query whatsappGetTemplates($integrationId: String!, $template_id: String, $name: String, $status: String, $category: String, $page: Int, $perPage: Int, $searchValue: String) {
+    whatsappGetTemplates(
+      integrationId: $integrationId
+      template_id: $template_id
+      name: $name
+      status: $status
+      category: $category
+      page: $page
+      perPage: $perPage
+      searchValue: $searchValue
+    ) {
+      data {
+        _id
+        template_id
+        business_account_id
+        category
+        components
+        createdAt
+        integrationId
+        language
+        mapping {
+          name
+          type
+          source
+          _autoTracking
+          isDynamicUrl
+          __typename
+        }
+        name
+        parameter_format
+        status
+        updatedAt
+        __typename
+      }
+      pagination {
+        currentPage
+        perPage
+        totalCount
+        totalPages
+        hasNextPage
+        hasPreviousPage
+        __typename
+      }
+      __typename
+    }
+  }
+`,t=`
+  query whatsappGetMessageTemplateDetail($integrationId: String!, $templateId: String!) {
+    whatsappGetMessageTemplateDetail(integrationId: $integrationId, templateId: $templateId) {
+      _id
+      template_id
+      business_account_id
+      category
+      components
+      createdAt
+      integrationId
+      language
+      mapping {
+        name
+        type
+        source
+        _autoTracking
+        isDynamicUrl
+      }
+      name
+      parameter_format
+      status
+      updatedAt
+    }
+  }
+`;export{e as W,t as a};
+

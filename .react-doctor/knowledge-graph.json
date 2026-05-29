@@ -15,9 +15,9 @@
       "Supabase",
       "Zod"
     ],
-    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 169 files",
-    "analyzedAt": "2026-05-29T21:55:46.184Z",
-    "gitCommitHash": "f8bb70719ee533c30f50d4d44b4b9c7efcae038e"
+    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 168 files",
+    "analyzedAt": "2026-05-29T22:04:02.215Z",
+    "gitCommitHash": "164d7af9486ad63c9ba0a5acfca9c23e17de53c7"
   },
   "nodes": [
     {
@@ -1646,8 +1646,8 @@
       "name": "Field",
       "filePath": "components/admin/products/products-client.tsx",
       "lineRange": [
-        426,
-        426
+        494,
+        494
       ],
       "summary": "Field({, children)",
       "tags": [
@@ -1662,8 +1662,8 @@
       "name": "HandlerBadge",
       "filePath": "components/admin/products/products-client.tsx",
       "lineRange": [
-        435,
-        435
+        503,
+        503
       ],
       "summary": "HandlerBadge({)",
       "tags": [
@@ -1678,8 +1678,8 @@
       "name": "StatusBadge",
       "filePath": "components/admin/products/products-client.tsx",
       "lineRange": [
-        451,
-        451
+        519,
+        519
       ],
       "summary": "StatusBadge({)",
       "tags": [
@@ -2437,34 +2437,6 @@
       "complexity": "simple"
     },
     {
-      "id": "file:components/admin/store-switcher.tsx",
-      "type": "file",
-      "name": "store-switcher.tsx",
-      "filePath": "components/admin/store-switcher.tsx",
-      "summary": "store-switcher.tsx — typescript source file",
-      "tags": [
-        "typescript",
-        "tsx"
-      ],
-      "complexity": "moderate"
-    },
-    {
-      "id": "fn:components/admin/store-switcher.tsx#StoreSwitcher",
-      "type": "function",
-      "name": "StoreSwitcher",
-      "filePath": "components/admin/store-switcher.tsx",
-      "lineRange": [
-        45,
-        115
-      ],
-      "summary": "StoreSwitcher()",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "complex"
-    },
-    {
       "id": "file:components/admin/topbar.tsx",
       "type": "file",
       "name": "topbar.tsx",
@@ -2482,8 +2454,8 @@
       "name": "AdminTopbar",
       "filePath": "components/admin/topbar.tsx",
       "lineRange": [
-        23,
-        27
+        22,
+        26
       ],
       "summary": "AdminTopbar({, userName, avatarUrl, })",
       "tags": [
@@ -2498,8 +2470,8 @@
       "name": "SearchBar",
       "filePath": "components/admin/topbar.tsx",
       "lineRange": [
-        172,
-        190
+        169,
+        187
       ],
       "summary": "SearchBar()",
       "tags": [
@@ -4271,7 +4243,7 @@
       "filePath": "lib/notifications/dispatch.ts",
       "lineRange": [
         46,
-        147
+        166
       ],
       "summary": "notifyOrderReady(args): Promise<NotifyResult>",
       "tags": [
@@ -4286,8 +4258,8 @@
       "name": "renderWhatsAppText",
       "filePath": "lib/notifications/dispatch.ts",
       "lineRange": [
-        154,
-        159
+        173,
+        178
       ],
       "summary": "renderWhatsAppText(args): string",
       "tags": [
@@ -6066,13 +6038,6 @@
       "weight": 0.9
     },
     {
-      "source": "file:components/admin/store-switcher.tsx",
-      "target": "fn:components/admin/store-switcher.tsx#StoreSwitcher",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
       "source": "file:components/admin/topbar.tsx",
       "target": "fn:components/admin/topbar.tsx#AdminTopbar",
       "type": "contains",
@@ -7015,7 +6980,6 @@
         "file:components/admin/stat-card.tsx",
         "file:components/admin/stats-grid.tsx",
         "file:components/admin/status-distribution.tsx",
-        "file:components/admin/store-switcher.tsx",
         "file:components/admin/topbar.tsx",
         "file:components/brand/logo.tsx",
         "file:components/effects/divider-draw.tsx",
@@ -7172,7 +7136,7 @@
     {
       "order": 8,
       "title": "Core Layer",
-      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+135 more)",
+      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+134 more)",
       "nodeIds": [
         "file:.vscode/settings.json",
         "file:app/(auth)/actions.ts",
@@ -7236,7 +7200,6 @@
         "file:components/admin/stat-card.tsx",
         "file:components/admin/stats-grid.tsx",
         "file:components/admin/status-distribution.tsx",
-        "file:components/admin/store-switcher.tsx",
         "file:components/admin/topbar.tsx",
         "file:components/brand/logo.tsx",
         "file:components/effects/divider-draw.tsx",

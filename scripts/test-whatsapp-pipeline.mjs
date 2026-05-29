@@ -50,7 +50,13 @@ const variables = {
   templateName: row.config.default_template,
   recipient: TO,
   language: row.config.language ?? "ar",
-  params: ["محمد - اختبار end-to-end", "PIPELINE-" + Date.now(), "ChatGPT Plus", "99 ريال", "بطاقة بنكية"],
+  params: {
+    "BODY_{{1}}": "لينك اب",
+    "BODY_{{2}}": "محمد - اختبار end-to-end",
+    "BODY_{{3}}": "PIPELINE-" + Date.now(),
+    "BODY_{{4}}": "ChatGPT Plus",
+    "BODY_{{5}}": "https://www.portaliosa.com/pickup",
+  },
 };
 
 const r = await fetch(`https://${row.config.host}/graphql`, {
