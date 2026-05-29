@@ -119,6 +119,7 @@ export async function lookupOrderAction(
     productName: productData.name,
     handlerType: productData.handler_type,
     optionName: optionData?.name ?? null,
+    lastFour,
     email: accountData.email ?? undefined,
     password,
     instructions: accountData.instructions ?? undefined,
