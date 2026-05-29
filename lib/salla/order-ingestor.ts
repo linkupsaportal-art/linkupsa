@@ -139,7 +139,7 @@ export async function processInbox(): Promise<{
         : String(order.customer.mobile);
 
       // Map Salla product to our product
-      const firstItem = order.items[0];
+      const firstItem = order.items?.[0];
       const sallaProductId = firstItem?.product?.id ?? null;
       const sallaOptionValue = firstItem?.options?.[0]?.value ?? null;
 
@@ -240,13 +240,38 @@ async function fetchSallaOrder(
   accessToken: string,
 ): Promise<SallaOrder | null> {
   try {
+    // Fetch the base order
+    const headers = { Authorization: `Bearer ${accessToken}`, accept: "application/json" };
     const r = await fetch(`${SALLA_API}/orders/${orderId}`, {
-      headers: { Authorization: `Bearer ${accessToken}`, accept: "application/json" },
+      headers,
       signal: AbortSignal.timeout(10_000),
     });
     if (!r.ok) return null;
     const json = await r.json();
-    return json.data ?? null;
+    const order = json.data as SallaOrder | undefined;
+    if (!order) return null;
+
+    // Salla's GET /orders/{id} no longer returns `items` — fetch them
+    // separately from /orders/items?order_id={id}. Without this we'd hit
+    // `Cannot read properties of undefined (reading '0')` on `order.items[0]`.
+    if (!Array.isArray((order as { items?: unknown }).items)) {
+      try {
+        const itemsRes = await fetch(`${SALLA_API}/orders/items?order_id=${orderId}`, {
+          headers,
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (itemsRes.ok) {
+          const itemsJson = await itemsRes.json();
+          order.items = Array.isArray(itemsJson.data) ? itemsJson.data : [];
+        } else {
+          order.items = [];
+        }
+      } catch {
+        order.items = [];
+      }
+    }
+
+    return order;
   } catch {
     return null;
   }
