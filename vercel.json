@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/salla/process",
-      "schedule": "* * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
