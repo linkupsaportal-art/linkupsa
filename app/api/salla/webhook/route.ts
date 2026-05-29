@@ -78,6 +78,22 @@ export async function POST(req: Request): Promise<NextResponse> {
     console.error("[salla.dispatch]", envelope.event, err);
   }
 
+  // 5. For order events, kick the processor asynchronously so the order
+  //    gets ingested without waiting for a cron tick.
+  const ORDER_EVENTS = new Set([
+    "order.created",
+    "order.updated",
+    "order.status.updated",
+    "order.payment.updated",
+  ]);
+  if (ORDER_EVENTS.has(envelope.event)) {
+    const origin = new URL(req.url).origin;
+    fetch(`${origin}/api/salla/process`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${process.env.SALLA_WEBHOOK_TOKEN ?? ""}` },
+    }).catch(() => {/* best-effort */});
+  }
+
   return NextResponse.json({ ok: true, event: envelope.event, id: stored.id });
 }
 
