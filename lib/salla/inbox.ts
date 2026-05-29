@@ -28,7 +28,9 @@ export async function recordWebhook(args: {
       delivery_hash: args.deliveryHash,
       event: args.envelope.event,
       merchant: args.envelope.merchant ?? null,
-      store_id: extractStoreId(args.envelope) ?? null,
+      // For Salla, the store id IS the merchant id at the envelope level.
+      // (`data.store.id` doesn't exist — verified from real payloads.)
+      store_id: args.envelope.merchant ?? null,
       payload: args.envelope as unknown as Record<string, unknown>,
       headers: args.headers,
     })
@@ -41,14 +43,4 @@ export async function recordWebhook(args: {
     return { duplicate: false, id: null, error: error.message };
   }
   return { duplicate: false, id: data.id };
-}
-
-function extractStoreId(env: SallaWebhookEnvelope): number | undefined {
-  const data = env.data as Record<string, unknown> | undefined;
-  if (!data) return undefined;
-  const store = data.store as { id?: number } | undefined;
-  if (store?.id) return store.id;
-  const storeId = data.store_id;
-  if (typeof storeId === "number") return storeId;
-  return undefined;
 }

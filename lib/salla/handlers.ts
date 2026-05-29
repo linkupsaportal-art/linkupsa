@@ -9,7 +9,7 @@ import type { AppStoreAuthorizeData, SallaWebhookEnvelope } from "./types";
  * in a background worker that drains `webhook_events` by status='pending',
  * not here. Here we only do the strictly-required state mutation:
  *   - app.store.authorize → store the access token
- *   - app.store.uninstall → mark store uninstalled
+ *   - app.store.uninstalled → mark store uninstalled
  *
  * Order events flip themselves to status='succeeded' once a worker picks
  * them up. For now they just persist in the inbox.
@@ -19,7 +19,7 @@ export async function dispatch(envelope: SallaWebhookEnvelope, eventId: string):
 
   switch (envelope.event) {
     case "app.store.authorize":
-      await persistStoreTokens(envelope.data as AppStoreAuthorizeData);
+      await persistStoreTokens(envelope);
       await markProcessed(sb, eventId, "succeeded");
       return;
     case "app.store.uninstalled":
@@ -34,26 +34,39 @@ export async function dispatch(envelope: SallaWebhookEnvelope, eventId: string):
   }
 }
 
-async function persistStoreTokens(data: AppStoreAuthorizeData | undefined) {
-  if (!data?.access_token) return;
-  const sb = createServiceClient();
-  const storeId = data.store?.id ?? data.merchant?.id;
-  if (!storeId) return;
+/**
+ * Real Salla `app.store.authorize` payload (verified from production):
+ *   {
+ *     event: "app.store.authorize",
+ *     merchant: 1375098081,              // ← THIS is the store id
+ *     created_at: "2026-05-29 16:11:49",
+ *     data: {
+ *       id: 1487898353,                  // app id (not store)
+ *       access_token: "ory_at_...",
+ *       refresh_token: "ory_rt_...",
+ *       expires: 1781269908,             // ← unix epoch seconds, absolute
+ *       scope: "...",
+ *       token_type: "bearer",
+ *       app_name, app_type, app_description
+ *     }
+ *   }
+ *
+ * Note: `data.store` does NOT exist — the store/merchant id lives on the
+ * envelope. We use `envelope.merchant` as our store_id.
+ */
+async function persistStoreTokens(envelope: SallaWebhookEnvelope) {
+  const data = envelope.data as AppStoreAuthorizeData | undefined;
+  if (!data?.access_token || !envelope.merchant) return;
 
-  const expiresAt = data.expires_in
-    ? new Date(Date.now() + data.expires_in * 1000).toISOString()
-    : data.expires
-      ? // Salla sometimes sends a Unix epoch in `expires`. Anything < 10^11
-        // is "seconds offset from now"; otherwise treat as absolute epoch.
-        new Date((data.expires < 1e11 ? Date.now() / 1000 + data.expires : data.expires) * 1000).toISOString()
-      : null;
+  const sb = createServiceClient();
+  const expiresAt = computeExpiry(data);
 
   await sb
     .from("salla_stores")
     .upsert(
       {
-        store_id: storeId,
-        store_name: data.store?.name ?? null,
+        store_id: envelope.merchant,
+        store_name: data.app_name ?? null,
         access_token: data.access_token,
         refresh_token: data.refresh_token ?? null,
         token_expires_at: expiresAt,
@@ -65,15 +78,28 @@ async function persistStoreTokens(data: AppStoreAuthorizeData | undefined) {
     );
 }
 
+/**
+ * Salla sends `data.expires` as an absolute unix epoch (seconds), e.g. 1781269908.
+ * `data.expires_in` is sometimes also present and is "seconds from now". We prefer
+ * the absolute value; fall back to expires_in only if expires is missing.
+ */
+function computeExpiry(data: AppStoreAuthorizeData): string | null {
+  if (typeof data.expires === "number" && data.expires > 0) {
+    return new Date(data.expires * 1000).toISOString();
+  }
+  if (typeof data.expires_in === "number" && data.expires_in > 0) {
+    return new Date(Date.now() + data.expires_in * 1000).toISOString();
+  }
+  return null;
+}
+
 async function markStoreUninstalled(envelope: SallaWebhookEnvelope) {
+  if (!envelope.merchant) return;
   const sb = createServiceClient();
-  const data = envelope.data as { store?: { id?: number } } | undefined;
-  const storeId = data?.store?.id ?? envelope.merchant;
-  if (!storeId) return;
   await sb
     .from("salla_stores")
     .update({ uninstalled_at: new Date().toISOString() })
-    .eq("store_id", storeId);
+    .eq("store_id", envelope.merchant);
 }
 
 async function markProcessed(
