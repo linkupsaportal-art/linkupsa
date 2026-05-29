@@ -209,13 +209,16 @@ export async function processInbox(): Promise<{
 
           if (allocated) {
             stats.fulfilled++;
-            // Send the order-ready email if we have a customer email
+            // Multi-channel notification — email + WhatsApp + future SMS/Telegram
             await sendNotification({
               orderId: upserted.id,
+              storeId: merchantId,
               email: order.customer.email,
+              mobile: mobile,
               customerName: order.customer.full_name,
               orderNumber: String(order.reference_id),
               productName: firstItem?.name ?? "منتج رقمي",
+              productId: productId,
               origin: getOrigin(),
             });
           }
@@ -269,7 +272,7 @@ async function markEvent(
  * Notification helpers
  * ============================================================ */
 
-import { sendOrderReadyEmail } from "@/lib/notifications/email";
+import { notifyOrderReady } from "@/lib/notifications/dispatch";
 
 /** Resolves the public origin for pickup links. */
 function getOrigin(): string {
@@ -280,30 +283,39 @@ function getOrigin(): string {
 
 async function sendNotification(args: {
   orderId: string;
-  email: string;
+  storeId: number;
+  email: string | null | undefined;
+  mobile: string | null | undefined;
   customerName: string;
   orderNumber: string;
   productName: string;
+  productId: string | null;
   origin: string;
 }): Promise<void> {
-  if (!args.email) return;
+  // Resolve the product's per-channel toggles. Default to email-only when
+  // we couldn't map the order to one of our products (best-effort fallback).
+  let channels = { email: true, whatsapp: false, sms: false, telegram: false };
+  if (args.productId) {
+    const sb = createServiceClient();
+    const { data: product } = await sb
+      .from("products")
+      .select("notification_channels")
+      .eq("id", args.productId)
+      .single();
+    if (product?.notification_channels) {
+      channels = { ...channels, ...product.notification_channels };
+    }
+  }
 
-  const sb = createServiceClient();
-  const result = await sendOrderReadyEmail({
-    to: args.email,
+  await notifyOrderReady({
+    orderId: args.orderId,
+    storeId: args.storeId,
     customerName: args.customerName,
+    customerEmail: args.email ?? null,
+    customerMobile: args.mobile ?? null,
     orderNumber: args.orderNumber,
     productName: args.productName,
+    productNotificationChannels: channels,
     pickupUrl: `${args.origin}/pickup`,
   });
-
-  if (result.ok) {
-    await sb
-      .from("orders")
-      .update({
-        notification_sent_at: new Date().toISOString(),
-        notification_channels_used: { email: true },
-      })
-      .eq("id", args.orderId);
-  }
 }
