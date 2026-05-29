@@ -49,9 +49,9 @@ export const STORE_NAV: NavGroup[] = [
   {
     label: "العمليات",
     items: [
-      { href: "/admin/orders", label: "الطلبات", icon: ShoppingBag, status: "soon" },
-      { href: "/admin/products", label: "المنتجات", icon: Package, status: "soon" },
-      { href: "/admin/accounts", label: "الحسابات / القواعد", icon: Boxes, status: "soon" },
+      { href: "/admin/orders", label: "الطلبات", icon: ShoppingBag },
+      { href: "/admin/products", label: "المنتجات", icon: Package },
+      { href: "/admin/accounts", label: "الحسابات / القواعد", icon: Boxes },
     ],
   },
   {
