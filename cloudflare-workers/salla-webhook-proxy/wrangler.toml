@@ -1,0 +1,18 @@
+name = "salla-webhook-proxy"
+main = "src/index.ts"
+compatibility_date = "2025-05-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "71a18d409d70ada0d143072afa97176d"
+
+# Where to forward verified webhooks. Set per-environment via secret/var.
+# Local dev defaults to the Next.js dev server on :3000.
+[vars]
+ORIGIN_URL = "https://www.portaliosa.com/api/salla/webhook"
+
+# Sensitive values (SALLA_WEBHOOK_TOKEN) come from `wrangler secret put`,
+# not from this file. Listed here for documentation only:
+#   wrangler secret put SALLA_WEBHOOK_TOKEN
+
+# Observability: tail logs for 7 days at the edge.
+[observability]
+enabled = true

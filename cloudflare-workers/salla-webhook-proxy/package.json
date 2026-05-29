@@ -1,0 +1,16 @@
+{
+  "name": "salla-webhook-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Edge proxy for Salla webhooks: token check, dedupe, fast ack, async forward to Next.js inbox.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250529.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.29.1"
+  }
+}
