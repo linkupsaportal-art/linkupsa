@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle } from "lucide-react";
 import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products-types";
+import { CustomSelect } from "@/components/ui/select";
 import {
   createProductAction,
   updateProductAction,
@@ -37,6 +38,10 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Modern UI states
+  const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [deleteOptionId, setDeleteOptionId] = useState<string | null>(null);
+
   function refresh() { window.location.reload(); }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -64,11 +69,12 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
     });
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("حذف هذا المنتج؟ لا يمكن التراجع.")) return;
+  async function handleConfirmDeleteProduct() {
+    if (!deleteProductId) return;
     startTransition(async () => {
-      const res = await deleteProductAction(id);
+      const res = await deleteProductAction(deleteProductId);
       if (res?.error) { setError(res.error); return; }
+      setDeleteProductId(null);
       refresh();
     });
   }
@@ -92,10 +98,12 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
     });
   }
 
-  async function handleDeleteOption(id: string) {
-    if (!confirm("حذف هذا الخيار؟")) return;
+  async function handleConfirmDeleteOption() {
+    if (!deleteOptionId) return;
     startTransition(async () => {
-      await deleteProductOptionAction(id);
+      const res = await deleteProductOptionAction(deleteOptionId);
+      if (res?.error) { setError(res.error); return; }
+      setDeleteOptionId(null);
       refresh();
     });
   }
@@ -180,7 +188,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => setDeleteProductId(product.id)}
                     disabled={isPending}
                     className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
                     aria-label="حذف"
@@ -255,7 +263,7 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                           )}
                           <button
                             type="button"
-                            onClick={() => handleDeleteOption(opt.id)}
+                            onClick={() => setDeleteOptionId(opt.id)}
                             className="text-fg-faint hover:text-red-400 transition-colors cursor-pointer"
                             aria-label="حذف الخيار"
                           >
@@ -299,6 +307,74 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modern UI Delete Product Dialog */}
+      <Dialog open={!!deleteProductId} onOpenChange={(o) => !o && setDeleteProductId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader dir="rtl">
+            <div className="flex items-center gap-3 text-red-500 mb-2">
+              <div className="size-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="size-5" />
+              </div>
+              <DialogTitle>تأكيد حذف المنتج</DialogTitle>
+            </div>
+            <DialogDescription className="text-right leading-relaxed text-sm">
+              هل أنت متأكد تماماً من رغبتك في حذف هذا المنتج؟ هذا الإجراء سيقوم بإزالة المنتج وكافة خياراته المرتبطة نهائياً من قاعدة البيانات، ولا يمكن التراجع عن هذا الإجراء.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 flex-row-reverse">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmDeleteProduct}
+              className="h-10 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isPending ? "جاري الحذف..." : "حذف نهائي"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteProductId(null)}
+              className="h-10 px-4 rounded-xl border border-[hsl(220_18%_14%/0.10)] text-[hsl(222_30%_6%)] text-sm font-semibold hover:bg-[hsl(60_14%_94%)] transition-colors cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modern UI Delete Option Dialog */}
+      <Dialog open={!!deleteOptionId} onOpenChange={(o) => !o && setDeleteOptionId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader dir="rtl">
+            <div className="flex items-center gap-3 text-red-500 mb-2">
+              <div className="size-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="size-5" />
+              </div>
+              <DialogTitle>تأكيد حذف خيار المنتج</DialogTitle>
+            </div>
+            <DialogDescription className="text-right leading-relaxed text-sm">
+              هل أنت متأكد من رغبتك في حذف هذا الخيار؟ سيتم حذف الخيار نهائياً من هذا المنتج ولا يمكن استعادته.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 flex-row-reverse">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmDeleteOption}
+              className="h-10 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isPending ? "جاري الحذف..." : "حذف نهائي"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteOptionId(null)}
+              className="h-10 px-4 rounded-xl border border-[hsl(220_18%_14%/0.10)] text-[hsl(222_30%_6%)] text-sm font-semibold hover:bg-[hsl(60_14%_94%)] transition-colors cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -314,9 +390,28 @@ function ProductForm({
   onCancel: () => void;
   isPending: boolean;
 }) {
+  const [handlerType, setHandlerType] = useState<string>(
+    product?.handler_type ?? "normal_account",
+  );
+  const [status, setStatus] = useState<string>(product?.status ?? "active");
+
+  const handlerOptions = [
+    { value: "2fa_account", label: "حساب 2FA", icon: <Key className="size-4" /> },
+    { value: "steam_guard_account", label: "حساب Steam Guard", icon: <Gamepad2 className="size-4" /> },
+    { value: "email_code_account", label: "كود البريد الإلكتروني", icon: <Mail className="size-4" /> },
+    { value: "normal_account", label: "حساب عادي", icon: <User className="size-4" /> },
+    { value: "recharge_card", label: "بطاقة شحن", icon: <CreditCard className="size-4" /> },
+    { value: "digital_file", label: "ملف رقمي", icon: <FileDown className="size-4" /> },
+  ];
+
+  const statusOptions = [
+    { value: "active", label: "نشط", icon: <ToggleRight className="size-4 text-accent" /> },
+    { value: "inactive", label: "موقوف", icon: <ToggleLeft className="size-4 text-fg-faint" /> },
+  ];
+
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="الاسم *">
           <input
             name="name"
@@ -335,16 +430,13 @@ function ProductForm({
           />
         </Field>
         <Field label="نوع التسليم *">
-          <select
+          <CustomSelect
             name="handler_type"
-            defaultValue={product?.handler_type ?? "normal_account"}
-            required
-            className="form-input"
-          >
-            {HANDLER_TYPES.map((t) => (
-              <option key={t} value={t}>{HANDLER_LABELS[t]}</option>
-            ))}
-          </select>
+            value={handlerType}
+            onChange={setHandlerType}
+            options={handlerOptions}
+            disabled={isPending}
+          />
         </Field>
         <Field label="رقم منتج سلة">
           <input
@@ -357,10 +449,13 @@ function ProductForm({
         </Field>
         {product && (
           <Field label="الحالة">
-            <select name="status" defaultValue={product.status} className="form-input">
-              <option value="active">نشط</option>
-              <option value="inactive">موقوف</option>
-            </select>
+            <CustomSelect
+              name="status"
+              value={status}
+              onChange={setStatus}
+              options={statusOptions}
+              disabled={isPending}
+            />
           </Field>
         )}
         <div className="sm:col-span-2">
@@ -394,6 +489,7 @@ function ProductForm({
     </form>
   );
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAccount, deleteAccount, updateAccountStatus, type Account } from "@/lib/db/accounts";
+import { createAccount, deleteAccount, updateAccountStatus, getAccountSecret, type Account } from "@/lib/db/accounts";
 import type { HandlerType } from "@/lib/db/products-types";
 
 export async function createAccountAction(formData: FormData) {
@@ -64,6 +64,23 @@ export async function deleteAccountAction(id: string) {
     await deleteAccount(id);
     revalidatePath("/admin/accounts");
     return { success: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function revealAccountSecretsAction(id: string) {
+  try {
+    const password = await getAccountSecret(id, "password_encrypted");
+    const totpSecret = await getAccountSecret(id, "totp_secret_encrypted");
+    const steamSharedSecret = await getAccountSecret(id, "steam_shared_secret_encrypted");
+    const cardCode = await getAccountSecret(id, "card_code_encrypted");
+    return {
+      password,
+      totpSecret,
+      steamSharedSecret,
+      cardCode,
+    };
   } catch (e) {
     return { error: (e as Error).message };
   }

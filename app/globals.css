@@ -558,6 +558,16 @@ select.form-input {
   cursor: pointer;
 }
 
+/* Hide default HTML5 number input spinner arrows globally for a premium, clean SaaS look */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 
 /* ────────────────────────────────────────────────────────────────────────
  *  Phone Input — custom dropdown scrollbar & react-international-phone

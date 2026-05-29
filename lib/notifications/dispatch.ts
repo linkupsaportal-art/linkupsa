@@ -94,26 +94,45 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     const host = cfg?.host as string | undefined;
     const defaultTemplate = (cfg?.default_template as string | undefined) ?? "order_cancel";
     const language = (cfg?.language as string | undefined) ?? "ar";
+    // Per-template positional param mapping. Keys are template names; values
+    // are arrays of placeholder positions matching `{{1}} {{2}} ...` order.
+    // The dispatcher fills this from the order at runtime.
+    const paramMap = (cfg?.param_map as Record<string, string[]> | undefined) ?? {
+      // Default mapping for the merchant's `order_cancel` template:
+      //   1 = customer name, 2 = order#, 3 = product, 4 = pickup link, 5 = ""
+      // (we abuse the cancel template as the only working positional one)
+      order_cancel: [
+        "customer_name",
+        "order_number",
+        "product_name",
+        "pickup_url",
+        "store_name",
+      ],
+    };
 
     if (cfg?.provider !== "karzoun" || !appToken || !integrationId) {
       result.failed.push({ channel: "whatsapp", error: "Karzoun Chat not configured for this store" });
     } else {
+      // Source values for placeholder substitution.
+      const src: Record<string, string> = {
+        customer_name: args.customerName,
+        order_number: args.orderNumber,
+        product_name: args.productName,
+        pickup_url: args.pickupUrl,
+        store_name: "PortalIosa",
+      };
+      const positions = paramMap[defaultTemplate] ?? [
+        "customer_name",
+        "order_number",
+        "product_name",
+        "pickup_url",
+        "store_name",
+      ];
+      const params = positions.map((k) => src[k] ?? "");
+
       const r = await sendKarzounWhatsApp({
         to: args.customerMobile,
-        // Positional body params for the merchant's template. The default
-        // 'order_ready' template should expect 5 params in this order:
-        //   1. customer name
-        //   2. order number
-        //   3. product name
-        //   4. store name
-        //   5. pickup link
-        params: [
-          args.customerName,
-          args.orderNumber,
-          args.productName,
-          "PortalIosa",
-          args.pickupUrl,
-        ],
+        params,
         template: defaultTemplate,
         config: { host, appToken, integrationId, defaultTemplate, language },
       });

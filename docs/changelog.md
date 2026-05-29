@@ -5,7 +5,27 @@
 
 ---
 
+# 2026-05-29 23:00
+
+- 🎛️ **Complete Dropdown UI Overhaul — CustomSelect Primitive & Native Select Replacement — Razex Xelite**
+  - **CustomSelect Primitive**: Crafted a reusable, highly accessible `CustomSelect` component ([select.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/select.tsx)) featuring smooth dropdown panels, keyboard navigation, hover-highlights, checked selection states, and integrated hidden inputs for zero-change `FormData` parser compatibility.
+  - **Visual Icon Enhancement**: Integrated premium Lucide icons (`Key`, `Gamepad2`, `Mail`, `User`, `CreditCard`, `FileDown`) directly beside options to easily differentiate between delivery types (e.g. 2FA account, Steam Guard, recharge card) with instant visual clarity.
+  - **Full Admin Integration**: Replaced all native `<select>` dropdowns across both Products ([products-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/products/products-client.tsx)) and Accounts ([accounts-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/accounts-client.tsx)) tables with the new CustomSelect element for a uniform, elite look.
+  - **Numeric Spinner Polish**: Hided the default, raw HTML5 number input spinner arrows globally inside [globals.css](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/globals.css) for both Webkit and Firefox browsers to match our clean, high-end visual language.
+  - **Typescript Perfected**: All changes pass compile-time type checking with zero warnings, fully validating backward compatibility.
+
+# 2026-05-29 22:45
+
+
+- 🎨 **Total Redesign of Customer Pickup Portal — Dashboard Theme (Cream & Lime) Integration — Razex Xelite**
+  - **Premium Theme Unification**: Applied the `.theme-admin` design system scope to the entire `/pickup` portal. Ported the dashboard's gorgeous premium gradient background, radial backdrop glowing ambient blobs, and custom high-end typography (Cairo display font & Manrope numeric figures).
+  - **Glassmorphic Interactive Containers**: Re-engineered the pickup portal inputs form ([pickup-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/pickup-form.tsx)) and credentials details panel ([order-details.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/order-details.tsx)) using a light-glass canvas layout (`bg-white/85 backdrop-blur-xl border border-white/60`) and the layered card shadow `.card-lift`.
+  - **Sleek Input Fields**: Restyled search fields with integrated modern inline icons (`Hash` and `Phone`), faint tinted backgrounds, and smooth focus-scaling border rings in neon electric lime.
+  - **Phosphor Accent Interactive Blocks**: Configured primary action triggers to use the brand's signature Phosphor electric lime accent (`bg-accent hover:bg-accent-hi text-accent-fg`) featuring subtle micro-scales, dynamic shadow overflows, and responsive indicator overlays.
+  - **Dual-Layer SVG TOTP Progress Countdown**: Re-designed the 2FA verification block ([totp-code-block.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/totp-code-block.tsx)) with a custom dual-layer SVG progress circle that dynamically drains color in lock-step with active countdown values, upscaled numeric code tracking, and automated hover-reload animations.
+
 # 2026-05-28 22:10
+
 
 - 🎨 **Complete PhoneInput Redesign — Custom Searchable Dropdown & Integrated Country Flag — Razex Xelite**
   - **Full Component Rewrite**: Completely rewrote [phone-input.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/phone-input.tsx) from scratch. Replaced the ugly native `<select>` overlay with a custom-built, searchable dropdown panel. The component now uses only the headless `usePhoneInput` hook from `react-international-phone` — all UI is custom.

@@ -6,22 +6,14 @@ import { getTotpCodeAction } from "./get-code-action";
 import type { HandlerType } from "@/lib/db/products-types";
 
 const HANDLER_LABELS: Record<HandlerType, string> = {
-  "2fa_account": "رمز المصادقة الثنائية",
-  steam_guard_account: "رمز Steam Guard",
-  email_code_account: "رمز البريد الإلكتروني",
+  "2fa_account": "رمز المصادقة الثنائية (2FA)",
+  steam_guard_account: "رمز الحماية (Steam Guard)",
+  email_code_account: "رمز التحقق من البريد الإلكتروني",
   normal_account: "",
   recharge_card: "",
   digital_file: "",
 };
 
-/**
- * Live TOTP code with circular countdown matching the spec/Salla Sync UX:
- *   - Customer clicks "احصل على الرمز"
- *   - 6-digit code appears with a circular ring counting down 30s
- *   - Code auto-refreshes when the ring hits 0
- *   - Each refresh hits the server (rate-limited + logged via OTP logs)
- *   - Customer NEVER sees the underlying TOTP secret
- */
 export function TotpCodeBlock({
   orderId,
   lastFour,
@@ -43,17 +35,19 @@ export function TotpCodeBlock({
   const [isPending, startTransition] = useTransition();
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Countdown ticker — runs while we have a code
+  // Countdown ticker
   useEffect(() => {
     if (!code) return;
     if (tickRef.current) clearInterval(tickRef.current);
     tickRef.current = setInterval(() => {
       setSecondsLeft((s) => Math.max(0, s - 1));
     }, 1000);
-    return () => { if (tickRef.current) clearInterval(tickRef.current); };
+    return () => {
+      if (tickRef.current) clearInterval(tickRef.current);
+    };
   }, [code]);
 
-  // Auto-refresh when countdown hits zero (smooth UX, no manual click needed)
+  // Auto-refresh when countdown hits zero
   useEffect(() => {
     if (code && secondsLeft === 0 && !isPending) {
       handleGetCode();
@@ -86,29 +80,39 @@ export function TotpCodeBlock({
   // ─── No code yet — show the "Get code" button ───────────────────────────
   if (!code) {
     return (
-      <div className="rounded-2xl bg-surface-2 border border-[hsl(var(--hairline))] p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="size-4 text-accent" />
-          <span className="text-sm font-semibold text-fg">{HANDLER_LABELS[handlerType]}</span>
+      <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] p-5 space-y-4 animate-in fade-in duration-300">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-[hsl(var(--hairline))]">
+          <div className="size-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent-fg">
+            <ShieldCheck className="size-5" />
+          </div>
+          <span className="text-sm font-extrabold text-fg">
+            {HANDLER_LABELS[handlerType]}
+          </span>
         </div>
+
         {error && (
-          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+          <div className="text-xs text-danger font-semibold bg-danger/10 border border-danger/20 px-3.5 py-2.5 rounded-xl">
             {error}
           </div>
         )}
-        <p className="text-xs text-fg-muted leading-relaxed">
-          اضغط على الزر أدناه للحصول على رمز التحقق. الرمز يتجدد تلقائياً كل 30 ثانية.
+
+        <p className="text-xs text-fg-muted leading-relaxed font-medium">
+          هذا الحساب محمي برمز تحقق ديناميكي. اضغط على الزر أدناه للحصول على الرمز. سيتجدد الرمز تلقائياً كل 30 ثانية لتسهيل تسجيل دخولك.
         </p>
+
         <button
           type="button"
           onClick={handleGetCode}
           disabled={isPending || requestsLeft <= 0}
-          className="w-full h-11 rounded-xl bg-accent text-accent-fg text-sm font-bold hover:bg-accent-hi transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full h-11 rounded-xl bg-accent text-accent-fg text-sm font-extrabold hover:bg-accent-hi transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_4px_16px_rgba(212,245,66,0.2)] active:scale-[0.98]"
         >
-          {isPending ? "جاري التوليد..." : "احصل على رمز التحقق"}
+          {isPending ? "جاري إنشاء الرمز الآمن..." : "احصل على رمز التفعيل المؤقت"}
         </button>
-        <div className="text-center text-[11px] text-fg-faint">
-          الطلبات المتبقية: <span className="font-num font-bold">{requestsLeft}</span> من <span className="font-num font-bold">{limit}</span>
+
+        <div className="text-center text-[10px] font-bold text-fg-faint uppercase tracking-wider">
+          الطلبات المتاحة:{" "}
+          <span className="font-num font-extrabold text-fg-muted">{requestsLeft}</span> من{" "}
+          <span className="font-num font-extrabold text-fg-faint">{limit}</span>
         </div>
       </div>
     );
@@ -116,44 +120,49 @@ export function TotpCodeBlock({
 
   // ─── Code is showing — circular ring + 6-digit display ─────────────────
   const TOTAL = 30;
-  const ringRadius = 36;
+  const ringRadius = 34;
   const ringCircumference = 2 * Math.PI * ringRadius;
   const progress = secondsLeft / TOTAL;
 
   return (
-    <div className="rounded-2xl bg-surface-2 border border-[hsl(var(--hairline))] p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <ShieldCheck className="size-4 text-accent" />
-        <span className="text-sm font-semibold text-fg">{HANDLER_LABELS[handlerType]}</span>
+    <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] p-5 space-y-4 animate-in fade-in duration-300">
+      <div className="flex items-center gap-2 pb-2.5 border-b border-[hsl(var(--hairline))]">
+        <div className="size-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent-fg">
+          <ShieldCheck className="size-5" />
+        </div>
+        <span className="text-sm font-extrabold text-fg">
+          {HANDLER_LABELS[handlerType]}
+        </span>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
-        {/* Circular countdown */}
-        <div className="relative shrink-0">
-          <svg width="88" height="88" viewBox="0 0 88 88" className="-rotate-90">
+      <div className="flex items-center justify-between gap-4 py-2">
+        {/* Circular countdown with glowing stroke */}
+        <div className="relative shrink-0 select-none">
+          <svg width="84" height="84" viewBox="0 0 84 84" className="-rotate-90">
             <circle
-              cx="44"
-              cy="44"
+              cx="42"
+              cy="42"
               r={ringRadius}
               fill="none"
               stroke="hsl(var(--hairline-strong))"
-              strokeWidth="6"
+              strokeWidth="5"
             />
             <circle
-              cx="44"
-              cy="44"
+              cx="42"
+              cy="42"
               r={ringRadius}
               fill="none"
               stroke="hsl(var(--accent))"
-              strokeWidth="6"
+              strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray={ringCircumference}
               strokeDashoffset={ringCircumference * (1 - progress)}
               style={{ transition: "stroke-dashoffset 1s linear" }}
+              className="drop-shadow-[0_0_4px_rgba(212,245,66,0.4)]"
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-num font-bold text-xl text-fg" dir="ltr">
+            <span className="font-num font-extrabold text-lg text-fg" dir="ltr">
               {secondsLeft}
             </span>
           </div>
@@ -161,17 +170,18 @@ export function TotpCodeBlock({
 
         {/* The 6-digit code, big and clear */}
         <div className="flex-1 text-center min-w-0">
-          <div className="text-[10px] font-semibold text-fg-muted uppercase tracking-widest mb-1">
-            الرمز الحالي
+          <div className="text-[10px] font-bold text-fg-faint uppercase tracking-wider mb-1">
+            رمز التحقق الحالي
           </div>
           <div
-            className="font-num font-extrabold text-3xl sm:text-4xl tracking-[0.2em] text-fg select-all"
+            className="font-num font-extrabold text-3xl sm:text-4xl tracking-[0.15em] text-fg select-all leading-none py-1"
             dir="ltr"
           >
             {code}
           </div>
-          <div className="text-[10px] text-fg-faint mt-1">
-            سيتغير خلال {secondsLeft} ثانية
+          <div className="text-[10px] font-semibold text-accent-fg/80 mt-1 flex items-center justify-center gap-1">
+            <span className="size-1.5 rounded-full bg-accent animate-ping" />
+            يتجدد تلقائياً عند انتهاء الوقت
           </div>
         </div>
 
@@ -179,28 +189,33 @@ export function TotpCodeBlock({
         <button
           type="button"
           onClick={copyCode}
-          className={`shrink-0 size-12 rounded-xl border transition-all flex items-center justify-center cursor-pointer ${
+          className={`shrink-0 size-12 rounded-xl border transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-95 shadow-sm ${
             copied
-              ? "bg-accent text-accent-fg border-accent"
-              : "bg-surface border-[hsl(var(--hairline-strong))] text-fg-muted hover:text-fg hover:border-fg/30"
+              ? "bg-accent text-accent-fg border-accent shadow-[0_4px_12px_rgba(212,245,66,0.3)]"
+              : "bg-surface text-fg-muted border-[hsl(var(--hairline-strong))] hover:text-fg hover:bg-surface-2"
           }`}
           aria-label={copied ? "تم النسخ" : "نسخ الرمز"}
         >
-          {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          {copied ? (
+            <Check className="size-4 stroke-[3]" />
+          ) : (
+            <Copy className="size-4" />
+          )}
         </button>
       </div>
 
       {error && (
-        <div className="mt-3 text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+        <div className="text-xs text-danger font-semibold bg-danger/10 border border-danger/20 px-3.5 py-2.5 rounded-xl">
           {error}
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between gap-2 text-[11px]">
+      {/* Manual refresh / request status */}
+      <div className="pt-3 border-t border-[hsl(var(--hairline))] flex items-center justify-between gap-3 text-[11px] font-bold">
         <span className="text-fg-faint">
-          الطلبات المتبقية:
-          <span className="font-num font-bold mx-1 text-fg-muted">{requestsLeft}</span>/
-          <span className="font-num font-bold text-fg-muted">{limit}</span>
+          الطلبات المتبقية:{" "}
+          <span className="font-num font-extrabold text-fg-muted">{requestsLeft}</span>/
+          <span className="font-num font-extrabold text-fg-muted">{limit}</span>
         </span>
         <button
           type="button"
@@ -208,8 +223,8 @@ export function TotpCodeBlock({
           disabled={isPending}
           className="inline-flex items-center gap-1 text-fg-muted hover:text-accent transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <RefreshCw className={`size-3 ${isPending ? "animate-spin" : ""}`} />
-          تحديث الآن
+          <RefreshCw className={`size-3.5 ${isPending ? "animate-spin" : ""}`} />
+          تحديث الكود الآن
         </button>
       </div>
     </div>

@@ -14,7 +14,7 @@ import { updateSession } from "@/lib/supabase/session";
  *   2. Session refresh + auth gating, delegated to updateSession().
  */
 export async function proxy(request: NextRequest) {
-  const host = request.headers.get("host") ?? "";
+  const host = (request.headers.get("host") ?? "").toLowerCase();
   const { pathname, search } = request.nextUrl;
 
   // -------- 1. SUBDOMAIN ROUTING --------

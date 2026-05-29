@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2, Eye, EyeOff, Database, Pause, Play } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Database, Pause, Play, Package, AlertTriangle, Key, Lock, Mail, FileText, CreditCard, Gamepad2, RefreshCw, Check, Copy } from "lucide-react";
 import type { Account } from "@/lib/db/accounts";
 import type { Product } from "@/lib/db/products-types";
 import { HANDLER_LABELS } from "@/lib/db/products-types";
+import { CustomSelect } from "@/components/ui/select";
 import {
   createAccountAction,
   deleteAccountAction,
   updateAccountStatusAction,
+  revealAccountSecretsAction,
 } from "@/app/admin/accounts/actions";
 import {
   Dialog,
@@ -46,6 +48,12 @@ export function AccountsClient({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Modern UI states
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [viewAccountDetails, setViewAccountDetails] = useState<Account | null>(null);
+  const [viewSecrets, setViewSecrets] = useState<{ password?: string; totpSecret?: string; steamSharedSecret?: string; cardCode?: string } | null>(null);
+  const [loadingSecrets, setLoadingSecrets] = useState(false);
+
   function refresh() { window.location.reload(); }
 
   const filtered = filterProduct === "all"
@@ -64,13 +72,32 @@ export function AccountsClient({
     });
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("حذف هذا الحساب؟ لا يمكن التراجع.")) return;
+  async function handleConfirmDelete() {
+    if (!deleteTargetId) return;
     startTransition(async () => {
-      const res = await deleteAccountAction(id);
+      const res = await deleteAccountAction(deleteTargetId);
       if (res?.error) { setError(res.error); return; }
+      setDeleteTargetId(null);
       refresh();
     });
+  }
+
+  async function handleViewDetails(account: Account) {
+    setViewAccountDetails(account);
+    setLoadingSecrets(true);
+    setViewSecrets(null);
+    try {
+      const res = await revealAccountSecretsAction(account.id);
+      if ("error" in res) {
+        setError(res.error);
+      } else {
+        setViewSecrets(res);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoadingSecrets(false);
+    }
   }
 
   async function handleStatusChange(id: string, status: Account["status"]) {
@@ -97,18 +124,19 @@ export function AccountsClient({
       )}
 
       <div className="flex flex-wrap items-center gap-3 justify-between">
-        <select
+        <CustomSelect
           value={filterProduct}
-          onChange={(e) => setFilterProduct(e.target.value)}
-          className="h-9 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
-        >
-          <option value="all">كل المنتجات ({initialAccounts.length})</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({initialAccounts.filter((a) => a.product_id === p.id).length})
-            </option>
-          ))}
-        </select>
+          onChange={setFilterProduct}
+          options={[
+            { value: "all", label: `كل المنتجات (${initialAccounts.length})`, icon: <Package className="size-4" /> },
+            ...products.map((p) => ({
+              value: p.id,
+              label: `${p.name} (${initialAccounts.filter((a) => a.product_id === p.id).length})`,
+              icon: <Package className="size-4" />,
+            })),
+          ]}
+          className="max-w-xs"
+        />
         <button
           type="button"
           onClick={() => { setShowAddDialog(true); setError(null); }}
@@ -132,15 +160,139 @@ export function AccountsClient({
             <AccountRow
               key={account.id}
               account={account}
-              revealed={revealedIds.has(account.id)}
-              onToggleReveal={() => toggleReveal(account.id)}
-              onDelete={() => handleDelete(account.id)}
+              onToggleReveal={() => handleViewDetails(account)}
+              onDelete={() => setDeleteTargetId(account.id)}
               onStatusChange={(s) => handleStatusChange(account.id, s)}
               isPending={isPending}
             />
           ))}
         </div>
       )}
+
+      {/* Modern UI Delete Dialog */}
+      <Dialog open={!!deleteTargetId} onOpenChange={(o) => !o && setDeleteTargetId(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader dir="rtl">
+            <div className="flex items-center gap-3 text-red-500 mb-2">
+              <div className="size-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                <AlertTriangle className="size-5" />
+              </div>
+              <DialogTitle>تأكيد حذف الحساب</DialogTitle>
+            </div>
+            <DialogDescription className="text-right leading-relaxed text-sm">
+              هل أنت متأكد تماماً من رغبتك في حذف هذا الحساب؟ هذا الإجراء سيقوم بإزالة الحساب نهائياً من قاعدة البيانات ولا يمكن التراجع عنه.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 flex-row-reverse">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={handleConfirmDelete}
+              className="h-10 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isPending ? "جاري الحذف..." : "حذف نهائي"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteTargetId(null)}
+              className="h-10 px-4 rounded-xl border border-[hsl(220_18%_14%/0.10)] text-[hsl(222_30%_6%)] text-sm font-semibold hover:bg-[hsl(60_14%_94%)] transition-colors cursor-pointer"
+            >
+              إلغاء
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modern UI View Details Dialog */}
+      <Dialog open={!!viewAccountDetails} onOpenChange={(o) => !o && setViewAccountDetails(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader dir="rtl">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-10 rounded-full bg-accent/20 flex items-center justify-center text-accent-fg">
+                <Database className="size-5" />
+              </div>
+              <DialogTitle>تفاصيل الحساب الكاملة</DialogTitle>
+            </div>
+            <DialogDescription className="text-right text-xs">
+              بيانات الحساب والمخزون الحالية المسترجعة بأمان من قاعدة البيانات.
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewAccountDetails && (
+            <div className="space-y-4 my-4 text-right" dir="rtl">
+              {/* Account basic info */}
+              <div className="grid grid-cols-2 gap-3 bg-[hsl(200_14%_97%)] p-4 rounded-2xl border border-[hsl(220_18%_14%/0.08)]">
+                <div>
+                  <div className="text-[10px] font-bold text-fg-faint uppercase">اسم الحساب (Label)</div>
+                  <div className="text-sm font-extrabold text-fg">{viewAccountDetails.label}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-fg-faint uppercase">نوع التسليم</div>
+                  <div className="text-sm font-extrabold text-fg">{HANDLER_LABELS[viewAccountDetails.handler_type]}</div>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-[hsl(var(--hairline-strong))] flex items-center justify-between text-xs">
+                  <span className="text-fg-muted font-bold">معدل الاستخدام الفعلي:</span>
+                  <span className="font-num font-extrabold text-fg">{viewAccountDetails.current_usage} / {viewAccountDetails.max_usage}</span>
+                </div>
+              </div>
+
+              {/* Decrypted credentials */}
+              <div className="space-y-3">
+                {viewAccountDetails.email && (
+                  <CredentialRow label="البريد الإلكتروني / اسم الدخول" value={viewAccountDetails.email} icon={<Mail className="size-4" />} />
+                )}
+
+                {loadingSecrets ? (
+                  <div className="flex flex-col items-center justify-center py-8 gap-2 bg-[hsl(200_14%_97%)] rounded-2xl border border-[hsl(220_18%_14%/0.08)]">
+                    <RefreshCw className="size-6 text-accent animate-spin" />
+                    <span className="text-xs font-bold text-fg-muted">جاري فك تشفير البيانات الحساسة بأمان...</span>
+                  </div>
+                ) : viewSecrets ? (
+                  <>
+                    {viewSecrets.password && (
+                      <CredentialRow label="كلمة المرور" value={viewSecrets.password} icon={<Lock className="size-4" />} isPassword />
+                    )}
+                    {viewSecrets.totpSecret && (
+                      <CredentialRow label="TOTP Secret (2FA)" value={viewSecrets.totpSecret} icon={<Key className="size-4" />} />
+                    )}
+                    {viewSecrets.steamSharedSecret && (
+                      <CredentialRow label="Steam Shared Secret" value={viewSecrets.steamSharedSecret} icon={<Gamepad2 className="size-4" />} />
+                    )}
+                    {viewSecrets.cardCode && (
+                      <CredentialRow label="كود البطاقة الرقمية" value={viewSecrets.cardCode} icon={<CreditCard className="size-4" />} />
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-danger font-semibold bg-danger/10 border border-danger/20 p-3.5 rounded-xl">
+                    حدث خطأ أثناء محاولة استرجاع البيانات الحساسة.
+                  </div>
+                )}
+              </div>
+
+              {/* Instructions */}
+              {viewAccountDetails.instructions && (
+                <div className="bg-[hsl(200_14%_97%)] p-4 rounded-2xl border border-[hsl(220_18%_14%/0.08)] space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-fg-faint uppercase">
+                    <FileText className="size-4" />
+                    تعليمات الاستخدام للعميل
+                  </div>
+                  <div className="text-xs font-semibold text-fg leading-relaxed whitespace-pre-wrap">{viewAccountDetails.instructions}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setViewAccountDetails(null)}
+              className="h-10 px-5 rounded-xl bg-[hsl(222_30%_6%)] text-[hsl(72_86%_62%)] text-sm font-bold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer w-full"
+            >
+              إغلاق نافذة البيانات
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -160,16 +312,15 @@ export function AccountsClient({
   );
 }
 
+
 function AccountRow({
   account,
-  revealed,
   onToggleReveal,
   onDelete,
   onStatusChange,
   isPending,
 }: {
   account: Account;
-  revealed: boolean;
   onToggleReveal: () => void;
   onDelete: () => void;
   onStatusChange: (s: Account["status"]) => void;
@@ -212,10 +363,10 @@ function AccountRow({
             type="button"
             onClick={onToggleReveal}
             className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
-            title={revealed ? "إخفاء" : "عرض البيانات"}
-            aria-label={revealed ? "إخفاء" : "عرض البيانات"}
+            title="عرض التفاصيل الكاملة"
+            aria-label="عرض التفاصيل الكاملة"
           >
-            {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            <Eye className="size-4" />
           </button>
 
           {account.status === "active" ? (
@@ -253,34 +404,67 @@ function AccountRow({
           </button>
         </div>
       </div>
-
-      {revealed && (
-        <div className="mt-3 pt-3 border-t border-[hsl(var(--hairline))] grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          {account.email && (
-            <div>
-              <span className="text-fg-faint">البريد الإلكتروني: </span>
-              <span className="text-fg">{account.email}</span>
-            </div>
-          )}
-          <div>
-            <span className="text-fg-faint">كلمة المرور: </span>
-            <span className="font-mono tracking-widest text-fg">••••••••</span>
-          </div>
-          {account.instructions && (
-            <div className="sm:col-span-2">
-              <span className="text-fg-faint">التعليمات: </span>
-              <span className="text-fg">{account.instructions}</span>
-            </div>
-          )}
-          <div className="sm:col-span-2 flex gap-4 text-fg-faint">
-            <span>حد الأكواد: {account.max_otp_requests}</span>
-            <span>Cooldown: {account.otp_cooldown_seconds}s</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
+function CredentialRow({
+  label,
+  value,
+  icon,
+  isPassword,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  isPassword?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [showPassword, setShowPassword] = useState(!isPassword);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold text-fg-faint uppercase">
+        {icon}
+        {label}
+      </div>
+      <div className="flex items-stretch gap-2" dir="ltr">
+        <div className="flex-1 h-10 px-3 bg-[hsl(200_14%_97%)] border border-[hsl(220_18%_14%/0.08)] rounded-xl flex items-center text-xs font-mono font-bold text-fg select-all break-all">
+          {showPassword ? value : "••••••••••••••••"}
+        </div>
+        
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="shrink-0 size-10 rounded-xl border border-[hsl(220_18%_14%/0.08)] bg-white text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={`shrink-0 size-10 rounded-xl border transition-all duration-200 flex items-center justify-center cursor-pointer active:scale-95 shadow-sm ${
+            copied
+              ? "bg-accent text-accent-fg border-accent shadow-[0_4px_12px_rgba(212,245,66,0.25)]"
+              : "bg-white text-fg-muted border-[hsl(220_18%_14%/0.08)] hover:text-fg hover:bg-surface-2"
+          }`}
+        >
+          {copied ? <Check className="size-4 stroke-[3]" /> : <Copy className="size-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 function AccountForm({
   products,
@@ -303,17 +487,17 @@ function AccountForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="المنتج *">
-          <select
+          <CustomSelect
             name="product_id"
             value={selectedProduct}
-            onChange={(e) => setSelectedProduct(e.target.value)}
-            required
-            className="form-input"
-          >
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onChange={setSelectedProduct}
+            options={products.map((p) => ({
+              value: p.id,
+              label: p.name,
+              icon: <Package className="size-4" />,
+            }))}
+            disabled={isPending}
+          />
         </Field>
 
         <Field label="اسم القاعدة *">

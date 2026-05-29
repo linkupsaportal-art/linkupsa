@@ -7,19 +7,41 @@ export const metadata = {
 
 export default function PickupPage() {
   return (
-    <div className="min-h-svh bg-bg flex items-center justify-center px-4 py-12" dir="rtl">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-fg mb-4 shadow-[0_8px_28px_-6px_hsl(var(--accent)/0.7)]">
-            <svg className="size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 7L12 3 4 7m16 0v10l-8 4-8-4V7m16 0l-8 4m0 0L4 7m8 4v10" />
+    <div
+      className="theme-admin min-h-svh flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(180deg, hsl(170 8% 92%) 0%, hsl(186 11% 84%) 50%, hsl(190 12% 78%) 100%)",
+      }}
+      dir="rtl"
+    >
+      {/* Decorative backdrop blobs to match high-end dashboard */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          {/* Enhanced package icon with glowing 3D-like container */}
+          <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-accent text-accent-fg mb-4 shadow-[0_8px_32px_rgba(212,245,66,0.3)] border border-white/20">
+            <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M20 7L12 3 4 7m16 0v10l-8 4-8-4V7m16 0l-8 4m0 0L4 7m8 4v10" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className="font-display text-3xl font-extrabold text-fg mb-2">استلام طلبك</h1>
-          <p className="text-sm text-fg-muted">
-            أدخل رقم الطلب وآخر 4 أرقام من جوالك المسجل في الطلب.
+
+          {/* Connected badge */}
+          <div className="mb-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold border border-emerald-500/20 shadow-sm select-none">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              بوابة الاستلام الآمن · متصل
+            </span>
+          </div>
+
+          <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-fg mb-2 tracking-tight">استلام طلبك</h1>
+          <p className="text-sm text-fg-muted max-w-sm mx-auto leading-relaxed">
+            أدخل رقم الطلب وآخر 4 أرقام من جوالك المسجل في الطلب للحصول على بيانات حسابك وأكواد التفعيل.
           </p>
         </div>
+
         <PickupForm />
       </div>
     </div>
