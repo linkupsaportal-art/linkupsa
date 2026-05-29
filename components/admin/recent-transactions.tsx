@@ -31,7 +31,7 @@ export function RecentTransactions() {
           <p className="text-xs text-fg-muted mt-0.5">حركة المحفظة</p>
         </div>
         <Link
-          href="/admin/billing"
+          href="/admin/orders"
           className="inline-flex items-center gap-1 text-xs font-semibold text-fg hover:text-accent-fg hover:bg-accent rounded-full px-3 py-1.5 transition-colors"
         >
           عرض الكل

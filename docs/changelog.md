@@ -5,6 +5,30 @@
 
 ---
 
+# 2026-05-28 22:10
+
+- 🎨 **Complete PhoneInput Redesign — Custom Searchable Dropdown & Integrated Country Flag — Razex Xelite**
+  - **Full Component Rewrite**: Completely rewrote [phone-input.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/phone-input.tsx) from scratch. Replaced the ugly native `<select>` overlay with a custom-built, searchable dropdown panel. The component now uses only the headless `usePhoneInput` hook from `react-international-phone` — all UI is custom.
+  - **Integrated Flag + Dial Code**: The country flag and dial code (e.g. `🇸🇦 +966`) are rendered inline inside the input field as a clean trigger button with a subtle chevron, separated from the phone digits by a thin vertical divider. Phone digits remain always LTR.
+  - **Searchable Dropdown**: The country dropdown features a built-in search bar that filters by name, dial code, or ISO2 code. Each row shows flag, country name, dial code, and a checkmark for the active selection. The panel has smooth `animate-in` entrance, rounded corners, shadow elevation, and a custom scrollbar.
+  - **CSS Cleanup**: Removed ~100 lines of dead `.linkup-phone-input` / `.linkup-phone-dropdown` / `.react-international-phone-*` CSS overrides from [globals.css](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/globals.css). Replaced with ~25 lines: a `display:none` reset for the library's unused default UI, and custom scrollbar styles for `.phone-dropdown-scroll`.
+  - **Zero Breaking Changes**: The `PhoneInputProps` interface is identical — no consumer code changes needed. The [account-info-card.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/profile/account-info-card.tsx) usage works as-is.
+
+# 2026-05-28 20:20
+
+
+- 📱 **Premium Country Code Dropdown UI Overhaul & Embedded Dial Code Trigger — Razex Xelite completed visual & responsive polish**
+  - **Embedded Dial Code in Trigger**: Fully redesigned the [phone-input.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/phone-input.tsx) component using the headless `usePhoneInput` hook. Embedded the country dial code (e.g. `+966`) directly inside the select trigger button next to the flag (e.g., `[ 🇸🇦 +966 ▼ ]`), and enabled `disableDialCodeAndPrefix` to completely hide the dial code from the editable input text field.
+  - **Fixed Dropdown Clipping & Stacking**: Changed the container overflow setting inside [globals.css](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/globals.css) to `overflow: visible` and unblocked [section-card.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/profile/section-card.tsx) boundary limits by removing `overflow-hidden` from the wrapper. Added z-index stack handling (`z-10` elevating to `z-30` on `:focus-within`) on the outer container.
+  - **Theme & Scrollbar Unification**: Styled the dropdown options list with native HSL tokens (`hsl(var(--bg))`, `hsl(var(--fg))`, `hsl(var(--surface-2))`) to match both light and dark modes, and configured a sleek, minimal webkit scrollbar for premium details.
+
+# 2026-05-28 20:15
+
+- 🛡️ **Secure 2FA Verification Gate for Backup Codes Regeneration — Razex Xelite implemented user verification**
+  - **Server-Side Challenge & Verification**: Enhanced the `regenerateBackupCodesAction` inside [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/profile/actions.ts) to accept a validated 6-digit code object via Zod. Fetches the user's active verified TOTP factor, challenges it, and verifies the token against the challenge before performing the internal backup codes regeneration.
+  - **RTL-Aligned Verification Dialog**: Built a custom `RegenerateConfirmDialog` overlay in [two-factor-card.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/profile/two-factor-card.tsx) prompting the user to enter their current 6-digit TOTP token using the premium `<OtpInput>` custom component.
+  - **Fluid Loading and Error Handling**: Managed state transitions smoothly. Displays any validation errors inline inside the modal so it remains open on failure, and closes it upon successful verification to transition cleanly to the backup codes grid view.
+
 # 2026-05-28 17:30
 
 - 🧭 **Dynamic Admin Sidebar Hover-Mode Spacer & Rounded Gap Patch — Razex Xelite fixed layout bugs**

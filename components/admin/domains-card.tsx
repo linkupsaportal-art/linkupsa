@@ -25,7 +25,7 @@ export function DomainsCard() {
           </h3>
         </div>
         <Link
-          href="/admin/stores"
+          href="/admin/integrations"
           aria-label="إضافة نطاق"
           className="grid place-items-center size-8 rounded-full pill-accent hover:scale-[1.05] active:scale-95 transition-transform"
         >

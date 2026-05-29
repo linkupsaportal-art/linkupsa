@@ -1,7 +1,16 @@
 import {
-  LayoutDashboard, ShoppingBag, Package, Boxes, Users, BellRing,
-  ScrollText, FileClock, ShieldBan, Archive, BarChart3, KeyRound,
-  UserCog, Webhook, Settings, Store, Receipt, Activity, UserCircle2,
+  LayoutDashboard,
+  ShoppingBag,
+  Package,
+  Boxes,
+  BellRing,
+  FileClock,
+  ShieldBan,
+  Archive,
+  Webhook,
+  Settings,
+  UserCog,
+  UserCircle2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,30 +28,30 @@ export type NavGroup = {
 };
 
 /**
- * Per-store sections — visible inside a tenant context.
- * Order matches the spec: ops first, then catalog, then verification/security,
- * then communication, then store management.
+ * Admin sidebar — sections mirror the eight modules in
+ * `docs/project-details.md` plus the security/integration extras the spec
+ * defines (Phone Bans, Webhooks/API, Staff RBAC).
+ *
+ * Items NOT in the original spec were removed:
+ *   - Customers          → covered as a column inside Orders
+ *   - Audit Logs         → consolidated into OTP Logs + Archives
+ *   - Code-Limit Operators → lives in its own panel at /code-limit
+ *   - Analytics          → spec only asks for "Dashboard"
+ *   - Stores / Billing / Platform Logs → multi-tenant, out of scope v1
  */
 export const STORE_NAV: NavGroup[] = [
   {
     label: "نظرة عامة",
     items: [
-      { href: "/admin", label: "لوحة المعلومات", icon: LayoutDashboard },
+      { href: "/admin", label: "لوحة التحكم", icon: LayoutDashboard },
     ],
   },
   {
     label: "العمليات",
     items: [
       { href: "/admin/orders", label: "الطلبات", icon: ShoppingBag, status: "soon" },
-      { href: "/admin/customers", label: "العملاء", icon: Users, status: "soon" },
-      { href: "/admin/audit-logs", label: "سجل العمليات", icon: ScrollText, status: "soon" },
-    ],
-  },
-  {
-    label: "الكتالوج",
-    items: [
       { href: "/admin/products", label: "المنتجات", icon: Package, status: "soon" },
-      { href: "/admin/accounts", label: "الحسابات", icon: Boxes, status: "soon" },
+      { href: "/admin/accounts", label: "الحسابات / القواعد", icon: Boxes, status: "soon" },
     ],
   },
   {
@@ -50,36 +59,29 @@ export const STORE_NAV: NavGroup[] = [
     items: [
       { href: "/admin/otp-logs", label: "سجل أكواد التحقق", icon: FileClock, status: "soon" },
       { href: "/admin/phone-bans", label: "حظر الأرقام", icon: ShieldBan, status: "soon" },
-      { href: "/admin/code-limit", label: "مشغلو حد الأكواد", icon: KeyRound, status: "soon" },
     ],
   },
   {
-    label: "التواصل",
+    label: "التواصل والربط",
     items: [
       { href: "/admin/notifications", label: "الإشعارات", icon: BellRing, status: "soon" },
-      { href: "/admin/integrations", label: "Webhooks و API", icon: Webhook, status: "soon" },
+      { href: "/admin/integrations", label: "ربط المتجر و Webhooks", icon: Webhook, status: "soon" },
     ],
   },
   {
-    label: "إدارة المتجر",
+    label: "الإدارة",
     items: [
-      { href: "/admin/analytics", label: "التحليلات", icon: BarChart3, status: "soon" },
       { href: "/admin/archives", label: "الأرشيف", icon: Archive, status: "soon" },
       { href: "/admin/staff", label: "الموظفون والصلاحيات", icon: UserCog, status: "soon" },
-      { href: "/admin/settings", label: "إعدادات المتجر", icon: Settings, status: "soon" },
+      { href: "/admin/settings", label: "الإعدادات", icon: Settings, status: "soon" },
     ],
   },
 ];
 
-/** Global sections — visible only to platform owner. Below a divider. */
+/** Account-level item — appears under a divider, single entry. */
 export const GLOBAL_NAV: NavGroup[] = [
   {
-    label: "المنصة",
-    items: [
-      { href: "/admin/stores", label: "المتاجر", icon: Store, status: "soon" },
-      { href: "/admin/billing", label: "الفوترة", icon: Receipt, status: "soon" },
-      { href: "/admin/platform-logs", label: "سجلات المنصة", icon: Activity, status: "soon" },
-      { href: "/admin/profile", label: "حسابي", icon: UserCircle2 },
-    ],
+    label: "حسابي",
+    items: [{ href: "/admin/profile", label: "الملف الشخصي", icon: UserCircle2 }],
   },
 ];

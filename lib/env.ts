@@ -27,4 +27,10 @@ export const env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
   // Optional — has a sensible default sender, override per environment.
   RESEND_FROM: process.env.RESEND_FROM ?? "LinkUp <noreply@portaliosa.com>",
+  // Salla — server-only. Empty at build is fine; webhook handler refuses to
+  // run without WEBHOOK_TOKEN, so a misconfigured deploy fails closed.
+  SALLA_APP_ID: process.env.SALLA_APP_ID ?? "",
+  SALLA_CLIENT_ID: process.env.SALLA_CLIENT_ID ?? "",
+  SALLA_CLIENT_SECRET: process.env.SALLA_CLIENT_SECRET ?? "",
+  SALLA_WEBHOOK_TOKEN: process.env.SALLA_WEBHOOK_TOKEN ?? "",
 } as const;

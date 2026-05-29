@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {
-  LogOut, User as UserIcon, Settings, BellRing, CreditCard, ChevronLeft,
+  LogOut, User as UserIcon, Settings, BellRing, ChevronLeft,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -106,18 +106,6 @@ export function ProfileMenu({
             </span>
             <span className="flex-1 text-sm font-semibold text-[hsl(222_30%_6%)]">
               الإشعارات
-            </span>
-            <ChevronLeft className="size-4 text-[hsl(220_8%_52%)] shrink-0" />
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem asChild>
-          <Link href="/admin/billing" className="gap-3 py-2.5">
-            <span className="grid place-items-center size-9 rounded-xl bg-[hsl(60_14%_94%)] text-[hsl(222_30%_6%)] shrink-0">
-              <CreditCard className="size-4" strokeWidth={1.7} />
-            </span>
-            <span className="flex-1 text-sm font-semibold text-[hsl(222_30%_6%)]">
-              الفوترة والاشتراك
             </span>
             <ChevronLeft className="size-4 text-[hsl(220_8%_52%)] shrink-0" />
           </Link>

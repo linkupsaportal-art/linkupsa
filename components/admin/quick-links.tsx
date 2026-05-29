@@ -23,8 +23,8 @@ type LinkCard = {
 };
 
 const LINKS: LinkCard[] = [
-  { href: "/admin/customers", title: "العملاء", icon: Users2, variant: "tile" },
-  { href: "/admin/analytics", title: "التحليلات", icon: BarChart3, variant: "tile" },
+  { href: "/admin/orders", title: "الطلبات", icon: Users2, variant: "tile" },
+  { href: "/admin/products", title: "المنتجات", icon: BarChart3, variant: "tile" },
   {
     href: "/admin/notifications",
     title: "مركز المساعدة",
@@ -47,8 +47,8 @@ const LINKS: LinkCard[] = [
     variant: "row",
   },
   {
-    href: "/admin/audit-logs",
-    title: "أرشيف العمليات",
+    href: "/admin/archives",
+    title: "الأرشيف",
     description: "تابع كل ما حدث في متجرك",
     icon: BookOpenText,
     variant: "row",

@@ -69,9 +69,12 @@ export function AdminTopbar({
             </Link>
           </IconButton>
 
-          {/* Primary CTA — black pill, lime icon */}
+          {/* Primary CTA — opens the order-import / refresh flow.
+              The spec doesn't ship a "create store" CTA in v1, so this CTA
+              points to Orders where the operator can re-fetch a paid order
+              from the storefront API. */}
           <Link
-            href="/admin/stores"
+            href="/admin/orders"
             className={cn(
               "hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full font-semibold text-sm",
               "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] transition-all",
@@ -79,7 +82,7 @@ export function AdminTopbar({
             )}
           >
             <Plus className="size-4 text-accent" strokeWidth={2.5} />
-            متجر جديد
+            استيراد طلب
           </Link>
 
           <ProfileMenu userEmail={userEmail} userName={userName} avatarUrl={avatarUrl} />

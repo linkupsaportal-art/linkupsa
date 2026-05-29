@@ -26,7 +26,7 @@ export function SectionCard({
   return (
     <article
       className={cn(
-        "rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft overflow-hidden",
+        "rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft",
         className,
       )}
     >
@@ -50,7 +50,7 @@ export function SectionCard({
       <div className="px-4 sm:px-5 py-4">{children}</div>
 
       {footer && (
-        <footer className="flex flex-wrap items-center justify-end gap-2 px-4 sm:px-5 py-3 bg-surface-2 border-t border-[hsl(var(--hairline))]">
+        <footer className="flex flex-wrap items-center justify-end gap-2 px-4 sm:px-5 py-3 bg-surface-2 border-t border-[hsl(var(--hairline))] rounded-b-[15px]">
           {footer}
         </footer>
       )}

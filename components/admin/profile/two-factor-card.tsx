@@ -42,6 +42,9 @@ export function TwoFactorCard({ hasMfa }: { hasMfa: boolean }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmDisable, setConfirmDisable] = useState(false);
+  const [confirmRegenerate, setConfirmRegenerate] = useState(false);
+  const [regenCode, setRegenCode] = useState("");
+  const [regenError, setRegenError] = useState<string | null>(null);
 
   function handleEnable() {
     setError(null);
@@ -88,14 +91,16 @@ export function TwoFactorCard({ hasMfa }: { hasMfa: boolean }) {
     });
   }
 
-  function handleRegenerate() {
-    setError(null);
+  function handleRegenerate(submittedCode: string) {
+    setRegenError(null);
     startTransition(async () => {
-      const res = await regenerateBackupCodesAction();
+      const res = await regenerateBackupCodesAction({ code: submittedCode });
       if (!res.ok) {
-        setError(res.error);
+        setRegenError(res.error);
         return;
       }
+      setConfirmRegenerate(false);
+      setRegenCode("");
       setStep({ kind: "backup", codes: res.backupCodes });
     });
   }
@@ -121,7 +126,7 @@ export function TwoFactorCard({ hasMfa }: { hasMfa: boolean }) {
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleRegenerate}
+              onClick={() => setConfirmRegenerate(true)}
               disabled={pending}
             >
               <RefreshCw className="size-4" />
@@ -152,6 +157,22 @@ export function TwoFactorCard({ hasMfa }: { hasMfa: boolean }) {
           open={confirmDisable}
           onOpenChange={setConfirmDisable}
           onConfirm={handleDisable}
+          pending={pending}
+        />
+
+        <RegenerateConfirmDialog
+          open={confirmRegenerate}
+          onOpenChange={(open) => {
+            setConfirmRegenerate(open);
+            if (!open) {
+              setRegenCode("");
+              setRegenError(null);
+            }
+          }}
+          onConfirm={handleRegenerate}
+          code={regenCode}
+          setCode={setRegenCode}
+          error={regenError}
           pending={pending}
         />
       </>
@@ -484,3 +505,76 @@ function DisableConfirmDialog({
     </Dialog>
   );
 }
+
+function RegenerateConfirmDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  code,
+  setCode,
+  error,
+  pending,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onConfirm: (code: string) => void;
+  code: string;
+  setCode: (code: string) => void;
+  error: string | null;
+  pending: boolean;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>تأكيد توليد أكواد جديدة</DialogTitle>
+          <DialogDescription>
+            يرجى إدخال رمز التحقق الثنائي (2FA) المكون من 6 أرقام لإثبات هويتك قبل إعادة توليد أكواد النسخ الاحتياطي.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4 space-y-4">
+          <div className="rounded-xl bg-surface-2 p-4 border border-[hsl(var(--hairline))] flex flex-col items-center justify-center gap-3">
+            <p className="text-xs text-fg-muted font-semibold text-center">
+              أدخل الرمز المكون من 6 أرقام من تطبيق المصادقة الخاص بك:
+            </p>
+            <OtpInput
+              value={code}
+              onChange={setCode}
+              onComplete={onConfirm}
+              disabled={pending}
+              invalid={!!error}
+            />
+          </div>
+
+          {error && (
+            <p className="text-center inline-flex justify-center w-full items-center gap-1.5 text-xs font-semibold text-danger">
+              <AlertCircle className="size-3.5" />
+              {error}
+            </p>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={pending}
+          >
+            إلغاء
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => onConfirm(code)}
+            disabled={pending || code.length !== 6}
+          >
+            {pending ? "جاري التحقق والتوليد…" : "تأكيد وتوليد"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

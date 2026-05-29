@@ -472,12 +472,23 @@ export async function disableMfaAction(): Promise<ActionResult> {
   return { ok: true };
 }
 
+const regenerateBackupCodesSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, "الكود يجب أن يكون 6 أرقام"),
+});
+
 /**
  * Regenerates the 8 backup codes — invalidates the previous batch.
+ * Requires verifying the user's active 6-digit 2FA TOTP code first.
  */
-export async function regenerateBackupCodesAction(): Promise<
-  ActionResult<{ backupCodes: string[] }>
-> {
+export async function regenerateBackupCodesAction(
+  input: unknown,
+): Promise<ActionResult<{ backupCodes: string[] }>> {
+  const parsed = regenerateBackupCodesSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
+  }
+  const { code } = parsed.data;
+
   const sb = await createClient();
   const {
     data: { user },
@@ -486,12 +497,27 @@ export async function regenerateBackupCodesAction(): Promise<
 
   // Require at least one verified factor before letting anyone regen codes.
   const { data: factors } = await sb.auth.mfa.listFactors();
-  const hasVerified = (factors?.totp ?? []).some((f) => f.status === "verified");
-  if (!hasVerified) return { ok: false, error: "فعّل المصادقة بخطوتين أولاً." };
+  const verifiedFactor = (factors?.totp ?? []).find((f) => f.status === "verified");
+  if (!verifiedFactor) return { ok: false, error: "فعّل المصادقة بخطوتين أولاً." };
+
+  // Challenge the factor to get a challenge ID
+  const { data: challenge, error: chalErr } = await sb.auth.mfa.challenge({
+    factorId: verifiedFactor.id,
+  });
+  if (chalErr || !challenge) return { ok: false, error: "تعذّر التحقق من الهوية." };
+
+  // Verify the submitted code against the challenge
+  const { error: verifyErr } = await sb.auth.mfa.verify({
+    factorId: verifiedFactor.id,
+    challengeId: challenge.id,
+    code,
+  });
+  if (verifyErr) return { ok: false, error: "كود التحقق غير صحيح." };
 
   const codes = await regenerateBackupCodesInternal(user.id);
   return { ok: true, backupCodes: codes };
 }
+
 
 /* ────────────────────────────────────────────────────────────────────── */
 /*  Internals                                                             */

@@ -23,7 +23,7 @@ import { getCurrentUser } from "@/lib/supabase/server";
  *      - col-8: 3 stat tiles + tubular chart
  *      - col-4: quick links rail
  *   3. SECONDARY analytics (new):
- *      - 8/4 split: monthly trend + status donut
+ *      - 8/4 split: monthly trend + status donut**************************************************************************************************************************************************ùùùùùùùù*****************************$*%%%%%%%%%%$**********************************************ù************************************************************************************************************************************************************* 
  *      - 8/4 split: recent orders table + (transactions stack + domains)
  *      - full-width: KPI grid (8 tiles)
  */
@@ -153,7 +153,7 @@ function UpgradeCard() {
       </div>
 
       <Link
-        href="/admin/billing"
+        href="/admin/settings"
         className="relative mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-bg text-fg text-sm font-bold hover:bg-accent hover:text-accent-fg active:scale-[0.98] transition-all"
       >
         ترقية الخطة ▶
