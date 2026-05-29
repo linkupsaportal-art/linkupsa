@@ -11,6 +11,14 @@ import {
   addProductOptionAction,
   deleteProductOptionAction,
 } from "@/app/admin/products/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const HANDLER_TYPES: HandlerType[] = [
   "2fa_account",
@@ -22,18 +30,14 @@ const HANDLER_TYPES: HandlerType[] = [
 ];
 
 export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
-  const [products, setProducts] = useState(initialProducts);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addOptionFor, setAddOptionFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function refresh() {
-    // Re-fetch by navigating — Next.js revalidatePath handles this
-    window.location.reload();
-  }
+  function refresh() { window.location.reload(); }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,19 +46,20 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
     startTransition(async () => {
       const res = await createProductAction(fd);
       if (res?.error) { setError(res.error); return; }
-      setShowAddForm(false);
+      setShowAddDialog(false);
       refresh();
     });
   }
 
-  async function handleUpdate(id: string, e: React.FormEvent<HTMLFormElement>) {
+  async function handleUpdate(e: React.FormEvent<HTMLFormElement>) {
+    if (!editingProduct) return;
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
-      const res = await updateProductAction(id, fd);
+      const res = await updateProductAction(editingProduct.id, fd);
       if (res?.error) { setError(res.error); return; }
-      setEditingId(null);
+      setEditingProduct(null);
       refresh();
     });
   }
@@ -104,117 +109,102 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
         </div>
       )}
 
-      {/* Add product button */}
+      {/* Add button */}
       <div className="flex justify-end">
         <button
-          onClick={() => { setShowAddForm(true); setEditingId(null); setError(null); }}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors"
+          type="button"
+          onClick={() => { setShowAddDialog(true); setError(null); }}
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent-hi transition-colors cursor-pointer"
         >
           <Plus className="size-4" />
           إضافة منتج
         </button>
       </div>
 
-      {/* Add product form */}
-      {showAddForm && (
-        <ProductForm
-          onSubmit={handleCreate}
-          onCancel={() => setShowAddForm(false)}
-          isPending={isPending}
-        />
-      )}
-
       {/* Products list */}
-      {products.length === 0 && !showAddForm ? (
-        <EmptyState onAdd={() => setShowAddForm(true)} />
+      {initialProducts.length === 0 ? (
+        <EmptyState onAdd={() => setShowAddDialog(true)} />
       ) : (
         <div className="space-y-3">
-          {products.map((product) => (
+          {initialProducts.map((product) => (
             <div key={product.id} className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] overflow-hidden">
-              {/* Product row */}
-              {editingId === product.id ? (
-                <div className="p-4">
-                  <ProductForm
-                    product={product}
-                    onSubmit={(e) => handleUpdate(product.id, e)}
-                    onCancel={() => setEditingId(null)}
-                    isPending={isPending}
-                  />
+              <div className="flex items-center gap-3 p-4">
+                <button
+                  type="button"
+                  onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
+                  className="text-fg-muted hover:text-fg transition-colors cursor-pointer"
+                  aria-label={expandedId === product.id ? "طي" : "توسيع"}
+                >
+                  {expandedId === product.id
+                    ? <ChevronDown className="size-4" />
+                    : <ChevronRight className="size-4" />}
+                </button>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-fg truncate">{product.name}</span>
+                    {product.name_ar && (
+                      <span className="text-xs text-fg-muted">{product.name_ar}</span>
+                    )}
+                    <HandlerBadge type={product.handler_type} />
+                    <StatusBadge status={product.status} />
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-3 text-xs text-fg-muted">
+                    <span>{product.options?.length ?? 0} خيار</span>
+                    {product.salla_product_id && (
+                      <span>Salla #{product.salla_product_id}</span>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="flex items-center gap-3 p-4">
-                  {/* Expand toggle */}
+
+                <div className="flex items-center gap-1 shrink-0">
                   <button
-                    onClick={() => setExpandedId(expandedId === product.id ? null : product.id)}
-                    className="text-fg-muted hover:text-fg transition-colors"
+                    type="button"
+                    onClick={() => handleToggle(product.id, product.status)}
+                    disabled={isPending}
+                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    title={product.status === "active" ? "إيقاف" : "تفعيل"}
+                    aria-label={product.status === "active" ? "إيقاف المنتج" : "تفعيل المنتج"}
                   >
-                    {expandedId === product.id
-                      ? <ChevronDown className="size-4" />
-                      : <ChevronRight className="size-4" />}
+                    {product.status === "active"
+                      ? <ToggleRight className="size-4 text-accent" />
+                      : <ToggleLeft className="size-4" />}
                   </button>
-
-                  {/* Product info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-fg truncate">{product.name}</span>
-                      {product.name_ar && (
-                        <span className="text-xs text-fg-muted">{product.name_ar}</span>
-                      )}
-                      <HandlerBadge type={product.handler_type} />
-                      <StatusBadge status={product.status} />
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-3 text-xs text-fg-muted">
-                      <span>{product.options?.length ?? 0} خيار</span>
-                      {product.salla_product_id && (
-                        <span>Salla #{product.salla_product_id}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => handleToggle(product.id, product.status)}
-                      disabled={isPending}
-                      className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-                      title={product.status === "active" ? "إيقاف" : "تفعيل"}
-                    >
-                      {product.status === "active"
-                        ? <ToggleRight className="size-4 text-accent" />
-                        : <ToggleLeft className="size-4" />}
-                    </button>
-                    <button
-                      onClick={() => { setEditingId(product.id); setExpandedId(null); }}
-                      className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-                    >
-                      <Pencil className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      disabled={isPending}
-                      className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingProduct(product); setError(null); }}
+                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+                    aria-label="تعديل"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(product.id)}
+                    disabled={isPending}
+                    className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                    aria-label="حذف"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
                 </div>
-              )}
+              </div>
 
               {/* Options panel */}
-              {expandedId === product.id && editingId !== product.id && (
+              {expandedId === product.id && (
                 <div className="border-t border-[hsl(var(--hairline))] bg-surface-2 px-4 py-3 space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">الخيارات</span>
                     <button
+                      type="button"
                       onClick={() => setAddOptionFor(addOptionFor === product.id ? null : product.id)}
-                      className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent/80 font-semibold"
+                      className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hi font-semibold cursor-pointer"
                     >
                       <Plus className="size-3" />
                       إضافة خيار
                     </button>
                   </div>
 
-                  {/* Add option form */}
                   {addOptionFor === product.id && (
                     <form onSubmit={(e) => handleAddOption(product.id, e)} className="flex flex-wrap gap-2 mb-3">
                       <input
@@ -225,32 +215,31 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                       />
                       <input
                         name="name_ar"
-                        placeholder="الاسم بالعربي (اختياري)"
+                        placeholder="الاسم بالعربي"
                         className="h-8 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                       <input
                         name="salla_option_value"
-                        placeholder="قيمة خيار سلة (اختياري)"
+                        placeholder="قيمة خيار سلة"
                         className="h-8 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                       <button
                         type="submit"
                         disabled={isPending}
-                        className="h-8 px-3 rounded-lg bg-accent text-accent-fg text-xs font-semibold hover:bg-accent/90 transition-colors"
+                        className="h-8 px-3 rounded-lg bg-accent text-accent-fg text-xs font-semibold hover:bg-accent-hi transition-colors cursor-pointer disabled:cursor-not-allowed"
                       >
                         حفظ
                       </button>
                       <button
                         type="button"
                         onClick={() => setAddOptionFor(null)}
-                        className="h-8 px-3 rounded-lg text-fg-muted hover:text-fg text-xs"
+                        className="h-8 px-3 rounded-lg text-fg-muted hover:text-fg text-xs cursor-pointer"
                       >
                         إلغاء
                       </button>
                     </form>
                   )}
 
-                  {/* Options list */}
                   {(product.options?.length ?? 0) === 0 ? (
                     <p className="text-xs text-fg-faint py-2">لا توجد خيارات بعد.</p>
                   ) : (
@@ -265,8 +254,10 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
                             <span className="text-fg-faint">({opt.salla_option_value})</span>
                           )}
                           <button
+                            type="button"
                             onClick={() => handleDeleteOption(opt.id)}
-                            className="text-fg-faint hover:text-red-400 transition-colors"
+                            className="text-fg-faint hover:text-red-400 transition-colors cursor-pointer"
+                            aria-label="حذف الخيار"
                           >
                             ×
                           </button>
@@ -280,6 +271,34 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
           ))}
         </div>
       )}
+
+      {/* Add product dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>منتج جديد</DialogTitle>
+            <DialogDescription>أضف منتجاً رقمياً جديداً واربطه بمنتج في متجر سلة.</DialogDescription>
+          </DialogHeader>
+          <ProductForm onSubmit={handleCreate} isPending={isPending} onCancel={() => setShowAddDialog(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit product dialog */}
+      <Dialog open={!!editingProduct} onOpenChange={(o) => !o && setEditingProduct(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>تعديل المنتج</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <ProductForm
+              product={editingProduct}
+              onSubmit={handleUpdate}
+              isPending={isPending}
+              onCancel={() => setEditingProduct(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -296,94 +315,92 @@ function ProductForm({
   isPending: boolean;
 }) {
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl bg-surface-2 border border-[hsl(var(--hairline-strong))] p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-fg mb-3">
-        {product ? "تعديل المنتج" : "منتج جديد"}
-      </h3>
+    <form onSubmit={onSubmit} className="space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">الاسم *</label>
+        <Field label="الاسم *">
           <input
             name="name"
             defaultValue={product?.name}
             required
             placeholder="مثال: ChatGPT Plus"
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">الاسم بالعربي</label>
+        </Field>
+        <Field label="الاسم بالعربي">
           <input
             name="name_ar"
             defaultValue={product?.name_ar ?? ""}
             placeholder="اختياري"
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">نوع التسليم *</label>
+        </Field>
+        <Field label="نوع التسليم *">
           <select
             name="handler_type"
             defaultValue={product?.handler_type ?? "normal_account"}
             required
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           >
             {HANDLER_TYPES.map((t) => (
               <option key={t} value={t}>{HANDLER_LABELS[t]}</option>
             ))}
           </select>
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">رقم منتج سلة</label>
+        </Field>
+        <Field label="رقم منتج سلة">
           <input
             name="salla_product_id"
             type="number"
             defaultValue={product?.salla_product_id ?? ""}
-            placeholder="اختياري — للربط التلقائي"
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+            placeholder="للربط التلقائي"
+            className="form-input"
           />
-        </div>
+        </Field>
         {product && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">الحالة</label>
-            <select
-              name="status"
-              defaultValue={product.status}
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
-            >
+          <Field label="الحالة">
+            <select name="status" defaultValue={product.status} className="form-input">
               <option value="active">نشط</option>
               <option value="inactive">موقوف</option>
             </select>
-          </div>
+          </Field>
         )}
-        <div className="sm:col-span-2 space-y-1">
-          <label className="text-xs text-fg-muted">الوصف</label>
-          <textarea
-            name="description"
-            defaultValue={product?.description ?? ""}
-            rows={2}
-            placeholder="وصف اختياري"
-            className="w-full px-3 py-2 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent resize-none"
-          />
+        <div className="sm:col-span-2">
+          <Field label="الوصف">
+            <textarea
+              name="description"
+              defaultValue={product?.description ?? ""}
+              rows={2}
+              placeholder="وصف اختياري"
+              className="form-input resize-none"
+            />
+          </Field>
         </div>
       </div>
-      <div className="flex items-center gap-2 pt-1">
+      <DialogFooter>
         <button
           type="submit"
           disabled={isPending}
-          className="h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors disabled:opacity-50"
+          className="h-10 px-4 rounded-xl bg-[hsl(222_30%_6%)] text-[hsl(72_86%_62%)] text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isPending ? "جاري الحفظ..." : "حفظ"}
+          {isPending ? "جاري الحفظ..." : product ? "حفظ التغييرات" : "إنشاء"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="h-9 px-4 rounded-xl text-fg-muted hover:text-fg text-sm transition-colors"
+          className="h-10 px-4 rounded-xl border border-[hsl(220_18%_14%/0.10)] text-[hsl(222_30%_6%)] text-sm font-semibold hover:bg-[hsl(60_14%_94%)] transition-colors cursor-pointer"
         >
           إلغاء
         </button>
-      </div>
+      </DialogFooter>
     </form>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-[hsl(220_8%_30%)]">{label}</label>
+      {children}
+    </div>
   );
 }
 
@@ -424,8 +441,9 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
       <h3 className="font-semibold text-fg mb-1">لا توجد منتجات بعد</h3>
       <p className="text-sm text-fg-muted mb-4">أضف منتجك الأول لبدء تسليم الطلبات تلقائياً.</p>
       <button
+        type="button"
         onClick={onAdd}
-        className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors"
+        className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent-hi transition-colors cursor-pointer"
       >
         <Plus className="size-4" />
         إضافة منتج

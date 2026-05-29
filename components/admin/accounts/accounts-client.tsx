@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2, Eye, EyeOff, Database, ShieldCheck, Flame, Pause, Play } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Database, Pause, Play } from "lucide-react";
 import type { Account } from "@/lib/db/accounts";
 import type { Product } from "@/lib/db/products-types";
 import { HANDLER_LABELS } from "@/lib/db/products-types";
@@ -10,6 +10,14 @@ import {
   deleteAccountAction,
   updateAccountStatusAction,
 } from "@/app/admin/accounts/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const STATUS_LABELS: Record<Account["status"], string> = {
   active: "نشط",
@@ -32,7 +40,7 @@ export function AccountsClient({
   initialAccounts: Account[];
   products: Product[];
 }) {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [filterProduct, setFilterProduct] = useState<string>("all");
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +59,7 @@ export function AccountsClient({
     startTransition(async () => {
       const res = await createAccountAction(fd);
       if (res?.error) { setError(res.error); return; }
-      setShowAddForm(false);
+      setShowAddDialog(false);
       refresh();
     });
   }
@@ -75,7 +83,7 @@ export function AccountsClient({
   function toggleReveal(id: string) {
     setRevealedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
@@ -88,12 +96,11 @@ export function AccountsClient({
         </div>
       )}
 
-      {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <select
           value={filterProduct}
           onChange={(e) => setFilterProduct(e.target.value)}
-          className="h-9 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+          className="h-9 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
         >
           <option value="all">كل المنتجات ({initialAccounts.length})</option>
           {products.map((p) => (
@@ -103,27 +110,22 @@ export function AccountsClient({
           ))}
         </select>
         <button
-          onClick={() => { setShowAddForm(true); setError(null); }}
-          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors"
+          type="button"
+          onClick={() => { setShowAddDialog(true); setError(null); }}
+          disabled={products.length === 0}
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent-hi transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          title={products.length === 0 ? "أضف منتجاً أولاً" : "إضافة حساب"}
         >
           <Plus className="size-4" />
           إضافة حساب
         </button>
       </div>
 
-      {/* Add form */}
-      {showAddForm && (
-        <AccountForm
-          products={products}
-          onSubmit={handleCreate}
-          onCancel={() => setShowAddForm(false)}
-          isPending={isPending}
+      {filtered.length === 0 ? (
+        <EmptyState
+          onAdd={() => setShowAddDialog(true)}
+          hasProducts={products.length > 0}
         />
-      )}
-
-      {/* Accounts list */}
-      {filtered.length === 0 && !showAddForm ? (
-        <EmptyState onAdd={() => setShowAddForm(true)} />
       ) : (
         <div className="space-y-2">
           {filtered.map((account) => (
@@ -139,6 +141,21 @@ export function AccountsClient({
           ))}
         </div>
       )}
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>حساب جديد</DialogTitle>
+            <DialogDescription>أضف بيانات حساب جديد للمخزون. تُشفّر الحقول الحساسة قبل الحفظ.</DialogDescription>
+          </DialogHeader>
+          <AccountForm
+            products={products}
+            onSubmit={handleCreate}
+            onCancel={() => setShowAddDialog(false)}
+            isPending={isPending}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -177,7 +194,6 @@ function AccountRow({
             {account.product_name && <span className="text-fg-faint">{account.product_name}</span>}
           </div>
 
-          {/* Usage bar */}
           <div className="flex items-center gap-2 mt-1">
             <div className="flex-1 max-w-[120px] h-1.5 rounded-full bg-surface-2 overflow-hidden">
               <div
@@ -191,51 +207,65 @@ function AccountRow({
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
           <button
+            type="button"
             onClick={onToggleReveal}
-            className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+            className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
             title={revealed ? "إخفاء" : "عرض البيانات"}
+            aria-label={revealed ? "إخفاء" : "عرض البيانات"}
           >
             {revealed ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
 
           {account.status === "active" ? (
             <button
+              type="button"
               onClick={() => onStatusChange("paused")}
               disabled={isPending}
-              className="p-2 rounded-lg text-fg-muted hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors"
+              className="p-2 rounded-lg text-fg-muted hover:text-yellow-400 hover:bg-yellow-500/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="إيقاف مؤقت"
+              aria-label="إيقاف مؤقت"
             >
               <Pause className="size-4" />
             </button>
           ) : account.status === "paused" ? (
             <button
+              type="button"
               onClick={() => onStatusChange("active")}
               disabled={isPending}
-              className="p-2 rounded-lg text-fg-muted hover:text-accent hover:bg-accent/10 transition-colors"
+              className="p-2 rounded-lg text-fg-muted hover:text-accent hover:bg-accent/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
               title="تفعيل"
+              aria-label="تفعيل"
             >
               <Play className="size-4" />
             </button>
           ) : null}
 
           <button
+            type="button"
             onClick={onDelete}
             disabled={isPending}
-            className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
+            aria-label="حذف"
           >
             <Trash2 className="size-4" />
           </button>
         </div>
       </div>
 
-      {/* Revealed credentials */}
       {revealed && (
         <div className="mt-3 pt-3 border-t border-[hsl(var(--hairline))] grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <SecretField label="البريد الإلكتروني" value={account.email} />
-          <SecretField label="كلمة المرور" value="••••••••" masked />
+          {account.email && (
+            <div>
+              <span className="text-fg-faint">البريد الإلكتروني: </span>
+              <span className="text-fg">{account.email}</span>
+            </div>
+          )}
+          <div>
+            <span className="text-fg-faint">كلمة المرور: </span>
+            <span className="font-mono tracking-widest text-fg">••••••••</span>
+          </div>
           {account.instructions && (
             <div className="sm:col-span-2">
               <span className="text-fg-faint">التعليمات: </span>
@@ -248,16 +278,6 @@ function AccountRow({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function SecretField({ label, value, masked }: { label: string; value?: string | null; masked?: boolean }) {
-  if (!value) return null;
-  return (
-    <div>
-      <span className="text-fg-faint">{label}: </span>
-      <span className={`font-mono ${masked ? "tracking-widest" : ""} text-fg`}>{value}</span>
     </div>
   );
 }
@@ -278,172 +298,175 @@ function AccountForm({
   const handlerType = selectedProductData?.handler_type ?? "normal_account";
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl bg-surface-2 border border-[hsl(var(--hairline-strong))] p-4 space-y-3">
-      <h3 className="text-sm font-semibold text-fg">حساب جديد</h3>
-
+    <form onSubmit={onSubmit} className="space-y-3">
       <input type="hidden" name="handler_type" value={handlerType} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* Product selector */}
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">المنتج *</label>
+        <Field label="المنتج *">
           <select
             name="product_id"
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
             required
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           >
             {products.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
-        </div>
+        </Field>
 
-        {/* Label */}
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">اسم القاعدة *</label>
+        <Field label="اسم القاعدة *">
           <input
             name="label"
             required
             placeholder="مثال: Account #1"
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           />
-        </div>
+        </Field>
 
-        {/* Email */}
         {["2fa_account", "steam_guard_account", "email_code_account", "normal_account"].includes(handlerType) && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">البريد الإلكتروني</label>
-            <input
-              name="email"
-              type="email"
-              placeholder="account@example.com"
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
+          <>
+            <Field label="البريد الإلكتروني">
+              <input
+                name="email"
+                type="email"
+                placeholder="account@example.com"
+                className="form-input"
+              />
+            </Field>
+            <Field label="كلمة المرور">
+              <input
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                className="form-input"
+              />
+            </Field>
+          </>
         )}
 
-        {/* Password */}
-        {["2fa_account", "steam_guard_account", "email_code_account", "normal_account"].includes(handlerType) && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">كلمة المرور</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
-        )}
-
-        {/* TOTP Secret */}
         {handlerType === "2fa_account" && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">TOTP Secret (2FA)</label>
-            <input
-              name="totp_secret"
-              placeholder="JBSWY3DPEHPK3PXP"
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm font-mono text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
-            />
+          <div className="sm:col-span-2">
+            <Field label="TOTP Secret (2FA)">
+              <input
+                name="totp_secret"
+                placeholder="JBSWY3DPEHPK3PXP"
+                className="form-input font-mono"
+              />
+            </Field>
           </div>
         )}
 
-        {/* Steam shared_secret */}
         {handlerType === "steam_guard_account" && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">Steam shared_secret</label>
-            <input
-              name="steam_shared_secret"
-              placeholder="base64 shared_secret"
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm font-mono text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
-            />
+          <div className="sm:col-span-2">
+            <Field label="Steam shared_secret">
+              <input
+                name="steam_shared_secret"
+                placeholder="base64 shared_secret"
+                className="form-input font-mono"
+              />
+            </Field>
           </div>
         )}
 
-        {/* Card code */}
         {handlerType === "recharge_card" && (
-          <div className="space-y-1">
-            <label className="text-xs text-fg-muted">كود البطاقة</label>
-            <input
-              name="card_code"
-              placeholder="XXXX-XXXX-XXXX-XXXX"
-              className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm font-mono text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
-            />
+          <div className="sm:col-span-2">
+            <Field label="كود البطاقة">
+              <input
+                name="card_code"
+                placeholder="XXXX-XXXX-XXXX-XXXX"
+                className="form-input font-mono"
+              />
+            </Field>
           </div>
         )}
 
-        {/* Max usage */}
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">الحد الأقصى للاستخدام</label>
+        <Field label="الحد الأقصى للاستخدام">
           <input
             name="max_usage"
             type="number"
             min={1}
             defaultValue={1}
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           />
-        </div>
+        </Field>
 
-        {/* Max OTP requests */}
-        <div className="space-y-1">
-          <label className="text-xs text-fg-muted">حد طلبات الكود</label>
+        <Field label="حد طلبات الكود">
           <input
             name="max_otp_requests"
             type="number"
             min={1}
             defaultValue={10}
-            className="w-full h-9 px-3 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+            className="form-input"
           />
-        </div>
+        </Field>
 
-        {/* Instructions */}
-        <div className="sm:col-span-2 space-y-1">
-          <label className="text-xs text-fg-muted">التعليمات</label>
-          <textarea
-            name="instructions"
-            rows={2}
-            placeholder="تعليمات تظهر للعميل عند الاستلام"
-            className="w-full px-3 py-2 rounded-lg bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent resize-none"
-          />
+        <div className="sm:col-span-2">
+          <Field label="التعليمات">
+            <textarea
+              name="instructions"
+              rows={2}
+              placeholder="تعليمات تظهر للعميل عند الاستلام"
+              className="form-input resize-none"
+            />
+          </Field>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-1">
+      <DialogFooter>
         <button
           type="submit"
           disabled={isPending}
-          className="h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors disabled:opacity-50"
+          className="h-10 px-4 rounded-xl bg-[hsl(222_30%_6%)] text-[hsl(72_86%_62%)] text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isPending ? "جاري الحفظ..." : "حفظ"}
+          {isPending ? "جاري الحفظ..." : "إنشاء"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="h-9 px-4 rounded-xl text-fg-muted hover:text-fg text-sm transition-colors"
+          className="h-10 px-4 rounded-xl border border-[hsl(220_18%_14%/0.10)] text-[hsl(222_30%_6%)] text-sm font-semibold hover:bg-[hsl(60_14%_94%)] transition-colors cursor-pointer"
         >
           إلغاء
         </button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-[hsl(220_8%_30%)]">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function EmptyState({ onAdd, hasProducts }: { onAdd: () => void; hasProducts: boolean }) {
   return (
     <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-12 text-center">
       <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-surface-2 mb-4">
         <Database className="size-6 text-fg-muted" />
       </div>
-      <h3 className="font-semibold text-fg mb-1">لا توجد حسابات بعد</h3>
-      <p className="text-sm text-fg-muted mb-4">أضف الحسابات والأكواد التي ستُسلَّم للعملاء.</p>
-      <button
-        onClick={onAdd}
-        className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent/90 transition-colors"
-      >
-        <Plus className="size-4" />
-        إضافة حساب
-      </button>
+      <h3 className="font-semibold text-fg mb-1">
+        {hasProducts ? "لا توجد حسابات بعد" : "أضف منتجاً أولاً"}
+      </h3>
+      <p className="text-sm text-fg-muted mb-4">
+        {hasProducts
+          ? "أضف الحسابات والأكواد التي ستُسلَّم للعملاء."
+          : "تحتاج إلى إنشاء منتج قبل إضافة الحسابات."}
+      </p>
+      {hasProducts && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="inline-flex items-center gap-2 h-9 px-4 rounded-xl bg-accent text-accent-fg text-sm font-semibold hover:bg-accent-hi transition-colors cursor-pointer"
+        >
+          <Plus className="size-4" />
+          إضافة حساب
+        </button>
+      )}
     </div>
   );
 }

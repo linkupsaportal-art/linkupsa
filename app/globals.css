@@ -88,6 +88,26 @@ html, body {
 }
 html { scroll-behavior: auto; color-scheme: dark; }
 
+/* Tailwind v4 dropped the implicit cursor:pointer on interactive elements.
+ * Restoring it globally so buttons, links, and ARIA-roled elements feel
+ * clickable without each component needing cursor-pointer in its className. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="menuitem"]:not([aria-disabled="true"]),
+[role="tab"]:not([aria-disabled="true"]),
+[role="option"]:not([aria-disabled="true"]),
+summary,
+label[for],
+select:not(:disabled),
+a[href] {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+}
+
 ::selection { background: hsl(var(--accent) / 0.95); color: white; }
 
 /* Scrollbar — Discord-style thin */
@@ -500,6 +520,42 @@ body.menu-open {
 .theme-admin .bar-tube.empty {
   background: transparent;
   border: 1.5px dashed hsl(var(--fg) / 0.20);
+}
+
+/* Shared form input style for dialogs in the admin theme. White surface,
+ * subtle hairline, lime focus ring. Used by Products + Accounts forms. */
+.theme-admin .form-input,
+.form-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  border-radius: 0.625rem;
+  background: hsl(60 14% 97%);
+  border: 1px solid hsl(220 18% 14% / 0.10);
+  color: hsl(222 30% 6%);
+  font-size: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.theme-admin .form-input::placeholder,
+.form-input::placeholder {
+  color: hsl(220 8% 60%);
+}
+.theme-admin .form-input:focus,
+.form-input:focus {
+  outline: none;
+  border-color: hsl(72 86% 50%);
+  box-shadow: 0 0 0 3px hsl(72 86% 62% / 0.25);
+  background: white;
+}
+.theme-admin textarea.form-input,
+textarea.form-input {
+  height: auto;
+  padding: 0.5rem 0.875rem;
+  line-height: 1.5;
+}
+.theme-admin select.form-input,
+select.form-input {
+  cursor: pointer;
 }
 
 
