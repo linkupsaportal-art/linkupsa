@@ -96,13 +96,22 @@ export async function lookupOrderAction(
     return { error: "خطأ في بيانات الطلب. تواصل مع المتجر." };
   }
 
-  // Decrypt password (currently bytea-as-utf8, will switch to pgsodium later)
-  const password = accountData.password_encrypted
-    ? Buffer.from(accountData.password_encrypted as unknown as string, "base64").toString("utf8")
-    : undefined;
-  const cardCode = accountData.card_code_encrypted
-    ? Buffer.from(accountData.card_code_encrypted as unknown as string, "base64").toString("utf8")
-    : undefined;
+  // Decrypt password.
+  // Supabase REST returns bytea columns as hex-escaped strings: "\x50617373..."
+  // We decode that hex to get the original UTF-8 bytes.
+  const decryptBytea = (raw: unknown): string | undefined => {
+    if (!raw) return undefined;
+    const s = raw as string;
+    // Supabase hex format: \x followed by hex pairs
+    if (s.startsWith("\\x")) {
+      return Buffer.from(s.slice(2), "hex").toString("utf8");
+    }
+    // Fallback: try base64
+    try { return Buffer.from(s, "base64").toString("utf8"); } catch { return s; }
+  };
+
+  const password = decryptBytea(accountData.password_encrypted);
+  const cardCode = decryptBytea(accountData.card_code_encrypted);
 
   return {
     orderId: order.id,

@@ -125,8 +125,11 @@ export async function getAccountSecret(
     .single<Record<string, unknown>>();
 
   if (error || !data) return null;
-  const raw = data[field] as Buffer | null;
+  const raw = data[field] as string | null;
   if (!raw) return null;
-  // raw is a Buffer from the bytea column
-  return Buffer.from(raw).toString("utf8");
+  // Supabase REST returns bytea as hex-escaped: \x followed by hex pairs
+  if (raw.startsWith("\\x")) {
+    return Buffer.from(raw.slice(2), "hex").toString("utf8");
+  }
+  try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; }
 }
