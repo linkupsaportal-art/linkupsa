@@ -1,13 +1,7 @@
 import { PageHeader } from "@/components/admin/page-header";
 import { createServiceClient } from "@/lib/supabase/server";
-import {
-  Webhook,
-  Store,
-  Activity,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-} from "lucide-react";
+import { Activity, AlertCircle, CheckCircle2, Clock, Store, Webhook } from "lucide-react";
+import { IntegrationsClient } from "@/components/admin/integrations/integrations-client";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +42,12 @@ export default async function IntegrationsPage() {
       <PageHeader
         title="ربط المتجر و Webhooks"
         eyebrow="التواصل والربط"
-        description="حالة الربط مع سلة، الأحداث الواردة من المتجر، وآخر العمليات."
+        description="حالة الربط مع المتجر، الأحداث الواردة، ومعالجة الطلبات."
       />
 
       <div className="space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <Stat icon={Store} label="متاجر مربوطة" value={active.length} tone="ok" />
           <Stat icon={Activity} label="أحداث 7 أيام" value={total} tone="neutral" />
           <Stat
@@ -63,15 +57,21 @@ export default async function IntegrationsPage() {
             tone="ok"
           />
           <Stat
+            icon={Clock}
+            label="قيد الانتظار"
+            value={counts.pending ?? 0}
+            tone={(counts.pending ?? 0) > 0 ? "warn" : "neutral"}
+          />
+          <Stat
             icon={AlertCircle}
-            label="فشلت أو معلّقة"
-            value={(counts.failed ?? 0) + (counts.pending ?? 0)}
-            tone={counts.failed > 0 ? "bad" : "neutral"}
+            label="فشلت"
+            value={counts.failed ?? 0}
+            tone={(counts.failed ?? 0) > 0 ? "bad" : "neutral"}
           />
         </div>
 
         {/* Connected stores */}
-        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر سلة مرتبط بالمنصة.">
+        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة.">
           {active.length === 0 ? (
             <p className="text-sm text-fg-muted text-center py-6">لا توجد متاجر مربوطة.</p>
           ) : (
@@ -102,63 +102,33 @@ export default async function IntegrationsPage() {
           )}
         </Section>
 
-        {/* Webhook events */}
+        {/* Webhook events with drain controls */}
         <Section
           icon={Webhook}
           title="آخر الأحداث الواردة"
-          description="آخر 20 webhook استقبلتها المنصة من سلة."
+          description="آخر 20 حدث استقبلته المنصة. الأحداث تُعالج تلقائياً، ويمكنك تشغيل المعالج الآن إذا احتجت."
         >
-          {events.length === 0 ? (
-            <p className="text-sm text-fg-muted text-center py-6">لم تصل أحداث webhook بعد.</p>
-          ) : (
-            <div className="overflow-x-auto -mx-5 px-5">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-xs font-semibold text-fg-muted uppercase tracking-wider border-b border-[hsl(var(--hairline))]">
-                    <th className="text-start py-2 font-semibold">الحدث</th>
-                    <th className="text-start py-2 font-semibold">الحالة</th>
-                    <th className="text-start py-2 font-semibold">الخطأ</th>
-                    <th className="text-start py-2 font-semibold">الوقت</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[hsl(var(--hairline))]">
-                  {events.map((e) => (
-                    <tr key={e.id}>
-                      <td className="py-2.5 text-xs text-fg font-bold">{e.event}</td>
-                      <td className="py-2.5">
-                        <StatusBadge status={e.status} />
-                      </td>
-                      <td className="py-2.5 text-[11px] text-fg-muted max-w-xs truncate" title={e.error ?? ""}>
-                        {e.error || <span className="text-fg-faint">—</span>}
-                      </td>
-                      <td className="py-2.5 text-[11px] text-fg-muted font-num" dir="ltr">
-                        {new Date(e.received_at).toLocaleString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: false,
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <IntegrationsClient
+            events={events as IntegrationEvent[]}
+            pending={counts.pending ?? 0}
+            failed={counts.failed ?? 0}
+          />
         </Section>
 
         {/* Webhook URL */}
         <Section
           icon={Webhook}
           title="عنوان Webhook"
-          description="استخدم هذا الرابط في إعدادات سلة لاستقبال الأحداث."
+          description="الرابط المستخدم لاستقبال الأحداث من المتجر."
         >
-          <div className="rounded-xl bg-surface-2 border border-[hsl(var(--hairline))] p-3 font-num text-xs text-fg" dir="ltr">
+          <div
+            className="rounded-xl bg-surface-2 border border-[hsl(var(--hairline))] p-3 font-num text-xs text-fg"
+            dir="ltr"
+          >
             https://salla-webhook-proxy.linkup.workers.dev/
           </div>
           <p className="text-[11px] text-fg-faint mt-2 leading-relaxed">
-            الأحداث تمر عبر Cloudflare Worker للحماية ضد DDoS وتسريع الاستجابة، ثم تُحفظ في قاعدة البيانات وتُعالج تلقائياً.
+            الأحداث تمر عبر طبقة حماية على Cloudflare لتسريع الاستجابة، ثم تُحفظ وتُعالج تلقائياً.
           </p>
         </Section>
       </div>
@@ -166,23 +136,14 @@ export default async function IntegrationsPage() {
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string; Icon: typeof Clock }> = {
-    succeeded: { label: "نجح", cls: "bg-accent/15 text-accent border-accent/25", Icon: CheckCircle2 },
-    failed: { label: "فشل", cls: "bg-red-500/15 text-red-400 border-red-500/25", Icon: AlertCircle },
-    pending: { label: "معلّق", cls: "bg-yellow-500/15 text-yellow-400 border-yellow-500/25", Icon: Clock },
-    processing: { label: "قيد المعالجة", cls: "bg-blue-500/15 text-blue-400 border-blue-500/25", Icon: Activity },
-    skipped: { label: "متجاوز", cls: "bg-fg-faint/15 text-fg-faint border-fg-faint/25", Icon: Clock },
-  };
-  const meta = map[status] ?? map.pending;
-  const Icon = meta.Icon;
-  return (
-    <span className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold border ${meta.cls}`}>
-      <Icon className="size-2.5" />
-      {meta.label}
-    </span>
-  );
-}
+export type IntegrationEvent = {
+  id: string;
+  event: string;
+  status: string;
+  error: string | null;
+  received_at: string;
+  processed_at: string | null;
+};
 
 function Stat({
   icon: Icon,
@@ -193,11 +154,12 @@ function Stat({
   icon: typeof Webhook;
   label: string;
   value: number;
-  tone: "ok" | "bad" | "neutral";
+  tone: "ok" | "bad" | "warn" | "neutral";
 }) {
   const colors = {
     ok: "bg-accent/10 text-accent",
     bad: "bg-red-500/10 text-red-400",
+    warn: "bg-amber-500/10 text-amber-500",
     neutral: "bg-surface-2 text-fg-muted",
   } as const;
   return (

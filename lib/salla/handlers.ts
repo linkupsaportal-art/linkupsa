@@ -12,7 +12,10 @@ import type { AppStoreAuthorizeData, SallaWebhookEnvelope } from "./types";
  *   - app.store.uninstalled → mark store uninstalled
  *
  * Order events flip themselves to status='succeeded' once a worker picks
- * them up. For now they just persist in the inbox.
+ * them up. Lightweight informational events (app.installed,
+ * app.updated, customer.*, product.*) are auto-acked as `succeeded`
+ * so the integrations dashboard doesn't show them stuck at `pending`
+ * forever — we record them for audit but have nothing more to do.
  */
 export async function dispatch(envelope: SallaWebhookEnvelope, eventId: string): Promise<void> {
   const sb = createServiceClient();
@@ -29,7 +32,16 @@ export async function dispatch(envelope: SallaWebhookEnvelope, eventId: string):
       return;
     // Order events are intentionally left at status='pending' — the
     // fulfillment worker (next milestone) will pick them up.
+    case "order.created":
+    case "order.updated":
+    case "order.status.updated":
+    case "order.payment.updated":
+      return;
+    // Everything else: archived / informational. Ack as succeeded so the
+    // dashboard reflects "we received and acknowledged it" rather than
+    // a misleading "pending".
     default:
+      await markProcessed(sb, eventId, "succeeded");
       return;
   }
 }
