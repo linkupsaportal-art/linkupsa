@@ -1,22 +1,26 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendKarzounWhatsApp } from "./whatsapp-karzoun";
+import { sendBanAlertEmail } from "./email";
 
 /**
- * Phone-ban WhatsApp notifier.
+ * Phone-ban multi-channel notifier.
  *
  * Fired (best-effort, fire-and-forget) whenever a phone gets banned —
  * either manually from the admin Bans tab, or automatically by the
- * threshold evaluator. Uses the merchant's pre-approved template
- * `phone_ban_alert_v1` (positional placeholders: store_name,
- * customer_name, reason). Duration is folded into the reason string so
- * we don't need a brand-new approved template every time the merchant
- * changes their wording.
+ * threshold evaluator. Fans out to:
  *
- * If WhatsApp isn't configured, the merchant's store has no row in
- * `notification_channels`, or the customer's mobile is missing/invalid,
- * the function quietly returns without throwing — banning a phone must
- * never depend on the network call succeeding.
+ *   - WhatsApp via Karzoun (uses pre-approved template
+ *     `phone_ban_alert_v1`, positional placeholders: store_name,
+ *     customer_name, reason). Duration is folded into the reason so
+ *     we don't need a new approved template per wording change.
+ *   - Email via Resend (custom HTML template, supports a separate
+ *     "duration" line because email has no length restrictions).
+ *   - Telegram mirror to the merchant's chat (operator-side only).
+ *
+ * Each channel runs independently. A failure in one never blocks
+ * the others — banning a phone must never depend on a network call
+ * succeeding.
  */
 export type NotifyBanArgs = {
   mobile: string;
@@ -35,77 +39,150 @@ export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
   if (!/^\d{8,15}$/.test(cleanMobile)) return;
 
   const sb = createServiceClient();
-  // Pull any active store-level Karzoun config. We currently run a single
-  // merchant tenant so picking the first enabled row is safe.
-  const { data: cfgRow } = await sb
+
+  // Resolve the customer's name + email from their most recent order.
+  // Phone-only callers (manual ban with no customer record) get a sane
+  // default name and skip the email mirror cleanly.
+  const { data: orderRow } = await sb
+    .from("orders")
+    .select("customer_name, customer_email, customer_mobile")
+    .ilike("customer_mobile", `%${cleanMobile.slice(-9)}%`)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const customerName =
+    args.customerName?.trim() ||
+    (orderRow?.customer_name as string | undefined) ||
+    "العميل الكريم";
+  const customerEmail =
+    (orderRow?.customer_email as string | null | undefined) ?? null;
+
+  // Resolve a default store name for the templates.
+  let storeName = args.storeName?.trim() ?? "";
+
+  // Pull active store-level WhatsApp config (Karzoun). Single-tenant safe.
+  const { data: waRow } = await sb
     .from("notification_channels")
-    .select("config, store_id")
+    .select("config")
     .eq("channel", "whatsapp")
     .eq("enabled", true)
     .limit(1)
     .maybeSingle();
-
-  const cfg = (cfgRow?.config ?? {}) as Record<string, unknown>;
-  const provider = cfg.provider as string | undefined;
-  const appToken = cfg.app_token as string | undefined;
-  const integrationId = cfg.integration_id as string | undefined;
-  const host = cfg.host as string | undefined;
-  const language = (cfg.language as string | undefined) ?? "ar";
-  const storeName =
-    args.storeName ?? (cfg.store_name as string | undefined) ?? "متجرنا";
-  const banTemplate =
-    (cfg.ban_template as string | undefined) ?? "phone_ban_alert_v1";
-
-  if (provider !== "karzoun" || !appToken || !integrationId) return;
-
-  // Lookup customer name from a recent order if not supplied.
-  let customerName = args.customerName?.trim() || "";
-  if (!customerName) {
-    const { data: orderRow } = await sb
-      .from("orders")
-      .select("customer_name, customer_mobile")
-      .ilike("customer_mobile", `%${cleanMobile.slice(-9)}%`)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    customerName = (orderRow?.customer_name as string | undefined) ?? "العميل الكريم";
+  const waCfg = (waRow?.config ?? {}) as Record<string, unknown>;
+  if (!storeName) {
+    storeName = (waCfg.store_name as string | undefined) ?? "متجرنا";
   }
 
-  // Fold duration into the reason placeholder so the merchant doesn't have
-  // to ask Meta to approve a new template every time wording changes.
-  // NOTE: WhatsApp template parameters CANNOT contain newlines, tabs, or
-  // 4+ consecutive spaces — those trigger Meta error #100. Use an inline
-  // separator instead.
+  // Build the body once, reused across channels.
   const baseReason =
     (args.reason || "").trim() ||
     "تم تقييد الرقم بناءً على سياسة الأمان";
   const flatBaseReason = baseReason.replace(/\s+/g, " ").trim();
   const durationLabel = (args.durationLabel || "").trim();
-  const reasonText = durationLabel
+  // WhatsApp templates can't contain newlines, tabs, or 4+ spaces in a
+  // single param (Meta error #100). Inline the duration with an em-dash.
+  const reasonForWhatsApp = durationLabel
     ? `${flatBaseReason} — مدة الحظر: ${durationLabel}`
     : flatBaseReason;
 
-  await sendKarzounWhatsApp({
-    to: cleanMobile,
-    template: banTemplate,
-    params: [storeName, customerName, reasonText],
-    config: {
-      host,
-      appToken,
-      integrationId,
-      defaultTemplate: banTemplate,
-      language,
-    },
-  }).catch(() => {
-    /* best-effort: never block ban creation on WhatsApp errors */
+  // ─── WhatsApp ──────────────────────────────────────────────────────────
+  void sendBanWhatsApp({
+    cfg: waCfg,
+    mobile: cleanMobile,
+    storeName,
+    customerName,
+    reasonForWhatsApp,
   });
 
-  // Mirror the ban event to the Telegram channel if configured.
+  // ─── Email ─────────────────────────────────────────────────────────────
+  void sendBanEmailIfEnabled(sb, {
+    customerEmail,
+    storeName,
+    customerName,
+    reason: flatBaseReason,
+    durationLabel: durationLabel || null,
+  });
+
+  // ─── Telegram mirror (operator-side) ───────────────────────────────────
   void mirrorBanToTelegram(sb, {
     storeName,
     mobile: cleanMobile,
     customerName,
-    reason: reasonText,
+    reason: reasonForWhatsApp,
+  });
+}
+
+/* ─────────────────────── helpers ─────────────────────── */
+
+async function sendBanWhatsApp(args: {
+  cfg: Record<string, unknown>;
+  mobile: string;
+  storeName: string;
+  customerName: string;
+  reasonForWhatsApp: string;
+}): Promise<void> {
+  const c = args.cfg;
+  const provider = c.provider as string | undefined;
+  const appToken = c.app_token as string | undefined;
+  const integrationId = c.integration_id as string | undefined;
+  if (provider !== "karzoun" || !appToken || !integrationId) return;
+  await sendKarzounWhatsApp({
+    to: args.mobile,
+    template: (c.ban_template as string | undefined) ?? "phone_ban_alert_v1",
+    params: [args.storeName, args.customerName, args.reasonForWhatsApp],
+    config: {
+      host: c.host as string | undefined,
+      appToken,
+      integrationId,
+      defaultTemplate:
+        (c.ban_template as string | undefined) ?? "phone_ban_alert_v1",
+      language: (c.language as string | undefined) ?? "ar",
+    },
+  }).catch(() => {
+    /* best-effort */
+  });
+}
+
+async function sendBanEmailIfEnabled(
+  sb: ReturnType<typeof createServiceClient>,
+  args: {
+    customerEmail: string | null;
+    storeName: string;
+    customerName: string;
+    reason: string;
+    durationLabel: string | null;
+  },
+): Promise<void> {
+  if (!args.customerEmail) return;
+  // Only send if the merchant enabled the email channel. Treat a missing
+  // row as "not configured" — keep it explicit so the operator stays in
+  // control.
+  const { data: emailRow } = await sb
+    .from("notification_channels")
+    .select("enabled, config")
+    .eq("channel", "email")
+    .maybeSingle();
+  if (!emailRow?.enabled) return;
+  const cfg = (emailRow.config ?? {}) as Record<string, unknown>;
+  const fallbackFrom =
+    (cfg.from as string | undefined) ||
+    (cfg.verified_domain
+      ? `LinkUp <noreply@${(cfg.verified_domain as string).trim()}>`
+      : undefined);
+  await sendBanAlertEmail({
+    to: args.customerEmail,
+    customerName: args.customerName,
+    storeName: args.storeName,
+    reason: args.reason,
+    durationLabel: args.durationLabel,
+    overrides: {
+      apiKey: cfg.api_key as string | undefined,
+      from: fallbackFrom,
+      replyTo: cfg.reply_to as string | undefined,
+    },
+  }).catch(() => {
+    /* best-effort */
   });
 }
 
@@ -125,7 +202,7 @@ async function mirrorBanToTelegram(
   try {
     const { data: tgRow } = await sb
       .from("notification_channels")
-      .select("config")
+      .select("config, enabled")
       .eq("channel", "telegram")
       .eq("enabled", true)
       .limit(1)

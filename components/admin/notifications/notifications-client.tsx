@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Mail,
   MessageCircle,
-  Smartphone,
   Send,
   CheckCircle2,
   XCircle,
@@ -17,36 +16,28 @@ import type {
 } from "@/lib/db/notifications";
 import { WhatsAppConfigDialog } from "./whatsapp-config-dialog";
 import { TelegramConfigDialog } from "./telegram-config-dialog";
+import { EmailConfigDialog } from "./email-config-dialog";
 
-type ChannelKind = "email" | "whatsapp" | "sms" | "telegram";
+type ChannelKind = "email" | "whatsapp" | "telegram";
 
 const CHANNEL_META: Record<
   ChannelKind,
-  { label: string; icon: React.ElementType; color: string; tone: string }
+  { label: string; icon: React.ElementType; color: string }
 > = {
   email: {
     label: "البريد الإلكتروني",
     icon: Mail,
     color: "text-blue-400 bg-blue-400/10",
-    tone: "blue",
   },
   whatsapp: {
     label: "واتساب",
     icon: MessageCircle,
     color: "text-emerald-400 bg-emerald-400/10",
-    tone: "emerald",
-  },
-  sms: {
-    label: "رسائل SMS",
-    icon: Smartphone,
-    color: "text-orange-400 bg-orange-400/10",
-    tone: "orange",
   },
   telegram: {
     label: "تليجرام",
     icon: Send,
     color: "text-sky-400 bg-sky-400/10",
-    tone: "sky",
   },
 };
 
@@ -59,6 +50,7 @@ export function NotificationsClient({
 }) {
   const [openWhatsApp, setOpenWhatsApp] = useState(false);
   const [openTelegram, setOpenTelegram] = useState(false);
+  const [openEmail, setOpenEmail] = useState(false);
 
   const byKind = (k: ChannelKind) => channels.find((c) => c.channel === k);
 
@@ -74,12 +66,15 @@ export function NotificationsClient({
             onConfigure={() => setOpenWhatsApp(true)}
           />
           <ChannelCard
+            kind="email"
+            cfg={byKind("email")}
+            onConfigure={() => setOpenEmail(true)}
+          />
+          <ChannelCard
             kind="telegram"
             cfg={byKind("telegram")}
             onConfigure={() => setOpenTelegram(true)}
           />
-          <ChannelCard kind="email" cfg={byKind("email")} disabled />
-          <ChannelCard kind="sms" cfg={byKind("sms")} disabled />
         </div>
       </section>
 
@@ -165,6 +160,12 @@ export function NotificationsClient({
         initial={(byKind("telegram")?.config as Record<string, unknown> | undefined) ?? {}}
         initialEnabled={byKind("telegram")?.enabled ?? false}
       />
+      <EmailConfigDialog
+        open={openEmail}
+        onOpenChange={setOpenEmail}
+        initial={(byKind("email")?.config as Record<string, unknown> | undefined) ?? {}}
+        initialEnabled={byKind("email")?.enabled ?? false}
+      />
     </div>
   );
 }
@@ -175,16 +176,17 @@ function ChannelCard({
   kind,
   cfg,
   onConfigure,
-  disabled,
 }: {
   kind: ChannelKind;
   cfg?: NotificationChannel;
-  onConfigure?: () => void;
-  disabled?: boolean;
+  onConfigure: () => void;
 }) {
   const meta = CHANNEL_META[kind];
   const Icon = meta.icon;
-  const configured = !!cfg && Object.keys(cfg.config ?? {}).length > 0;
+  // Email "configured" really means a row exists. We default to enabled by
+  // simply having no row at all = not configured. Once the operator opens
+  // the dialog and saves, the row turns the card green.
+  const configured = !!cfg;
   const enabled = !!cfg?.enabled;
 
   return (
@@ -198,19 +200,13 @@ function ChannelCard({
           <StatusBadge configured={configured} enabled={enabled} />
         </div>
         <p className="text-xs text-fg-muted leading-relaxed mb-3">{describe(kind, cfg)}</p>
-        {!disabled ? (
-          <button
-            onClick={onConfigure}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface-2 hover:bg-surface text-fg text-xs font-bold border border-[hsl(var(--hairline-strong))] transition-colors cursor-pointer"
-          >
-            <Settings className="size-3.5" />
-            {configured ? "تعديل الإعدادات" : "إعداد القناة"}
-          </button>
-        ) : (
-          <span className="inline-flex items-center h-8 px-3 rounded-lg bg-surface-2 text-fg-faint text-xs font-bold border border-[hsl(var(--hairline-strong))]">
-            قريباً
-          </span>
-        )}
+        <button
+          onClick={onConfigure}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-surface-2 hover:bg-surface text-fg text-xs font-bold border border-[hsl(var(--hairline-strong))] transition-colors cursor-pointer"
+        >
+          <Settings className="size-3.5" />
+          {configured ? "تعديل الإعدادات" : "إعداد القناة"}
+        </button>
       </div>
     </div>
   );
@@ -252,9 +248,12 @@ function describe(kind: ChannelKind, cfg?: NotificationChannel): string {
     }
     return "متصل ببوت تيليجرام. كل طلب وكل حظر يصل لك مباشرة على المحادثة.";
   }
-  if (kind === "email") return "يستخدم Resend مع قالب HTML احترافي. مفعّل افتراضياً لكل المنتجات.";
-  if (kind === "sms") return "بانتظار ربط مزود محلي (Unifonic / Mobily).";
-  return "";
+  // email
+  if (!cfg) {
+    return "بريد العميل يستلم تأكيد الطلب الجاهز ونفس تنبيه الواتساب — اضغط للتفعيل.";
+  }
+  const from = (cfg.config?.from as string) || "العنوان الافتراضي";
+  return `يرسل من: ${from}. مرآة كاملة لرسائل الواتساب وتنبيهات الحظر.`;
 }
 
 function EmptyDispatches() {

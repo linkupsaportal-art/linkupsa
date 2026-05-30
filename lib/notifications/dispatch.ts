@@ -8,7 +8,7 @@ import { sendKarzounWhatsApp } from "./whatsapp-karzoun";
  * Multi-channel notification dispatcher.
  *
  * Per-product channel toggles live on `products.notification_channels`
- * (jsonb shape: `{email, whatsapp, sms, telegram}`). Per-store provider
+ * (jsonb shape: `{email, whatsapp, telegram}`). Per-store provider
  * credentials live on `notification_channels` table, one row per channel.
  *
  * The dispatcher fans out to every enabled+configured channel and records
@@ -31,7 +31,6 @@ export type NotifyArgs = {
   productNotificationChannels: {
     email?: boolean;
     whatsapp?: boolean;
-    sms?: boolean;
     telegram?: boolean;
   };
   pickupUrl: string;
@@ -50,10 +49,9 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
   // Resolve which channels to attempt. A channel runs only if BOTH:
   //   - the product has it enabled (`product.notification_channels.<key>`)
   //   - the store has it configured + enabled (`notification_channels` row)
-  const channels: Array<"email" | "whatsapp" | "sms" | "telegram"> = [];
+  const channels: Array<"email" | "whatsapp" | "telegram"> = [];
   if (args.productNotificationChannels.email && args.customerEmail) channels.push("email");
   if (args.productNotificationChannels.whatsapp && args.customerMobile) channels.push("whatsapp");
-  if (args.productNotificationChannels.sms && args.customerMobile) channels.push("sms");
   if (args.productNotificationChannels.telegram) channels.push("telegram");
 
   if (channels.length === 0) return result;
@@ -75,12 +73,25 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
   // ─── Email ──────────────────────────────────────────────────────────────
   if (channels.includes("email") && args.customerEmail) {
     result.attempted.push("email");
+    const emailCfg = configByChannel.get("email");
+    const emailFrom =
+      (emailCfg?.from as string | undefined) ||
+      (emailCfg?.verified_domain
+        ? `LinkUp <noreply@${(emailCfg.verified_domain as string).trim()}>`
+        : undefined);
     const r = await sendOrderReadyEmail({
       to: args.customerEmail,
       customerName: args.customerName,
       orderNumber: args.orderNumber,
       productName: args.productName,
       pickupUrl: args.pickupUrl,
+      overrides: emailCfg
+        ? {
+            apiKey: emailCfg.api_key as string | undefined,
+            from: emailFrom,
+            replyTo: emailCfg.reply_to as string | undefined,
+          }
+        : undefined,
     });
     r.ok ? result.succeeded.push("email") : result.failed.push({ channel: "email", error: r.error ?? "unknown" });
   }
@@ -140,12 +151,7 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     }
   }
 
-  // ─── SMS / Telegram ─────────────────────────────────────────────────────
-  // SMS still stubbed (Sprint 3 wires Unifonic / Mobily).
-  if (channels.includes("sms")) {
-    result.failed.push({ channel: "sms", error: "SMS provider not yet wired" });
-  }
-
+  // ─── Telegram (operator mirror) ─────────────────────────────────────────
   if (channels.includes("telegram")) {
     result.attempted.push("telegram");
     const tg = configByChannel.get("telegram");

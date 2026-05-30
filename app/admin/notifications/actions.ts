@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/notifications";
 import { verifyKarzoun, sendKarzounWhatsApp } from "@/lib/notifications/whatsapp-karzoun";
 import { verifyTelegramBot, sendTelegramMessage } from "@/lib/notifications/telegram";
+import { verifyResendKey, sendOrderReadyEmail } from "@/lib/notifications/email";
 
 export type ActionResult<T = void> =
   | { ok: true; data?: T }
@@ -136,7 +137,7 @@ export async function sendTelegramTestMessageAction(input: {
   return r.ok ? { ok: true } : { ok: false, error: r.error };
 }
 
-/* ─── Email / SMS quick toggle ───────────────────────────────────────── */
+/* ─── Email quick toggle ─────────────────────────────────────────────── */
 
 export async function saveEmailConfigAction(input: {
   enabled: boolean;
@@ -149,12 +150,49 @@ export async function saveEmailConfigAction(input: {
     channel: "email",
     enabled: input.enabled,
     config: {
+      api_key: input.config.api_key?.trim() || undefined,
+      verified_domain: input.config.verified_domain?.trim() || undefined,
       from: input.config.from?.trim() || undefined,
       reply_to: input.config.reply_to?.trim() || undefined,
     },
   });
   revalidatePath("/admin/notifications");
   return { ok: true };
+}
+
+export async function testEmailConnectionAction(input: {
+  apiKey: string;
+}): Promise<ActionResult<{ domains: number }>> {
+  const r = await verifyResendKey({ apiKey: input.apiKey });
+  return r.ok ? { ok: true, data: { domains: r.domains } } : { ok: false, error: r.error };
+}
+
+export async function sendEmailTestMessageAction(input: {
+  apiKey?: string;
+  verifiedDomain?: string;
+  from?: string;
+  replyTo?: string;
+  to: string;
+}): Promise<ActionResult> {
+  // Default From: explicit > noreply@<verified_domain> > env default.
+  const resolvedFrom =
+    input.from?.trim() ||
+    (input.verifiedDomain?.trim()
+      ? `LinkUp <noreply@${input.verifiedDomain.trim()}>`
+      : undefined);
+  const r = await sendOrderReadyEmail({
+    to: input.to,
+    customerName: "اختبار",
+    orderNumber: "TEST-1234",
+    productName: "اختبار قناة البريد",
+    pickupUrl: "https://www.portaliosa.com/pickup",
+    overrides: {
+      apiKey: input.apiKey,
+      from: resolvedFrom,
+      replyTo: input.replyTo,
+    },
+  });
+  return r.ok ? { ok: true } : { ok: false, error: r.error ?? "unknown" };
 }
 
 export async function toggleChannelAction(input: {

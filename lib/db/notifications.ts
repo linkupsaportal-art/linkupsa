@@ -1,7 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export type ChannelKind = "email" | "whatsapp" | "sms" | "telegram";
+export type ChannelKind = "email" | "whatsapp" | "telegram";
 
 export type NotificationChannel = {
   id: string;
@@ -56,16 +56,19 @@ export type TelegramConfig = {
  * Email config (Resend). RESEND_API_KEY stays in env; per-store wiring
  * here just lets the merchant override the default From address.
  */
+/**
+ * Email config (Resend). The merchant can plug in their own Resend
+ * API key from the admin panel — when present, it overrides the
+ * platform default. The verified sender domain (e.g. `portaliosa.com`)
+ * is captured here too so the From / Reply-To selectors can default
+ * sensibly without manual editing on every send.
+ */
 export type EmailConfig = {
+  api_key?: string;
+  /** Verified sender domain registered in Resend (e.g. "portaliosa.com"). */
+  verified_domain?: string;
   from?: string;
   reply_to?: string;
-};
-
-export type SmsConfig = {
-  /** Reserved for the upcoming local SA provider integration. */
-  provider?: "unifonic" | "mobily" | "twilio";
-  api_key?: string;
-  sender_id?: string;
 };
 
 /* ─── Read helpers ───────────────────────────────────────────────────── */

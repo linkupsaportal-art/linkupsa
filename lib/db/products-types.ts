@@ -23,7 +23,6 @@ export type Product = {
   notification_channels: {
     email: boolean;
     whatsapp: boolean;
-    sms: boolean;
     telegram: boolean;
   };
   sort_order: number;

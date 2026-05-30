@@ -230,7 +230,7 @@ export async function processInbox(): Promise<{
 
           if (allocated) {
             stats.fulfilled++;
-            // Multi-channel notification — email + WhatsApp + future SMS/Telegram
+            // Multi-channel notification — email + WhatsApp + Telegram mirror
             await sendNotification({
               orderId: upserted.id,
               storeId: merchantId,
@@ -340,7 +340,7 @@ async function sendNotification(args: {
 }): Promise<void> {
   // Resolve the product's per-channel toggles. Default to email-only when
   // we couldn't map the order to one of our products (best-effort fallback).
-  let channels = { email: true, whatsapp: false, sms: false, telegram: false };
+  let channels = { email: true, whatsapp: false, telegram: false };
   if (args.productId) {
     const sb = createServiceClient();
     const { data: product } = await sb
