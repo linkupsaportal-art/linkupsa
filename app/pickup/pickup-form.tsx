@@ -4,9 +4,10 @@ import { useState, useTransition } from "react";
 import { lookupOrderAction } from "./actions";
 import { OrderDetails } from "./order-details";
 import type { PickupResult } from "./types";
+import type { PickupSessionSettings } from "@/lib/db/platform-settings";
 import { Hash, Phone, AlertCircle, ArrowRight } from "lucide-react";
 
-export function PickupForm() {
+export function PickupForm({ sessionConfig }: { sessionConfig: PickupSessionSettings }) {
   const [orderNumber, setOrderNumber] = useState("");
   const [lastFour, setLastFour] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export function PickupForm() {
     return (
       <OrderDetails
         result={result}
+        sessionConfig={sessionConfig}
         onReset={() => {
           setResult(null);
           setOrderNumber("");

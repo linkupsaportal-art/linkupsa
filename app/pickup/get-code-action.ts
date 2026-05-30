@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generateTotpCode } from "@/lib/handlers/totp";
+import { evaluateAutoBan } from "@/lib/security/auto-ban";
 
 /**
  * Generates a fresh TOTP code for an already-verified order.
@@ -141,4 +142,22 @@ async function logOtp(
     ip_address: ip,
     result,
   });
+
+  // Fire-and-forget abuse detection. Auto-ban only triggers when the
+  // admin enabled it in /admin/otp-logs settings tab.
+  if (result !== "success") {
+    const { data: order } = await sb
+      .from("orders")
+      .select("customer_mobile, product_id")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (order) {
+      void evaluateAutoBan({
+        orderId,
+        ip,
+        mobile: order.customer_mobile ?? null,
+        productId: order.product_id ?? null,
+      });
+    }
+  }
 }

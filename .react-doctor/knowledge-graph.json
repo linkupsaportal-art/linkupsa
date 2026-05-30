@@ -15,9 +15,9 @@
       "Supabase",
       "Zod"
     ],
-    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 168 files",
-    "analyzedAt": "2026-05-29T22:04:02.215Z",
-    "gitCommitHash": "164d7af9486ad63c9ba0a5acfca9c23e17de53c7"
+    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 178 files",
+    "analyzedAt": "2026-05-30T09:28:42.061Z",
+    "gitCommitHash": "b4680c1b48b6aadd7d238dce364bd166f7e904dc"
   },
   "nodes": [
     {
@@ -406,6 +406,38 @@
         "typescript",
         "tsx"
       ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/archives/page.tsx#loadArchiveStats",
+      "type": "function",
+      "name": "loadArchiveStats",
+      "filePath": "app/admin/archives/page.tsx",
+      "lineRange": [
+        7,
+        26
+      ],
+      "summary": "loadArchiveStats()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/archives/page.tsx#ArchiveCard",
+      "type": "function",
+      "name": "ArchiveCard",
+      "filePath": "app/admin/archives/page.tsx",
+      "lineRange": [
+        102,
+        108
+      ],
+      "summary": "ArchiveCard({, title, description, old, total, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
       "complexity": "simple"
     },
     {
@@ -417,6 +449,70 @@
       "tags": [
         "typescript",
         "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/integrations/page.tsx#loadIntegrationData",
+      "type": "function",
+      "name": "loadIntegrationData",
+      "filePath": "app/admin/integrations/page.tsx",
+      "lineRange": [
+        14,
+        40
+      ],
+      "summary": "loadIntegrationData()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/integrations/page.tsx#StatusBadge",
+      "type": "function",
+      "name": "StatusBadge",
+      "filePath": "app/admin/integrations/page.tsx",
+      "lineRange": [
+        169,
+        169
+      ],
+      "summary": "StatusBadge({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/integrations/page.tsx#Stat",
+      "type": "function",
+      "name": "Stat",
+      "filePath": "app/admin/integrations/page.tsx",
+      "lineRange": [
+        187,
+        192
+      ],
+      "summary": "Stat({, label, value, tone, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/integrations/page.tsx#Section",
+      "type": "function",
+      "name": "Section",
+      "filePath": "app/admin/integrations/page.tsx",
+      "lineRange": [
+        216,
+        221
+      ],
+      "summary": "Section({, title, description, children, })",
+      "tags": [
+        "function",
+        "typescript"
       ],
       "complexity": "simple"
     },
@@ -495,6 +591,66 @@
         "typescript"
       ],
       "complexity": "moderate"
+    },
+    {
+      "id": "file:app/admin/phone-bans/actions.ts",
+      "type": "file",
+      "name": "actions.ts",
+      "filePath": "app/admin/phone-bans/actions.ts",
+      "summary": "actions.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/phone-bans/actions.ts#createPhoneBan",
+      "type": "function",
+      "name": "createPhoneBan",
+      "filePath": "app/admin/phone-bans/actions.ts",
+      "lineRange": [
+        9,
+        13
+      ],
+      "summary": "createPhoneBan(input): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/phone-bans/actions.ts#togglePhoneBan",
+      "type": "function",
+      "name": "togglePhoneBan",
+      "filePath": "app/admin/phone-bans/actions.ts",
+      "lineRange": [
+        32,
+        38
+      ],
+      "summary": "togglePhoneBan(id, active): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/phone-bans/actions.ts#deletePhoneBan",
+      "type": "function",
+      "name": "deletePhoneBan",
+      "filePath": "app/admin/phone-bans/actions.ts",
+      "lineRange": [
+        40,
+        46
+      ],
+      "summary": "deletePhoneBan(id): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
     },
     {
       "id": "file:app/admin/phone-bans/page.tsx",
@@ -866,6 +1022,70 @@
         "typescript",
         "tsx"
       ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/settings/page.tsx#loadStores",
+      "type": "function",
+      "name": "loadStores",
+      "filePath": "app/admin/settings/page.tsx",
+      "lineRange": [
+        14,
+        21
+      ],
+      "summary": "loadStores()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/settings/page.tsx#Section",
+      "type": "function",
+      "name": "Section",
+      "filePath": "app/admin/settings/page.tsx",
+      "lineRange": [
+        134,
+        139
+      ],
+      "summary": "Section({, title, description, children, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/settings/page.tsx#SecurityItem",
+      "type": "function",
+      "name": "SecurityItem",
+      "filePath": "app/admin/settings/page.tsx",
+      "lineRange": [
+        161,
+        166
+      ],
+      "summary": "SecurityItem({, status, detail, ok, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/settings/page.tsx#ExternalLinkRow",
+      "type": "function",
+      "name": "ExternalLinkRow",
+      "filePath": "app/admin/settings/page.tsx",
+      "lineRange": [
+        192,
+        192
+      ],
+      "summary": "ExternalLinkRow({, href)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
       "complexity": "simple"
     },
     {
@@ -877,6 +1097,22 @@
       "tags": [
         "typescript",
         "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/staff/page.tsx#loadStaff",
+      "type": "function",
+      "name": "loadStaff",
+      "filePath": "app/admin/staff/page.tsx",
+      "lineRange": [
+        7,
+        11
+      ],
+      "summary": "loadStaff()",
+      "tags": [
+        "function",
+        "typescript"
       ],
       "complexity": "simple"
     },
@@ -1513,6 +1749,66 @@
       "complexity": "moderate"
     },
     {
+      "id": "file:components/admin/notifications/notifications-client.tsx",
+      "type": "file",
+      "name": "notifications-client.tsx",
+      "filePath": "components/admin/notifications/notifications-client.tsx",
+      "summary": "notifications-client.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/notifications/notifications-client.tsx#NotificationsClient",
+      "type": "function",
+      "name": "NotificationsClient",
+      "filePath": "components/admin/notifications/notifications-client.tsx",
+      "lineRange": [
+        24,
+        27
+      ],
+      "summary": "NotificationsClient({, dispatches, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/notifications/notifications-client.tsx#describe",
+      "type": "function",
+      "name": "describe",
+      "filePath": "components/admin/notifications/notifications-client.tsx",
+      "lineRange": [
+        142,
+        157
+      ],
+      "summary": "describe(kind, cfg?)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/notifications/notifications-client.tsx#EmptyDispatches",
+      "type": "function",
+      "name": "EmptyDispatches",
+      "filePath": "components/admin/notifications/notifications-client.tsx",
+      "lineRange": [
+        159,
+        171
+      ],
+      "summary": "EmptyDispatches()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:components/admin/orders/orders-client.tsx",
       "type": "file",
       "name": "orders-client.tsx",
@@ -1548,6 +1844,82 @@
       "lineRange": [
         172,
         182
+      ],
+      "summary": "EmptyState()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "type": "file",
+      "name": "otp-logs-client.tsx",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "summary": "otp-logs-client.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#formatMobile",
+      "type": "function",
+      "name": "formatMobile",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "lineRange": [
+        30,
+        46
+      ],
+      "summary": "formatMobile(mobile)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#OtpLogsClient",
+      "type": "function",
+      "name": "OtpLogsClient",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "lineRange": [
+        48,
+        52
+      ],
+      "summary": "OtpLogsClient({, total, stats, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#Stat",
+      "type": "function",
+      "name": "Stat",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "lineRange": [
+        237,
+        242
+      ],
+      "summary": "Stat({, label, value, tone, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "lineRange": [
+        281,
+        291
       ],
       "summary": "EmptyState()",
       "tags": [
@@ -1606,6 +1978,82 @@
         10
       ],
       "summary": "PageHeader({, eyebrow, description, actions, className, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:components/admin/phone-bans/phone-bans-client.tsx",
+      "type": "file",
+      "name": "phone-bans-client.tsx",
+      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
+      "summary": "phone-bans-client.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#PhoneBansClient",
+      "type": "function",
+      "name": "PhoneBansClient",
+      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
+      "lineRange": [
+        17,
+        20
+      ],
+      "summary": "PhoneBansClient({, products, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#BanRow",
+      "type": "function",
+      "name": "BanRow",
+      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
+      "lineRange": [
+        162,
+        162
+      ],
+      "summary": "BanRow({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#Field",
+      "type": "function",
+      "name": "Field",
+      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
+      "lineRange": [
+        228,
+        228
+      ],
+      "summary": "Field({, required, children)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
+      "lineRange": [
+        239,
+        251
+      ],
+      "summary": "EmptyState()",
       "tags": [
         "function",
         "typescript"
@@ -3666,7 +4114,7 @@
         "markdown",
         "md"
       ],
-      "complexity": "moderate"
+      "complexity": "complex"
     },
     {
       "id": "file:docs/conversation.md",
@@ -4013,6 +4461,50 @@
       "complexity": "simple"
     },
     {
+      "id": "file:lib/db/notifications.ts",
+      "type": "file",
+      "name": "notifications.ts",
+      "filePath": "lib/db/notifications.ts",
+      "summary": "notifications.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/notifications.ts#listNotificationChannels",
+      "type": "function",
+      "name": "listNotificationChannels",
+      "filePath": "lib/db/notifications.ts",
+      "lineRange": [
+        18,
+        26
+      ],
+      "summary": "listNotificationChannels(): Promise<NotificationChannel[]>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:lib/db/notifications.ts#listRecentDispatches",
+      "type": "function",
+      "name": "listRecentDispatches",
+      "filePath": "lib/db/notifications.ts",
+      "lineRange": [
+        40,
+        65
+      ],
+      "summary": "listRecentDispatches(limit): Promise<NotificationDispatchSummary[]>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
       "id": "file:lib/db/orders.ts",
       "type": "file",
       "name": "orders.ts",
@@ -4039,6 +4531,62 @@
         "typescript"
       ],
       "complexity": "simple"
+    },
+    {
+      "id": "file:lib/db/otp-logs.ts",
+      "type": "file",
+      "name": "otp-logs.ts",
+      "filePath": "lib/db/otp-logs.ts",
+      "summary": "otp-logs.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/otp-logs.ts#listOtpLogs",
+      "type": "function",
+      "name": "listOtpLogs",
+      "filePath": "lib/db/otp-logs.ts",
+      "lineRange": [
+        35,
+        40
+      ],
+      "summary": "listOtpLogs(opts): Promise<",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:lib/db/phone-bans.ts",
+      "type": "file",
+      "name": "phone-bans.ts",
+      "filePath": "lib/db/phone-bans.ts",
+      "summary": "phone-bans.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/phone-bans.ts#listPhoneBans",
+      "type": "function",
+      "name": "listPhoneBans",
+      "filePath": "lib/db/phone-bans.ts",
+      "lineRange": [
+        20,
+        41
+      ],
+      "summary": "listPhoneBans(): Promise<PhoneBan[]>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
     },
     {
       "id": "file:lib/db/products-types.ts",
@@ -4346,8 +4894,8 @@
       "name": "sendKarzounWhatsApp",
       "filePath": "lib/notifications/whatsapp-karzoun.ts",
       "lineRange": [
-        79,
-        131
+        84,
+        148
       ],
       "summary": "sendKarzounWhatsApp(args): Promise<KarzounSendResult>",
       "tags": [
@@ -4362,8 +4910,8 @@
       "name": "safeJson",
       "filePath": "lib/notifications/whatsapp-karzoun.ts",
       "lineRange": [
-        133,
-        136
+        150,
+        153
       ],
       "summary": "safeJson(r): Promise<unknown>",
       "tags": [
@@ -4478,8 +5026,8 @@
       "name": "processInbox",
       "filePath": "lib/salla/order-ingestor.ts",
       "lineRange": [
-        52,
-        57
+        53,
+        58
       ],
       "summary": "processInbox(): Promise<",
       "tags": [
@@ -4494,8 +5042,8 @@
       "name": "markEvent",
       "filePath": "lib/salla/order-ingestor.ts",
       "lineRange": [
-        280,
-        294
+        301,
+        315
       ],
       "summary": "markEvent(sb, id, status, error?)",
       "tags": [
@@ -4510,8 +5058,8 @@
       "name": "getOrigin",
       "filePath": "lib/salla/order-ingestor.ts",
       "lineRange": [
-        303,
-        307
+        324,
+        328
       ],
       "summary": "getOrigin(): string",
       "tags": [
@@ -4526,8 +5074,8 @@
       "name": "sendNotification",
       "filePath": "lib/salla/order-ingestor.ts",
       "lineRange": [
-        309,
-        319
+        330,
+        340
       ],
       "summary": "sendNotification(args): Promise<void>",
       "tags": [
@@ -4869,6 +5417,18 @@
       "complexity": "simple"
     },
     {
+      "id": "file:scripts/drawer-output.txt",
+      "type": "file",
+      "name": "drawer-output.txt",
+      "filePath": "scripts/drawer-output.txt",
+      "summary": "drawer-output.txt — unknown source file",
+      "tags": [
+        "unknown",
+        "txt"
+      ],
+      "complexity": "moderate"
+    },
+    {
       "id": "file:scripts/fetch-salla-products.mjs",
       "type": "file",
       "name": "fetch-salla-products.mjs",
@@ -4879,6 +5439,18 @@
         "mjs"
       ],
       "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/find-karzoun-bundle.mjs",
+      "type": "file",
+      "name": "find-karzoun-bundle.mjs",
+      "filePath": "scripts/find-karzoun-bundle.mjs",
+      "summary": "find-karzoun-bundle.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "simple"
     },
     {
       "id": "file:scripts/place-real-order.mjs",
@@ -4914,7 +5486,7 @@
         "javascript",
         "mjs"
       ],
-      "complexity": "simple"
+      "complexity": "moderate"
     },
     {
       "id": "fn:scripts/probe-karzoun.mjs#gql",
@@ -4922,10 +5494,38 @@
       "name": "gql",
       "filePath": "scripts/probe-karzoun.mjs",
       "lineRange": [
-        4,
-        11
+        7,
+        14
       ],
-      "summary": "gql(query)",
+      "summary": "gql(query, variables)",
+      "tags": [
+        "function",
+        "javascript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/real-order-test.mjs",
+      "type": "file",
+      "name": "real-order-test.mjs",
+      "filePath": "scripts/real-order-test.mjs",
+      "summary": "real-order-test.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:scripts/real-order-test.mjs#sb",
+      "type": "function",
+      "name": "sb",
+      "filePath": "scripts/real-order-test.mjs",
+      "lineRange": [
+        26,
+        36
+      ],
+      "summary": "sb(path, method, body)",
       "tags": [
         "function",
         "javascript"
@@ -5407,8 +6007,71 @@
       "weight": 0.9
     },
     {
+      "source": "file:app/admin/archives/page.tsx",
+      "target": "fn:app/admin/archives/page.tsx#loadArchiveStats",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/archives/page.tsx",
+      "target": "fn:app/admin/archives/page.tsx#ArchiveCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/integrations/page.tsx",
+      "target": "fn:app/admin/integrations/page.tsx#loadIntegrationData",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/integrations/page.tsx",
+      "target": "fn:app/admin/integrations/page.tsx#StatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/integrations/page.tsx",
+      "target": "fn:app/admin/integrations/page.tsx#Stat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/integrations/page.tsx",
+      "target": "fn:app/admin/integrations/page.tsx#Section",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:app/admin/page.tsx",
       "target": "fn:app/admin/page.tsx#UpgradeCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/phone-bans/actions.ts",
+      "target": "fn:app/admin/phone-bans/actions.ts#createPhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/phone-bans/actions.ts",
+      "target": "fn:app/admin/phone-bans/actions.ts#togglePhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/phone-bans/actions.ts",
+      "target": "fn:app/admin/phone-bans/actions.ts#deletePhoneBan",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -5535,6 +6198,41 @@
     {
       "source": "file:app/admin/profile/actions.ts",
       "target": "fn:app/admin/profile/actions.ts#regenerateBackupCodesInternal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/settings/page.tsx",
+      "target": "fn:app/admin/settings/page.tsx#loadStores",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/settings/page.tsx",
+      "target": "fn:app/admin/settings/page.tsx#Section",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/settings/page.tsx",
+      "target": "fn:app/admin/settings/page.tsx#SecurityItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/settings/page.tsx",
+      "target": "fn:app/admin/settings/page.tsx#ExternalLinkRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/staff/page.tsx",
+      "target": "fn:app/admin/staff/page.tsx#loadStaff",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -5744,6 +6442,27 @@
       "weight": 0.9
     },
     {
+      "source": "file:components/admin/notifications/notifications-client.tsx",
+      "target": "fn:components/admin/notifications/notifications-client.tsx#NotificationsClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/notifications/notifications-client.tsx",
+      "target": "fn:components/admin/notifications/notifications-client.tsx#describe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/notifications/notifications-client.tsx",
+      "target": "fn:components/admin/notifications/notifications-client.tsx#EmptyDispatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:components/admin/orders/orders-client.tsx",
       "target": "fn:components/admin/orders/orders-client.tsx#OrdersClient",
       "type": "contains",
@@ -5758,6 +6477,34 @@
       "weight": 0.9
     },
     {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#formatMobile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#OtpLogsClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#Stat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#EmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:components/admin/overview-greeting.tsx",
       "target": "fn:components/admin/overview-greeting.tsx#OverviewGreeting",
       "type": "contains",
@@ -5767,6 +6514,34 @@
     {
       "source": "file:components/admin/page-header.tsx",
       "target": "fn:components/admin/page-header.tsx#PageHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
+      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#PhoneBansClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
+      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#BanRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
+      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#Field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
+      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#EmptyState",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -6452,8 +7227,36 @@
       "weight": 0.7
     },
     {
+      "source": "file:lib/db/notifications.ts",
+      "target": "fn:lib/db/notifications.ts#listNotificationChannels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/notifications.ts",
+      "target": "fn:lib/db/notifications.ts#listRecentDispatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:lib/db/orders.ts",
       "target": "fn:lib/db/orders.ts#listOrders",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/otp-logs.ts",
+      "target": "fn:lib/db/otp-logs.ts#listOtpLogs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/phone-bans.ts",
+      "target": "fn:lib/db/phone-bans.ts#listPhoneBans",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -6737,6 +7540,13 @@
       "weight": 0.9
     },
     {
+      "source": "file:scripts/real-order-test.mjs",
+      "target": "fn:scripts/real-order-test.mjs#sb",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:scripts/refire-algeria.mjs",
       "target": "fn:scripts/refire-algeria.mjs#sb",
       "type": "contains",
@@ -6846,7 +7656,10 @@
       "description": "Database models, schemas, repositories, and ORM",
       "nodeIds": [
         "file:lib/db/accounts.ts",
+        "file:lib/db/notifications.ts",
         "file:lib/db/orders.ts",
+        "file:lib/db/otp-logs.ts",
+        "file:lib/db/phone-bans.ts",
         "file:lib/db/products-types.ts",
         "file:lib/db/products.ts"
       ]
@@ -6929,6 +7742,7 @@
         "file:app/admin/orders/page.tsx",
         "file:app/admin/otp-logs/page.tsx",
         "file:app/admin/page.tsx",
+        "file:app/admin/phone-bans/actions.ts",
         "file:app/admin/phone-bans/page.tsx",
         "file:app/admin/products/actions.ts",
         "file:app/admin/products/page.tsx",
@@ -6959,9 +7773,12 @@
         "file:components/admin/domains-card.tsx",
         "file:components/admin/monthly-trend.tsx",
         "file:components/admin/nav-config.ts",
+        "file:components/admin/notifications/notifications-client.tsx",
         "file:components/admin/orders/orders-client.tsx",
+        "file:components/admin/otp-logs/otp-logs-client.tsx",
         "file:components/admin/overview-greeting.tsx",
         "file:components/admin/page-header.tsx",
+        "file:components/admin/phone-bans/phone-bans-client.tsx",
         "file:components/admin/products/products-client.tsx",
         "file:components/admin/profile/account-info-card.tsx",
         "file:components/admin/profile/avatar-card.tsx",
@@ -7035,10 +7852,13 @@
         "file:package.json",
         "file:proxy.ts",
         "file:public/images/README.md",
+        "file:scripts/drawer-output.txt",
         "file:scripts/fetch-salla-products.mjs",
+        "file:scripts/find-karzoun-bundle.mjs",
         "file:scripts/place-real-order.mjs",
         "file:scripts/place-test-order.mjs",
         "file:scripts/probe-karzoun.mjs",
+        "file:scripts/real-order-test.mjs",
         "file:scripts/refire-algeria.mjs",
         "file:scripts/replay-real-order.mjs",
         "file:scripts/simulate-order.mjs",
@@ -7069,9 +7889,12 @@
     {
       "order": 2,
       "title": "Data Layer",
-      "description": "Explore the data layer: orders.ts, products-types.ts, accounts.ts, products.ts",
+      "description": "Explore the data layer: notifications.ts, orders.ts, otp-logs.ts, phone-bans.ts, products-types.ts (+2 more)",
       "nodeIds": [
+        "file:lib/db/notifications.ts",
         "file:lib/db/orders.ts",
+        "file:lib/db/otp-logs.ts",
+        "file:lib/db/phone-bans.ts",
         "file:lib/db/products-types.ts",
         "file:lib/db/accounts.ts",
         "file:lib/db/products.ts"
@@ -7136,7 +7959,7 @@
     {
       "order": 8,
       "title": "Core Layer",
-      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+134 more)",
+      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+141 more)",
       "nodeIds": [
         "file:.vscode/settings.json",
         "file:app/(auth)/actions.ts",
@@ -7154,6 +7977,7 @@
         "file:app/admin/orders/page.tsx",
         "file:app/admin/otp-logs/page.tsx",
         "file:app/admin/page.tsx",
+        "file:app/admin/phone-bans/actions.ts",
         "file:app/admin/phone-bans/page.tsx",
         "file:app/admin/products/actions.ts",
         "file:app/admin/products/page.tsx",
@@ -7179,9 +8003,12 @@
         "file:components/admin/domains-card.tsx",
         "file:components/admin/monthly-trend.tsx",
         "file:components/admin/nav-config.ts",
+        "file:components/admin/notifications/notifications-client.tsx",
         "file:components/admin/orders/orders-client.tsx",
+        "file:components/admin/otp-logs/otp-logs-client.tsx",
         "file:components/admin/overview-greeting.tsx",
         "file:components/admin/page-header.tsx",
+        "file:components/admin/phone-bans/phone-bans-client.tsx",
         "file:components/admin/products/products-client.tsx",
         "file:components/admin/profile/account-info-card.tsx",
         "file:components/admin/profile/avatar-card.tsx",
@@ -7252,10 +8079,13 @@
         "file:package.json",
         "file:proxy.ts",
         "file:public/images/README.md",
+        "file:scripts/drawer-output.txt",
         "file:scripts/fetch-salla-products.mjs",
+        "file:scripts/find-karzoun-bundle.mjs",
         "file:scripts/place-real-order.mjs",
         "file:scripts/place-test-order.mjs",
         "file:scripts/probe-karzoun.mjs",
+        "file:scripts/real-order-test.mjs",
         "file:scripts/refire-algeria.mjs",
         "file:scripts/replay-real-order.mjs",
         "file:scripts/simulate-order.mjs",

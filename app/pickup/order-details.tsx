@@ -14,16 +14,31 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import type { PickupResult } from "./types";
+import type { PickupSessionSettings } from "@/lib/db/platform-settings";
 import { TotpCodeBlock } from "./totp-code-block";
+import { useIdleTimeout } from "./use-idle-timeout";
+import { IdleLockOverlay } from "./idle-lock-overlay";
+import { SessionTimer } from "./session-timer";
 
 export function OrderDetails({
   result,
+  sessionConfig,
   onReset,
 }: {
   result: PickupResult;
+  sessionConfig: PickupSessionSettings;
   onReset: () => void;
 }) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // ─── Idle session lock ───────────────────────────────────────────────
+  // Auto-blurs the credentials after `idle_timeout_seconds` of zero input.
+  // The customer can either resume in-place (extends the timer) or fully
+  // reset to the order-number form.
+  const { secondsLeft, idle, reset: resumeIdle } = useIdleTimeout({
+    enabled: true,
+    timeoutSeconds: sessionConfig.idle_timeout_seconds,
+  });
 
   function copy(field: string, value: string) {
     navigator.clipboard.writeText(value);
@@ -55,7 +70,15 @@ export function OrderDetails({
   );
 
   return (
-    <div className="bg-white/85 backdrop-blur-xl border border-white/60 p-6 sm:p-8 space-y-6 rounded-3xl card-lift animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="bg-white/85 backdrop-blur-xl border border-white/60 p-6 sm:p-8 space-y-6 rounded-3xl card-lift animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+      {/* Live session countdown — visible to the customer at all times */}
+      <SessionTimer
+        secondsLeft={secondsLeft}
+        totalSeconds={sessionConfig.idle_timeout_seconds}
+      />
+
+      {/* Card body. Blurred while idle to hide the credentials. */}
+      <div className={`space-y-6 transition-all duration-300 ${idle ? "blur-sm pointer-events-none select-none" : ""}`}>
       {/* Top Header: Order Ref + Product + Paid Badge */}
       <div className="flex items-start justify-between gap-4 pb-5 border-b border-[hsl(var(--hairline-strong))]">
         <div className="min-w-0 space-y-1">
@@ -138,6 +161,7 @@ export function OrderDetails({
           remaining={result.otpRequestLimit - result.otpRequestCount}
           limit={result.otpRequestLimit}
           handlerType={result.handlerType}
+          lifetimeSeconds={sessionConfig.totp_max_seconds}
         />
       )}
 
@@ -187,6 +211,16 @@ export function OrderDetails({
         <ArrowLeft className="size-4 rotate-180 transition-transform group-hover:translate-x-1" />
         رجوع للرئيسية
       </button>
+      </div>
+
+      {/* Idle lock overlay — appears once the timer expires */}
+      {idle && (
+        <IdleLockOverlay
+          totalSeconds={sessionConfig.idle_timeout_seconds}
+          onResume={resumeIdle}
+          onReset={onReset}
+        />
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@
  */
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { findActiveBan } from "@/lib/db/phone-bans";
 
 const SALLA_API = "https://api.salla.dev/admin/v2";
 
@@ -201,6 +202,26 @@ export async function processInbox(): Promise<{
       // If paid and not yet fulfilled, run the allocator
       if (paymentStatus === "paid" && upserted.fulfillment_status === "pending" && !upserted.account_id) {
         if (productId) {
+          // Phone ban check — refuse to allocate if the customer's mobile
+          // is banned globally or for this specific product.
+          const ban = await findActiveBan({ mobile, productId });
+          if (ban) {
+            await sb
+              .from("orders")
+              .update({
+                fulfillment_status: "cancelled",
+                raw_payload: {
+                  ...(upserted as { raw_payload?: Record<string, unknown> }).raw_payload,
+                  ban_reason: ban.reason,
+                  ban_id: ban.id,
+                },
+              })
+              .eq("id", upserted.id);
+            await markEvent(sb, event.id, "skipped", `phone banned: ${ban.reason ?? ban.id}`);
+            stats.skipped++;
+            continue;
+          }
+
           const { data: allocated } = await sb.rpc("allocate_account", {
             p_order_id: upserted.id,
             p_product_id: productId,

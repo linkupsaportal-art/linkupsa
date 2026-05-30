@@ -1,11 +1,15 @@
 import { PickupForm } from "./pickup-form";
+import { getPickupSessionSettings } from "@/lib/db/platform-settings";
 
 export const metadata = {
   title: "استلام الطلب",
   description: "أدخل رقم الطلب وآخر 4 أرقام من جوالك للاستلام",
 };
 
-export default function PickupPage() {
+export const dynamic = "force-dynamic";
+
+export default async function PickupPage() {
+  const session = await getPickupSessionSettings();
   return (
     <div
       className="theme-admin min-h-svh flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden"
@@ -42,7 +46,7 @@ export default function PickupPage() {
           </p>
         </div>
 
-        <PickupForm />
+        <PickupForm sessionConfig={session} />
       </div>
     </div>
   );

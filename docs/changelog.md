@@ -5,6 +5,34 @@
 
 ---
 
+# 2026-05-30 14:20
+
+- 📨 **WhatsApp Ban Alerts + Pickup Session Settings — Razex Xelite**
+  - **Ban Notification Pipeline**: Added [ban-notify.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/notifications/ban-notify.ts) with a fire-and-forget `notifyPhoneBan` helper. Wired into both manual ban creation in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/otp-logs/actions.ts) and the auto-ban evaluator in [auto-ban.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/security/auto-ban.ts) so any banned phone receives a WhatsApp explaining the reason.
+  - **Karzoun Template `phone_ban_alert_v1`**: Submitted a new Arabic UTILITY template via `whatsappTemplatesAdd` with three positional placeholders (`store_name`, `customer_name`, `reason`). Status is currently PENDING with Meta — once it flips to APPROVED the live test in `scripts/poll-and-send-ban-test.mjs` will fire to +213672661102 automatically.
+  - **Session Tab UI**: Created [session-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/session-tab.tsx) — the fourth tab in the OTP hub. Operators can tune two pickup-page guard rails: idle-lock window and TOTP visibility cap. Includes preset chips, live duration humanizer, and a dirty-state save bar matching the existing auto-ban tab pattern.
+  - **Pickup Session Storage**: Added `PickupSessionSettings` type plus getters/setters to [platform-settings.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/platform-settings.ts), with `updatePickupSessionSettingsAction` server action that revalidates both `/admin/otp-logs` and `/pickup`.
+  - **Pickup Idle Lock + TOTP Lifetime Cap**: New `use-idle-timeout.ts` hook plus `idle-lock-overlay.tsx` and `session-timer.tsx` components in `app/pickup/`, threaded through `pickup-form.tsx` and `order-details.tsx`. The TOTP block in `totp-code-block.tsx` now respects a hard lifetime cap and offers a "احصل على كود جديد" reset.
+  - **Diagnostics & Build**: Verified zero TypeScript errors across all touched files; full `next build` (Next 16 Turbopack) compiles in 6s with all 21 routes intact.
+
+# 2026-05-30 10:35
+
+- 📊 **Dedicated Phone Number Column with Bold Highlight in OTP Logs — Razex Xelite**
+  - **New Column Integration**: Appended a dedicated "رقم الجوال" (Phone Number) column to the OTP Logs admin table in [otp-logs-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/otp-logs-client.tsx) instead of rendering it stacked under the Customer column.
+  - **Last 4 Digits Bold Formatting**: Programmed the `formatMobile` helper function to render the full phone number as standard LTR monospace, clearly **bolding** (`font-extrabold` / `strong`) the last 4 digits for swift visual parsing and keeping the preceding digits in a neutral muted tone.
+  - **Balanced Column Ratios**: Recalculated the percentages across all 7 columns (`12% - 12% - 20% - 16% - 18% - 12% - 10%`) to enforce a rigid fixed table structure (`table-fixed`), maintaining precise grid alignment in RTL layout with zero layout shifts or vertical text wrapping.
+  - **Phone Number Search Filter**: Added phone numbers to the dynamic search filter, allowing administrators to search logs by the customer's full phone number or last 4 digits instantly.
+  - **Pristine Compilation**: Validated 100% TypeScript type safety and verified that Next.js static builds compile perfectly with `react_doctor_diagnose` reporting zero errors.
+
+# 2026-05-30 10:30
+
+- 📊 **Premium Redesign & Fixed Layout of OTP Logs Table — Razex Xelite**
+  - **Fixed Grid Columns**: Re-engineered the OTP logs table in [otp-logs-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/otp-logs-client.tsx) to enforce a rigid fixed column layout (`table-fixed`) with explicit percentage-based widths, preventing awkward layout shifts and stretching.
+  - **Premium Status Indicators**: Enhanced the status badges with HSL colors and animated micro-dots (pulsing electric lime for success, glowing red for failures, and warm orange for waiting states).
+  - **Monospace IP and Order Badges**: Wrapped IP addresses and order references in highly-organized monospace tags (`font-mono`) featuring thin borders, custom background highlights, and integrated inline globe icons.
+  - **Stacked Data Layout**: Stacked customer names/phone numbers, account labels/products, and date/time (divided cleanly in monospace structure) vertically inside cells to maximize readability.
+  - **Perfect Compilation Health**: Verified 100% type-safety and pristine build generation with zero warnings and zero TypeScript errors on the whole workspace.
+
 # 2026-05-29 23:20
 
 - 🗑️ **Wiped StoreSwitcher Component & Cleaned Topbar — Razex Xelite**

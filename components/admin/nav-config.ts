@@ -5,7 +5,6 @@ import {
   Boxes,
   BellRing,
   FileClock,
-  ShieldBan,
   Archive,
   Webhook,
   Settings,
@@ -57,23 +56,22 @@ export const STORE_NAV: NavGroup[] = [
   {
     label: "التحقق والأمان",
     items: [
-      { href: "/admin/otp-logs", label: "سجل أكواد التحقق", icon: FileClock, status: "soon" },
-      { href: "/admin/phone-bans", label: "حظر الأرقام", icon: ShieldBan, status: "soon" },
+      { href: "/admin/otp-logs", label: "سجل التحقق وحظر الأرقام", icon: FileClock },
     ],
   },
   {
     label: "التواصل والربط",
     items: [
-      { href: "/admin/notifications", label: "الإشعارات", icon: BellRing, status: "soon" },
-      { href: "/admin/integrations", label: "ربط المتجر و Webhooks", icon: Webhook, status: "soon" },
+      { href: "/admin/notifications", label: "الإشعارات", icon: BellRing },
+      { href: "/admin/integrations", label: "ربط المتجر و Webhooks", icon: Webhook },
     ],
   },
   {
     label: "الإدارة",
     items: [
-      { href: "/admin/archives", label: "الأرشيف", icon: Archive, status: "soon" },
-      { href: "/admin/staff", label: "الموظفون والصلاحيات", icon: UserCog, status: "soon" },
-      { href: "/admin/settings", label: "الإعدادات", icon: Settings, status: "soon" },
+      { href: "/admin/archives", label: "الأرشيف", icon: Archive },
+      { href: "/admin/staff", label: "الموظفون والصلاحيات", icon: UserCog },
+      { href: "/admin/settings", label: "الإعدادات", icon: Settings },
     ],
   },
 ];
