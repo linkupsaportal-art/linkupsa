@@ -1,23 +1,19 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendTelegramMessage } from "./telegram";
 import { generateTotpCode } from "@/lib/handlers/totp";
 import { findActiveBan } from "@/lib/db/phone-bans";
 
 /**
- * Customer-facing Telegram pickup bot.
+ * Customer-facing Telegram pickup bot — editable-card UX.
  *
- * Wraps the same security model as the /pickup web page in a chat:
- *   1. /start                       → idle, prompt for order#
- *   2. user types numeric order#    → look up + verify, ask for last4
- *   3. user types 4-digit code      → verify last4, deliver credentials
- *   4. /code  (after delivery)      → fresh TOTP if the product is 2FA
+ * Instead of dumping a chain of messages (which clutters the chat with
+ * timestamps and reply chains), the bot keeps a single "card" message
+ * that it edits through every step. Buttons trigger ForceReply prompts
+ * for input; after capture we delete both the prompt and the user's
+ * reply so the chat stays focused on the card.
  *
- * Per-chat state lives in `telegram_pickup_sessions`. Failed attempts
- * are counted; after 5 the chat is locked for 30 minutes. The same
- * `phone_bans` and `auto-ban` evaluator that protects the web flow
- * applies here too — banned numbers can never receive credentials,
- * regardless of channel.
+ * State machine:
+ *   idle → awaiting_order → awaiting_last4 → verified → /code on demand
  */
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -27,8 +23,11 @@ type SessionRow = {
   chat_id: string;
   user_data: Record<string, unknown> | null;
   state: "idle" | "awaiting_last4" | "verified" | "rate_limited";
+  awaiting: "order" | "last4" | null;
   order_id: string | null;
   failed_attempts: number;
+  main_message_id: number | null;
+  last_prompt_message_id: number | null;
   last_action_at: string;
   expires_at: string;
 };
@@ -37,14 +36,15 @@ type IncomingUpdate = {
   update_id: number;
   message?: {
     message_id: number;
-    from?: { id: number; username?: string; first_name?: string; language_code?: string };
+    from?: { id: number; username?: string; first_name?: string };
     chat: { id: number; type: string };
     date: number;
     text?: string;
+    reply_to_message?: { message_id: number };
   };
   callback_query?: {
     id: string;
-    from: { id: number; username?: string };
+    from: { id: number; username?: string; first_name?: string };
     message?: { chat: { id: number }; message_id: number };
     data?: string;
   };
@@ -54,7 +54,6 @@ export async function handleTelegramUpdate(
   update: IncomingUpdate,
   botToken: string,
 ): Promise<void> {
-  // We only implement message + callback flows. Anything else is a no-op.
   if (update.message?.text) {
     await handleTextMessage(update, botToken);
     return;
@@ -65,7 +64,7 @@ export async function handleTelegramUpdate(
   }
 }
 
-/* ─── Text message handler ─────────────────────────────────────────── */
+/* ─── Text handler ─────────────────────────────────────────────────── */
 
 async function handleTextMessage(
   update: IncomingUpdate,
@@ -76,91 +75,59 @@ async function handleTextMessage(
   const text = (msg.text ?? "").trim();
   const sb = createServiceClient();
 
-  const session = await loadOrCreateSession(sb, chatId, msg.from);
+  let session = await loadOrCreateSession(sb, chatId, msg.from);
   if (sessionExpired(session)) {
-    await resetSession(sb, chatId, "idle");
-    session.state = "idle";
-    session.failed_attempts = 0;
-    session.order_id = null;
+    session = await resetSession(sb, chatId, "idle");
   }
 
+  // Commands always reset and re-render the welcome card.
   if (text === "/start" || text === "/help") {
-    await reply(
-      botToken,
-      chatId,
-      [
-        "👋 <b>أهلاً بك في خدمة استلام الطلبات</b>",
-        "",
-        "أرسل <b>رقم الطلب</b> فقط لبدء عملية الاستلام.",
-        "",
-        "بعد التحقق من رقمك، تقدر تطلب أكواد التحقق الثنائية (إن وُجدت) في أي وقت بالأمر /code.",
-      ].join("\n"),
-    );
-    await resetSession(sb, chatId, "idle");
+    session = await resetSession(sb, chatId, "idle");
+    await renderWelcomeCard(botToken, chatId, session, sb, msg.from?.first_name);
     return;
   }
-
   if (text === "/cancel") {
-    await resetSession(sb, chatId, "idle");
-    await reply(botToken, chatId, "🔁 تم إلغاء العملية. أرسل /start لتبدأ من جديد.");
+    session = await resetSession(sb, chatId, "idle");
+    await renderWelcomeCard(botToken, chatId, session, sb, msg.from?.first_name);
     return;
   }
-
   if (text === "/code") {
     await handleCodeRequest(sb, botToken, chatId, session);
     return;
   }
 
   if (session.state === "rate_limited") {
-    await reply(
+    await sendEphemeral(
       botToken,
       chatId,
-      "🛑 تم إيقاف الجلسة مؤقتاً بسبب محاولات متكررة. حاول لاحقاً أو راسل المتجر.",
+      "🛑 الجلسة موقوفة مؤقتاً بسبب محاولات متكررة. حاول لاحقاً أو راسل المتجر.",
     );
     return;
   }
 
-  if (session.state === "verified" && session.order_id) {
-    // Already verified — ignore arbitrary text, hint at /code.
-    await reply(
-      botToken,
-      chatId,
-      "✅ طلبك مستلم بالفعل. لطلب كود تحقق جديد، أرسل /code.",
-    );
+  // Free text outside an awaiting prompt → re-render welcome.
+  if (!session.awaiting) {
+    await renderWelcomeCard(botToken, chatId, session, sb, msg.from?.first_name);
     return;
   }
 
-  if (session.state === "idle") {
-    // Awaiting an order number. Accept digits only.
-    const cleanOrder = text.replace(/\D/g, "");
-    if (!cleanOrder) {
-      await reply(
-        botToken,
-        chatId,
-        "🔢 أرسل <b>رقم الطلب</b> مكوّناً من أرقام فقط للبدء.",
-      );
-      return;
-    }
-    await beginOrderLookup(sb, botToken, chatId, session, cleanOrder);
-    return;
+  // Captured input — delete user's message + the prompt to keep chat clean.
+  await deleteMessage(botToken, chatId, msg.message_id);
+  if (session.last_prompt_message_id) {
+    await deleteMessage(botToken, chatId, session.last_prompt_message_id);
   }
 
-  if (session.state === "awaiting_last4") {
-    const cleanLast4 = text.replace(/\D/g, "");
-    if (!/^\d{4}$/.test(cleanLast4)) {
-      await reply(
-        botToken,
-        chatId,
-        "📱 أرسل آخر <b>4 أرقام</b> من جوالك المسجّل في الطلب — 4 أرقام بالضبط.",
-      );
-      return;
-    }
-    await verifyLast4(sb, botToken, chatId, session, cleanLast4);
+  if (session.awaiting === "order") {
+    await handleOrderInput(sb, botToken, chatId, session, text);
+    return;
+  }
+  if (session.awaiting === "last4") {
+    await handleLast4Input(sb, botToken, chatId, session, text);
     return;
   }
 }
 
-/* ─── Callback handler (inline buttons) ────────────────────────────── */
+/* ─── Callback handler (button taps) ───────────────────────────────── */
 
 async function handleCallback(
   update: IncomingUpdate,
@@ -170,40 +137,201 @@ async function handleCallback(
   const chatId = cq.message?.chat?.id;
   if (!chatId) return;
   const data = (cq.data ?? "").trim();
+  const sb = createServiceClient();
+  const cid = String(chatId);
 
-  // Acknowledge the click immediately so the user doesn't see a spinner.
-  await fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ callback_query_id: cq.id }),
-  }).catch(() => {});
+  // Acknowledge fast.
+  await ackCallback(botToken, cq.id);
 
-  if (data === "fresh_code") {
-    const sb = createServiceClient();
-    const session = await loadOrCreateSession(sb, String(chatId), cq.from);
-    await handleCodeRequest(sb, botToken, String(chatId), session);
+  let session = await loadOrCreateSession(sb, cid, cq.from);
+  if (sessionExpired(session)) {
+    session = await resetSession(sb, cid, "idle");
   }
+
+  switch (data) {
+    case "enter_order":
+      await openPrompt(sb, botToken, cid, session, "order");
+      return;
+    case "enter_last4":
+      if (!session.order_id) {
+        // Order missing — bounce back to welcome.
+        session = await resetSession(sb, cid, "idle");
+        await renderWelcomeCard(botToken, cid, session, sb, cq.from.first_name);
+        return;
+      }
+      await openPrompt(sb, botToken, cid, session, "last4");
+      return;
+    case "fresh_code":
+      await handleCodeRequest(sb, botToken, cid, session);
+      return;
+    case "restart":
+      session = await resetSession(sb, cid, "idle");
+      await renderWelcomeCard(botToken, cid, session, sb, cq.from.first_name);
+      return;
+  }
+}
+
+/* ─── Card renderers ───────────────────────────────────────────────── */
+
+async function renderWelcomeCard(
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  sb: ReturnType<typeof createServiceClient>,
+  firstName?: string,
+): Promise<void> {
+  const greeting = firstName ? `أهلاً <b>${escapeHtml(firstName)}</b>` : "أهلاً بك";
+  const text = [
+    "🎯 <b>بوابة الاستلام الذكية</b>",
+    "━━━━━━━━━━━━━━━",
+    "",
+    `${greeting}،`,
+    "",
+    "استلم بياناتك في خطوتين فقط:",
+    "",
+    "①  أدخل <b>رقم طلبك</b>",
+    "②  أكّد آخر <b>4 أرقام</b> من جوالك المسجّل",
+    "",
+    "🔒 جميع المحادثات مشفّرة ومحمية بسياسة الحظر التلقائي.",
+  ].join("\n");
+
+  const keyboard = [
+    [{ text: "🔢 إدخال رقم الطلب", callback_data: "enter_order" }],
+    [{ text: "🔄 إعادة من البداية", callback_data: "restart" }],
+  ];
+
+  await ensureCard(sb, botToken, chatId, session, text, keyboard);
+}
+
+async function renderOrderFoundCard(
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  sb: ReturnType<typeof createServiceClient>,
+  refId: string | number,
+  productName: string,
+): Promise<void> {
+  const text = [
+    "✅ <b>تم العثور على طلبك</b>",
+    "━━━━━━━━━━━━━━━",
+    "",
+    `🔖 رقم الطلب: <code>${escapeHtml(String(refId))}</code>`,
+    `🛒 المنتج: ${escapeHtml(productName)}`,
+    "",
+    "للتحقق من هويتك، أدخل الآن آخر <b>4 أرقام</b> من جوالك المسجّل في الطلب.",
+  ].join("\n");
+  const keyboard = [
+    [{ text: "📱 إدخال آخر 4 أرقام", callback_data: "enter_last4" }],
+    [{ text: "🔁 طلب مختلف", callback_data: "restart" }],
+  ];
+  await ensureCard(sb, botToken, chatId, session, text, keyboard);
+}
+
+async function renderCredentialsCard(
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  sb: ReturnType<typeof createServiceClient>,
+  payload: {
+    refId: string | number;
+    productName: string;
+    optionName?: string | null;
+    email?: string | null;
+    password?: string | null;
+    cardCode?: string | null;
+    fileUrl?: string | null;
+    instructions?: string | null;
+    totp?: { code: string; expiresInSeconds: number } | null;
+  },
+): Promise<void> {
+  const lines: string[] = [
+    "🎉 <b>طلبك جاهز للاستخدام</b>",
+    "━━━━━━━━━━━━━━━",
+    "",
+    `🔖 رقم الطلب: <code>${escapeHtml(String(payload.refId))}</code>`,
+    `🛒 المنتج: <b>${escapeHtml(payload.productName)}</b>`,
+  ];
+  if (payload.optionName) {
+    lines.push(`⚙️ الباقة: ${escapeHtml(payload.optionName)}`);
+  }
+  lines.push("");
+  lines.push("🔐 <b>بيانات الدخول</b>");
+  if (payload.email) {
+    lines.push(`📧 <code>${escapeHtml(payload.email)}</code>`);
+  }
+  if (payload.password) {
+    lines.push(`🔑 <code>${escapeHtml(payload.password)}</code>`);
+  }
+  if (payload.cardCode) {
+    lines.push(`💳 <code>${escapeHtml(payload.cardCode)}</code>`);
+  }
+  if (payload.fileUrl) {
+    lines.push(`📎 ${escapeHtml(payload.fileUrl)}`);
+  }
+  if (payload.totp) {
+    lines.push("");
+    lines.push("⚡ <b>كود التحقق الثنائي</b>");
+    lines.push(
+      `   <code>${payload.totp.code}</code>  •  ينتهي خلال ${payload.totp.expiresInSeconds}ث`,
+    );
+  }
+  if (payload.instructions) {
+    lines.push("");
+    lines.push("📝 <i>" + escapeHtml(payload.instructions) + "</i>");
+  }
+  lines.push("");
+  lines.push("⚠️ <i>لا تشارك هذه البيانات مع أي شخص.</i>");
+
+  const keyboard: Array<Array<{ text: string; callback_data: string }>> = [];
+  if (payload.totp) {
+    keyboard.push([{ text: "🔄 طلب كود تحقق جديد", callback_data: "fresh_code" }]);
+  }
+  keyboard.push([{ text: "🔁 إعادة من البداية", callback_data: "restart" }]);
+
+  await ensureCard(sb, botToken, chatId, session, lines.join("\n"), keyboard);
+}
+
+async function renderErrorCard(
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  sb: ReturnType<typeof createServiceClient>,
+  body: string,
+): Promise<void> {
+  const text = [
+    "⚠️ <b>تعذّر إكمال العملية</b>",
+    "━━━━━━━━━━━━━━━",
+    "",
+    body,
+  ].join("\n");
+  const keyboard = [
+    [{ text: "🔁 المحاولة مجدداً", callback_data: "restart" }],
+  ];
+  await ensureCard(sb, botToken, chatId, session, text, keyboard);
 }
 
 /* ─── Domain logic ─────────────────────────────────────────────────── */
 
-async function beginOrderLookup(
+async function handleOrderInput(
   sb: ReturnType<typeof createServiceClient>,
   botToken: string,
   chatId: string,
   session: SessionRow,
-  orderNumber: string,
+  raw: string,
 ): Promise<void> {
-  const orderNumberAsBigint = Number(orderNumber);
-  if (!Number.isFinite(orderNumberAsBigint)) {
-    await reply(botToken, chatId, "❌ رقم الطلب غير صحيح.");
+  const orderNumber = raw.replace(/\D/g, "");
+  if (!orderNumber) {
+    await sendEphemeral(botToken, chatId, "🔢 أدخل رقم الطلب أرقاماً فقط.");
+    await openPrompt(sb, botToken, chatId, session, "order");
     return;
   }
+  const orderNumberAsBigint = Number(orderNumber);
   const { data: order } = await sb
     .from("orders")
     .select(
       `id, salla_order_id, salla_reference_id, customer_mobile_last4,
-       payment_status, fulfillment_status, account_id, archived_at`,
+       payment_status, fulfillment_status, account_id, archived_at,
+       product:products(name, handler_type)`,
     )
     .or(
       `salla_reference_id.eq.${orderNumberAsBigint},salla_order_id.eq.${orderNumberAsBigint}`,
@@ -212,59 +340,94 @@ async function beginOrderLookup(
 
   if (!order) {
     await bumpFailure(sb, chatId, session);
-    await reply(botToken, chatId, "❌ الطلب غير موجود. تحقق من الرقم وحاول مجدداً.");
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "❌ الطلب غير موجود. تأكد من الرقم وحاول مجدداً.",
+    );
     return;
   }
   if (order.archived_at) {
-    await reply(botToken, chatId, "🗂️ هذا الطلب مؤرشف. تواصل مع المتجر.");
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "🗂️ هذا الطلب مؤرشف. يرجى التواصل مع المتجر.",
+    );
     return;
   }
   if (order.payment_status !== "paid") {
-    await reply(botToken, chatId, "⏳ الطلب لم يكتمل دفعه بعد.");
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "⏳ الطلب لم يكتمل دفعه بعد.",
+    );
     return;
   }
   if (order.fulfillment_status !== "fulfilled" || !order.account_id) {
-    await reply(botToken, chatId, "⏳ الطلب قيد المعالجة. حاول بعد قليل.");
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "⏳ الطلب قيد المعالجة. حاول بعد قليل.",
+    );
     return;
   }
 
+  const product = Array.isArray(order.product) ? order.product[0] : order.product;
   await sb
     .from("telegram_pickup_sessions")
     .update({
       state: "awaiting_last4",
       order_id: order.id,
+      awaiting: null,
+      last_prompt_message_id: null,
       last_action_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
     })
     .eq("chat_id", chatId);
 
-  await reply(
+  const refId = order.salla_reference_id ?? order.salla_order_id ?? "—";
+  const fresh = await loadOrCreateSession(sb, chatId);
+  await renderOrderFoundCard(
     botToken,
     chatId,
-    [
-      "✅ تم العثور على الطلب.",
-      "",
-      "للتحقق من هويتك، أرسل <b>آخر 4 أرقام</b> من جوالك المسجّل في الطلب.",
-    ].join("\n"),
+    fresh,
+    sb,
+    refId,
+    product?.name ?? "منتج رقمي",
   );
 }
 
-async function verifyLast4(
+async function handleLast4Input(
   sb: ReturnType<typeof createServiceClient>,
   botToken: string,
   chatId: string,
   session: SessionRow,
-  last4: string,
+  raw: string,
 ): Promise<void> {
+  const last4 = raw.replace(/\D/g, "");
+  if (!/^\d{4}$/.test(last4)) {
+    await sendEphemeral(botToken, chatId, "📱 أدخل 4 أرقام بالضبط.");
+    await openPrompt(sb, botToken, chatId, session, "last4");
+    return;
+  }
   if (!session.order_id) {
-    await reply(botToken, chatId, "أرسل /start لبدء عملية جديدة.");
+    const fresh = await resetSession(sb, chatId, "idle");
+    await renderWelcomeCard(botToken, chatId, fresh, sb);
     return;
   }
 
   const { data: order } = await sb
     .from("orders")
     .select(
-      `id, customer_mobile, customer_mobile_last4, product_id, salla_reference_id,
+      `id, customer_mobile, customer_mobile_last4, product_id, salla_reference_id, salla_order_id,
        account:accounts(
          email, instructions, password_encrypted,
          card_code_encrypted, file_storage_path, totp_secret_encrypted, status
@@ -275,22 +438,28 @@ async function verifyLast4(
     .single();
 
   if (!order) {
-    await reply(botToken, chatId, "حصل خطأ. أرسل /start لإعادة المحاولة.");
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "حدث خطأ في تحميل الطلب. أعد المحاولة.",
+    );
     return;
   }
 
   if (order.customer_mobile_last4 !== last4) {
     await bumpFailure(sb, chatId, session);
-    await reply(
+    await renderErrorCard(
       botToken,
       chatId,
-      "❌ الأرقام لا تطابق الجوال المسجّل. أعد الإرسال.",
+      session,
+      sb,
+      "❌ الأرقام لا تطابق الجوال المسجّل في الطلب.",
     );
     return;
   }
 
-  // Phone-ban gate at delivery time. Catches bans that landed AFTER the
-  // order was originally allocated.
   if (order.product_id && order.customer_mobile) {
     const ban = await findActiveBan({
       mobile: order.customer_mobile,
@@ -299,135 +468,65 @@ async function verifyLast4(
     if (ban) {
       await sb
         .from("telegram_pickup_sessions")
-        .update({ state: "idle", order_id: null })
+        .update({ state: "idle", order_id: null, awaiting: null })
         .eq("chat_id", chatId);
-      await reply(
+      await renderErrorCard(
         botToken,
         chatId,
-        `🚫 تم تقييد رقمك من استلام هذا المنتج.\n📌 السبب: ${ban.reason ?? "حماية"}`,
+        session,
+        sb,
+        `🚫 تم تقييد رقمك من استلام هذا المنتج.\n📌 السبب: ${escapeHtml(ban.reason ?? "حماية أمنية")}`,
       );
       return;
     }
   }
 
-  await deliverCredentials(sb, botToken, chatId, order);
+  const product = Array.isArray(order.product) ? order.product[0] : order.product;
+  const option = Array.isArray(order.option) ? order.option[0] : order.option;
+  const account = Array.isArray(order.account) ? order.account[0] : order.account;
+  if (!product || !account) {
+    await renderErrorCard(
+      botToken,
+      chatId,
+      session,
+      sb,
+      "بيانات الطلب غير مكتملة. تواصل مع المتجر.",
+    );
+    return;
+  }
+
+  const password = decryptBytea(account.password_encrypted);
+  const cardCode = decryptBytea(account.card_code_encrypted);
+  const totpData =
+    product.handler_type === "2fa_account" && account.totp_secret_encrypted
+      ? generateTotpFromAccount(account.totp_secret_encrypted)
+      : null;
 
   await sb
     .from("telegram_pickup_sessions")
     .update({
       state: "verified",
       failed_attempts: 0,
+      awaiting: null,
       last_action_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
     })
     .eq("chat_id", chatId);
-}
 
-type DbOrderForDelivery = {
-  id: string;
-  salla_reference_id: number | null;
-  account: Array<{
-    email: string | null;
-    instructions: string | null;
-    password_encrypted: unknown;
-    card_code_encrypted: unknown;
-    file_storage_path: string | null;
-    totp_secret_encrypted: unknown;
-    status: string;
-  }> | {
-    email: string | null;
-    instructions: string | null;
-    password_encrypted: unknown;
-    card_code_encrypted: unknown;
-    file_storage_path: string | null;
-    totp_secret_encrypted: unknown;
-    status: string;
-  } | null;
-  product: { name: string; handler_type: string } | Array<{ name: string; handler_type: string }> | null;
-  option: { name: string } | Array<{ name: string }> | null;
-};
-
-async function deliverCredentials(
-  sb: ReturnType<typeof createServiceClient>,
-  botToken: string,
-  chatId: string,
-  order: DbOrderForDelivery,
-): Promise<void> {
-  const product = Array.isArray(order.product) ? order.product[0] : order.product;
-  const option = Array.isArray(order.option) ? order.option[0] : order.option;
-  const account = Array.isArray(order.account) ? order.account[0] : order.account;
-  if (!product || !account) {
-    await reply(botToken, chatId, "❌ بيانات الطلب غير مكتملة. تواصل مع المتجر.");
-    return;
-  }
-
-  const password = decryptBytea(account.password_encrypted);
-  const cardCode = decryptBytea(account.card_code_encrypted);
-  const reference = order.salla_reference_id ?? "—";
-
-  const lines: string[] = [];
-  lines.push(`🎉 <b>طلبك جاهز</b>`);
-  lines.push(``);
-  lines.push(`🔖 رقم الطلب: <code>${reference}</code>`);
-  lines.push(`🛒 المنتج: <b>${escapeHtml(product.name)}</b>`);
-  if (option?.name) lines.push(`⚙️ الباقة: ${escapeHtml(option.name)}`);
-  lines.push(``);
-
-  if (account.email) {
-    lines.push(`📧 البريد: <code>${escapeHtml(account.email)}</code>`);
-  }
-  if (password) {
-    lines.push(`🔑 كلمة المرور: <code>${escapeHtml(password)}</code>`);
-  }
-  if (cardCode) {
-    lines.push(`💳 كود البطاقة: <code>${escapeHtml(cardCode)}</code>`);
-  }
-  if (account.file_storage_path) {
-    lines.push(`📎 ملف رقمي: ${escapeHtml(account.file_storage_path)}`);
-  }
-  if (account.instructions) {
-    lines.push(``);
-    lines.push(`📝 ملاحظات:\n${escapeHtml(account.instructions)}`);
-  }
-
-  const isTotp = product.handler_type === "2fa_account" && !!account.totp_secret_encrypted;
-  if (isTotp) {
-    const totp = generateTotpFromAccount(account.totp_secret_encrypted);
-    if (totp) {
-      lines.push(``);
-      lines.push(
-        `🔐 كود التحقق الثنائي الحالي: <code>${totp.code}</code> (يتجدد خلال ${totp.expiresInSeconds} ثانية)`,
-      );
-    }
-  }
-
-  lines.push(``);
-  lines.push(`⚠️ لا تشارك بيانات الحساب مع أحد.`);
-
-  await sendTelegramMessage({
-    text: lines.join("\n"),
-    config: { botToken, chatId },
-    buttons: isTotp
-      ? [{ text: "🔄 طلب كود تحقق جديد", url: "" }] // placeholder removed below
-      : undefined,
+  const fresh = await loadOrCreateSession(sb, chatId);
+  await renderCredentialsCard(botToken, chatId, fresh, sb, {
+    refId: order.salla_reference_id ?? order.salla_order_id ?? "—",
+    productName: product.name,
+    optionName: option?.name ?? null,
+    email: account.email,
+    password,
+    cardCode,
+    fileUrl: account.file_storage_path,
+    instructions: account.instructions,
+    totp: totpData
+      ? { code: totpData.code, expiresInSeconds: totpData.expiresInSeconds }
+      : null,
   });
-
-  // sendTelegramMessage's buttons are URL-only inline keyboards. For the
-  // 2FA refresh button we want a callback button, so send a follow-up
-  // with raw API to get the right keyboard type.
-  if (isTotp) {
-    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: "🔄 احتجت كوداً جديداً؟ اضغط الزر أو أرسل /code.",
-        reply_markup: {
-          inline_keyboard: [[{ text: "🔄 طلب كود جديد", callback_data: "fresh_code" }]],
-        },
-      }),
-    }).catch(() => {});
-  }
 }
 
 async function handleCodeRequest(
@@ -437,10 +536,10 @@ async function handleCodeRequest(
   session: SessionRow,
 ): Promise<void> {
   if (session.state !== "verified" || !session.order_id) {
-    await reply(
+    await sendEphemeral(
       botToken,
       chatId,
-      "👋 يجب أن تتحقق من طلبك أولاً. أرسل رقم الطلب لبدء العملية.",
+      "👋 يجب التحقق من الطلب أولاً.",
     );
     return;
   }
@@ -453,23 +552,22 @@ async function handleCodeRequest(
     .eq("id", session.order_id)
     .single();
   if (!order) {
-    await reply(botToken, chatId, "حدث خطأ. أرسل /start.");
+    await sendEphemeral(botToken, chatId, "حدث خطأ. أعد المحاولة.");
     return;
   }
   if (order.otp_request_count >= order.otp_request_limit) {
-    await reply(
+    await sendEphemeral(
       botToken,
       chatId,
-      "🚫 تجاوزت الحد الأقصى لطلبات الكود لهذا الطلب. تواصل مع المتجر.",
+      "🚫 تجاوزت الحد الأقصى لطلبات الكود لهذا الطلب.",
     );
     return;
   }
   const acct = Array.isArray(order.account) ? order.account[0] : order.account;
   if (!acct?.totp_secret_encrypted) {
-    await reply(botToken, chatId, "هذا المنتج لا يدعم كود تحقق ثنائي.");
+    await sendEphemeral(botToken, chatId, "هذا المنتج لا يدعم كود تحقق ثنائي.");
     return;
   }
-
   const cooldown = acct.otp_cooldown_seconds ?? 30;
   const { data: recent } = await sb
     .from("otp_logs")
@@ -481,7 +579,7 @@ async function handleCodeRequest(
   if (recent?.length) {
     const elapsed = (Date.now() - new Date(recent[0].requested_at).getTime()) / 1000;
     if (elapsed < cooldown) {
-      await reply(
+      await sendEphemeral(
         botToken,
         chatId,
         `⏳ انتظر ${Math.ceil(cooldown - elapsed)} ثانية قبل طلب كود جديد.`,
@@ -492,10 +590,9 @@ async function handleCodeRequest(
 
   const totp = generateTotpFromAccount(acct.totp_secret_encrypted);
   if (!totp) {
-    await reply(botToken, chatId, "تعذّر توليد الكود. تواصل مع المتجر.");
+    await sendEphemeral(botToken, chatId, "تعذّر توليد الكود.");
     return;
   }
-
   await sb
     .from("orders")
     .update({ otp_request_count: order.otp_request_count + 1 })
@@ -506,23 +603,192 @@ async function handleCodeRequest(
     result: "success",
   });
 
-  await reply(
-    botToken,
-    chatId,
-    [
-      `🔐 الكود الجديد: <code>${totp.code}</code>`,
-      `⏱️ متبقّي على انتهائه: ${totp.expiresInSeconds} ثانية`,
-      `📊 طلبات متبقّية: ${order.otp_request_limit - (order.otp_request_count + 1)}`,
-    ].join("\n"),
-  );
+  // Re-render the credentials card with the fresh code so the chat
+  // doesn't grow more messages.
+  const { data: full } = await sb
+    .from("orders")
+    .select(
+      `id, salla_reference_id, salla_order_id,
+       account:accounts(email, instructions, password_encrypted,
+         card_code_encrypted, file_storage_path, totp_secret_encrypted),
+       product:products(name, handler_type),
+       option:product_options(name)`,
+    )
+    .eq("id", session.order_id)
+    .single();
+  if (!full) return;
+  const product = Array.isArray(full.product) ? full.product[0] : full.product;
+  const option = Array.isArray(full.option) ? full.option[0] : full.option;
+  const account = Array.isArray(full.account) ? full.account[0] : full.account;
+  const fresh = await loadOrCreateSession(sb, chatId);
+  await renderCredentialsCard(botToken, chatId, fresh, sb, {
+    refId: full.salla_reference_id ?? full.salla_order_id ?? "—",
+    productName: product?.name ?? "منتج",
+    optionName: option?.name ?? null,
+    email: account?.email,
+    password: decryptBytea(account?.password_encrypted),
+    cardCode: decryptBytea(account?.card_code_encrypted),
+    fileUrl: account?.file_storage_path,
+    instructions: account?.instructions,
+    totp: { code: totp.code, expiresInSeconds: totp.expiresInSeconds },
+  });
 }
 
-/* ─── Helpers ──────────────────────────────────────────────────────── */
+/* ─── Card / prompt helpers ────────────────────────────────────────── */
+
+/**
+ * Either edits the existing main card or sends a fresh one. Persists
+ * the message_id back onto the session so subsequent edits hit the
+ * same card. If editing fails (message too old / deleted), we fall
+ * back to a new message gracefully.
+ */
+async function ensureCard(
+  sb: ReturnType<typeof createServiceClient>,
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  text: string,
+  keyboard: Array<Array<{ text: string; callback_data: string }>>,
+): Promise<void> {
+  const reply_markup = { inline_keyboard: keyboard };
+
+  if (session.main_message_id) {
+    const editRes = await tg(botToken, "editMessageText", {
+      chat_id: chatId,
+      message_id: session.main_message_id,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+      reply_markup,
+    });
+    if (editRes?.ok) {
+      await sb
+        .from("telegram_pickup_sessions")
+        .update({
+          last_action_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
+        })
+        .eq("chat_id", chatId);
+      return;
+    }
+  }
+
+  const sent = await tg(botToken, "sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup,
+  });
+  const messageId = sent?.result?.message_id;
+  if (typeof messageId === "number") {
+    await sb
+      .from("telegram_pickup_sessions")
+      .update({
+        main_message_id: messageId,
+        last_action_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
+      })
+      .eq("chat_id", chatId);
+  }
+}
+
+/**
+ * Sends a ForceReply prompt and remembers its message_id so we can
+ * delete it after capturing the user's reply.
+ */
+async function openPrompt(
+  sb: ReturnType<typeof createServiceClient>,
+  botToken: string,
+  chatId: string,
+  session: SessionRow,
+  awaiting: "order" | "last4",
+): Promise<void> {
+  const promptText =
+    awaiting === "order"
+      ? "🔢 <b>أدخل رقم الطلب:</b>\nمثال: <code>5232685</code>"
+      : "📱 <b>أدخل آخر 4 أرقام من جوالك:</b>\nمثال: <code>1102</code>";
+  const sent = await tg(botToken, "sendMessage", {
+    chat_id: chatId,
+    text: promptText,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+    reply_markup: {
+      force_reply: true,
+      input_field_placeholder:
+        awaiting === "order" ? "رقم الطلب" : "4 أرقام فقط",
+      selective: false,
+    },
+  });
+  const promptId = sent?.result?.message_id ?? null;
+  await sb
+    .from("telegram_pickup_sessions")
+    .update({
+      awaiting,
+      last_prompt_message_id: promptId,
+      last_action_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
+    })
+    .eq("chat_id", chatId);
+}
+
+/**
+ * Sends a short auto-deleting toast — used for transient validation errors.
+ */
+async function sendEphemeral(
+  botToken: string,
+  chatId: string,
+  text: string,
+): Promise<void> {
+  const sent = await tg(botToken, "sendMessage", {
+    chat_id: chatId,
+    text,
+    parse_mode: "HTML",
+    disable_web_page_preview: true,
+  });
+  const messageId = sent?.result?.message_id;
+  if (typeof messageId === "number") {
+    setTimeout(() => {
+      void deleteMessage(botToken, chatId, messageId);
+    }, 5_000);
+  }
+}
+
+async function deleteMessage(
+  botToken: string,
+  chatId: string,
+  messageId: number,
+): Promise<void> {
+  await tg(botToken, "deleteMessage", { chat_id: chatId, message_id: messageId });
+}
+
+async function ackCallback(botToken: string, callbackId: string): Promise<void> {
+  await tg(botToken, "answerCallbackQuery", { callback_query_id: callbackId });
+}
+
+async function tg(
+  botToken: string,
+  method: string,
+  body: Record<string, unknown>,
+): Promise<{ ok: boolean; result?: { message_id: number } } | null> {
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return (await r.json().catch(() => null)) as never;
+  } catch {
+    return null;
+  }
+}
+
+/* ─── Session helpers ──────────────────────────────────────────────── */
 
 async function loadOrCreateSession(
   sb: ReturnType<typeof createServiceClient>,
   chatId: string,
-  userData: unknown,
+  userData?: unknown,
 ): Promise<SessionRow> {
   const { data } = await sb
     .from("telegram_pickup_sessions")
@@ -530,12 +796,11 @@ async function loadOrCreateSession(
     .eq("chat_id", chatId)
     .maybeSingle();
   if (data) return data as SessionRow;
-
   const { data: created, error } = await sb
     .from("telegram_pickup_sessions")
     .insert({
       chat_id: chatId,
-      user_data: userData ?? null,
+      user_data: (userData as Record<string, unknown> | undefined) ?? null,
       state: "idle",
     })
     .select("*")
@@ -548,17 +813,24 @@ async function resetSession(
   sb: ReturnType<typeof createServiceClient>,
   chatId: string,
   state: SessionRow["state"],
-): Promise<void> {
-  await sb
+): Promise<SessionRow> {
+  // Keep main_message_id so we can keep editing the same card.
+  const { data, error } = await sb
     .from("telegram_pickup_sessions")
     .update({
       state,
       order_id: null,
       failed_attempts: 0,
+      awaiting: null,
+      last_prompt_message_id: null,
       last_action_at: new Date().toISOString(),
       expires_at: new Date(Date.now() + SESSION_TTL_MIN * 60_000).toISOString(),
     })
-    .eq("chat_id", chatId);
+    .eq("chat_id", chatId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as SessionRow;
 }
 
 async function bumpFailure(
@@ -573,6 +845,8 @@ async function bumpFailure(
     .update({
       failed_attempts: next,
       state: limited ? "rate_limited" : session.state,
+      awaiting: null,
+      last_prompt_message_id: null,
       last_action_at: new Date().toISOString(),
     })
     .eq("chat_id", chatId);
@@ -603,19 +877,6 @@ function generateTotpFromAccount(secretRaw: unknown):
   } catch {
     return null;
   }
-}
-
-async function reply(botToken: string, chatId: string, text: string): Promise<void> {
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text,
-      parse_mode: "HTML",
-      disable_web_page_preview: true,
-    }),
-  }).catch(() => {});
 }
 
 function escapeHtml(s: string): string {
