@@ -1,5 +1,6 @@
 import { PickupForm } from "./pickup-form";
 import { getPickupSessionSettings } from "@/lib/db/platform-settings";
+import { getTelegramBotSettings } from "@/lib/db/telegram-bot";
 
 export const metadata = {
   title: "استلام الطلب",
@@ -10,6 +11,20 @@ export const dynamic = "force-dynamic";
 
 export default async function PickupPage() {
   const session = await getPickupSessionSettings();
+
+  // Show the "Receive via Telegram" CTA only when the bot is fully
+  // operational: enabled, has a token, has a username, has a webhook
+  // registered, and customer pickup flow is on.
+  const tg = await getTelegramBotSettings().catch(() => null);
+  const telegram =
+    tg?.enabled &&
+    tg.bot_token &&
+    tg.bot_username &&
+    tg.webhook_url &&
+    tg.pickup_flow_enabled
+      ? { username: tg.bot_username }
+      : null;
+
   return (
     <div
       className="theme-admin min-h-svh flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden"
@@ -46,7 +61,7 @@ export default async function PickupPage() {
           </p>
         </div>
 
-        <PickupForm sessionConfig={session} />
+        <PickupForm sessionConfig={session} telegram={telegram} />
       </div>
     </div>
   );

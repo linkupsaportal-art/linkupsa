@@ -5,9 +5,16 @@ import { lookupOrderAction } from "./actions";
 import { OrderDetails } from "./order-details";
 import type { PickupResult } from "./types";
 import type { PickupSessionSettings } from "@/lib/db/platform-settings";
-import { Hash, Phone, AlertCircle, ArrowRight } from "lucide-react";
+import { Hash, Phone, AlertCircle, ArrowRight, Send } from "lucide-react";
 
-export function PickupForm({ sessionConfig }: { sessionConfig: PickupSessionSettings }) {
+export function PickupForm({
+  sessionConfig,
+  telegram,
+}: {
+  sessionConfig: PickupSessionSettings;
+  /** Set only when the merchant's Telegram pickup bot is live + enabled. */
+  telegram: { username: string } | null;
+}) {
   const [orderNumber, setOrderNumber] = useState("");
   const [lastFour, setLastFour] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +137,31 @@ export function PickupForm({ sessionConfig }: { sessionConfig: PickupSessionSett
           <ArrowRight className="size-4 rotate-180 transition-transform group-hover:-translate-x-1" />
         )}
       </button>
+
+      {/* Telegram alternative — only when the merchant's bot is fully wired */}
+      {telegram && (
+        <div className="pt-1">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 h-px bg-[hsl(var(--hairline))]" />
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-fg-faint">
+              أو استلم عبر
+            </span>
+            <div className="flex-1 h-px bg-[hsl(var(--hairline))]" />
+          </div>
+          <a
+            href={`https://t.me/${telegram.username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-[#26A5E4] text-white text-sm font-bold hover:bg-[#1f8fc8] transition-colors shadow-[0_6px_20px_rgba(38,165,228,0.35)] active:scale-[0.98]"
+          >
+            <Send className="size-4" />
+            <span>متابعة الاستلام على تيليجرام</span>
+          </a>
+          <p className="text-[11px] text-fg-faint text-center mt-2 leading-relaxed">
+            افتح بوت <code className="font-mono text-fg-muted">@{telegram.username}</code> واكمل خطوتين فقط داخل المحادثة.
+          </p>
+        </div>
+      )}
 
       {/* Help footer */}
       <div className="pt-2 border-t border-[hsl(var(--hairline))] text-center">
