@@ -10,6 +10,7 @@ import {
   Settings,
   UserCog,
   UserCircle2,
+  Send,
   type LucideIcon,
 } from "lucide-react";
 
@@ -63,6 +64,7 @@ export const STORE_NAV: NavGroup[] = [
     label: "التواصل والربط",
     items: [
       { href: "/admin/notifications", label: "الإشعارات", icon: BellRing },
+      { href: "/admin/telegram", label: "بوت تيليجرام", icon: Send },
       { href: "/admin/integrations", label: "ربط المتجر و Webhooks", icon: Webhook },
     ],
   },

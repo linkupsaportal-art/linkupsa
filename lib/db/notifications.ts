@@ -1,7 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export type ChannelKind = "email" | "whatsapp" | "telegram";
+export type ChannelKind = "email" | "whatsapp";
 
 export type NotificationChannel = {
   id: string;
@@ -36,26 +36,6 @@ export type WhatsAppConfig = {
   param_map?: Record<string, string[]>;
 };
 
-/**
- * Telegram bot push notifications. Customer-side support requires a
- * per-order chat_id (not yet collected); for now this drives a
- * merchant-side mirror feed: every order-ready / ban event is
- * cross-posted to the configured chat.
- */
-export type TelegramConfig = {
-  bot_token: string;
-  /** Default chat to mirror events to (group / channel / DM). */
-  chat_id: string;
-  /** Whether to post a copy of every fulfilled order to chat_id. */
-  mirror_orders: boolean;
-  /** Whether to post a copy of every phone ban event to chat_id. */
-  mirror_bans: boolean;
-};
-
-/**
- * Email config (Resend). RESEND_API_KEY stays in env; per-store wiring
- * here just lets the merchant override the default From address.
- */
 /**
  * Email config (Resend). The merchant can plug in their own Resend
  * API key from the admin panel — when present, it overrides the

@@ -187,8 +187,8 @@ async function sendBanEmailIfEnabled(
 }
 
 /**
- * Posts a copy of the ban event to the merchant's Telegram channel
- * if `mirror_bans` is enabled in the channel config. Best-effort.
+ * Posts a copy of the ban event to the merchant's Telegram chat
+ * if mirroring is enabled in `telegram_bot_settings`. Best-effort.
  */
 async function mirrorBanToTelegram(
   sb: ReturnType<typeof createServiceClient>,
@@ -200,18 +200,13 @@ async function mirrorBanToTelegram(
   },
 ): Promise<void> {
   try {
-    const { data: tgRow } = await sb
-      .from("notification_channels")
-      .select("config, enabled")
-      .eq("channel", "telegram")
-      .eq("enabled", true)
+    const { data: row } = await sb
+      .from("telegram_bot_settings")
+      .select("bot_token, operator_chat_id, mirror_bans, enabled")
       .limit(1)
       .maybeSingle();
-    const cfg = (tgRow?.config ?? {}) as Record<string, unknown>;
-    const botToken = cfg.bot_token as string | undefined;
-    const chatId = cfg.chat_id as string | undefined;
-    const mirrorBans = (cfg.mirror_bans as boolean | undefined) ?? true;
-    if (!botToken || !chatId || !mirrorBans) return;
+    if (!row?.enabled || !row?.bot_token || !row?.operator_chat_id) return;
+    if (!row.mirror_bans) return;
 
     const { sendTelegramMessage } = await import("./telegram");
     const text = [
@@ -222,7 +217,10 @@ async function mirrorBanToTelegram(
       `📱 الرقم: <code>${escapeHtml(args.mobile)}</code>`,
       `📌 السبب: ${escapeHtml(args.reason)}`,
     ].join("\n");
-    await sendTelegramMessage({ text, config: { botToken, chatId } });
+    await sendTelegramMessage({
+      text,
+      config: { botToken: row.bot_token, chatId: row.operator_chat_id },
+    });
   } catch {
     /* best-effort */
   }

@@ -5,19 +5,21 @@ import { sendOrderReadyEmail } from "./email";
 import { sendKarzounWhatsApp } from "./whatsapp-karzoun";
 
 /**
- * Multi-channel notification dispatcher.
+ * Multi-channel order-ready notifier.
  *
- * Per-product channel toggles live on `products.notification_channels`
- * (jsonb shape: `{email, whatsapp, telegram}`). Per-store provider
- * credentials live on `notification_channels` table, one row per channel.
+ * Customer-facing channels (per-product toggles in
+ * `products.notification_channels`):
+ *   - Email   — Resend, custom HTML template
+ *   - WhatsApp — Karzoun Chat, pre-approved template
  *
- * The dispatcher fans out to every enabled+configured channel and records
- * which channels actually fired on `orders.notification_channels_used`.
+ * Operator-side mirror (driven by global Telegram bot config in
+ * `telegram_bot_settings.mirror_orders`):
+ *   - Telegram — posts a copy to the operator's chat regardless of the
+ *     per-product flag, so the merchant always sees deliveries.
  *
- * Failures on one channel never block the others — best-effort delivery
- * is the right policy here. If WhatsApp fails the customer still gets the
- * email; if both fail the admin sees red flags in the orders table and
- * can manually resend.
+ * The Telegram bot itself (the one customers interact with for
+ * self-service pickup) lives in `app/api/telegram/webhook` and is
+ * unrelated to this dispatcher.
  */
 
 export type NotifyArgs = {
@@ -31,7 +33,6 @@ export type NotifyArgs = {
   productNotificationChannels: {
     email?: boolean;
     whatsapp?: boolean;
-    telegram?: boolean;
   };
   pickupUrl: string;
 };
@@ -46,31 +47,26 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
   const result: NotifyResult = { attempted: [], succeeded: [], failed: [] };
   const sb = createServiceClient();
 
-  // Resolve which channels to attempt. A channel runs only if BOTH:
-  //   - the product has it enabled (`product.notification_channels.<key>`)
-  //   - the store has it configured + enabled (`notification_channels` row)
-  const channels: Array<"email" | "whatsapp" | "telegram"> = [];
+  // ─── Customer channels ────────────────────────────────────────────────
+  const channels: Array<"email" | "whatsapp"> = [];
   if (args.productNotificationChannels.email && args.customerEmail) channels.push("email");
   if (args.productNotificationChannels.whatsapp && args.customerMobile) channels.push("whatsapp");
-  if (args.productNotificationChannels.telegram) channels.push("telegram");
 
-  if (channels.length === 0) return result;
-
-  // Fetch store-level provider configs in one shot
-  const { data: configs } = await sb
-    .from("notification_channels")
-    .select("channel, enabled, config")
-    .eq("store_id", args.storeId)
-    .in("channel", channels);
-
-  const configByChannel = new Map<string, Record<string, unknown>>();
-  for (const row of configs ?? []) {
-    if (row.enabled) {
-      configByChannel.set(row.channel as string, (row.config as Record<string, unknown>) ?? {});
+  let configByChannel = new Map<string, Record<string, unknown>>();
+  if (channels.length > 0) {
+    const { data: configs } = await sb
+      .from("notification_channels")
+      .select("channel, enabled, config")
+      .eq("store_id", args.storeId)
+      .in("channel", channels);
+    for (const row of configs ?? []) {
+      if (row.enabled) {
+        configByChannel.set(row.channel as string, (row.config as Record<string, unknown>) ?? {});
+      }
     }
   }
 
-  // ─── Email ──────────────────────────────────────────────────────────────
+  // ─── Email ────────────────────────────────────────────────────────────
   if (channels.includes("email") && args.customerEmail) {
     result.attempted.push("email");
     const emailCfg = configByChannel.get("email");
@@ -93,10 +89,12 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
           }
         : undefined,
     });
-    r.ok ? result.succeeded.push("email") : result.failed.push({ channel: "email", error: r.error ?? "unknown" });
+    r.ok
+      ? result.succeeded.push("email")
+      : result.failed.push({ channel: "email", error: r.error ?? "unknown" });
   }
 
-  // ─── WhatsApp via Karzoun Chat ──────────────────────────────────────────
+  // ─── WhatsApp via Karzoun ─────────────────────────────────────────────
   if (channels.includes("whatsapp") && args.customerMobile) {
     result.attempted.push("whatsapp");
     const cfg = configByChannel.get("whatsapp");
@@ -105,13 +103,7 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     const host = cfg?.host as string | undefined;
     const defaultTemplate = (cfg?.default_template as string | undefined) ?? "order_cancel";
     const language = (cfg?.language as string | undefined) ?? "ar";
-    // Per-template positional param mapping. Keys are template names; values
-    // are arrays of placeholder positions matching `{{1}} {{2}} ...` order.
-    // The dispatcher fills this from the order at runtime.
     const paramMap = (cfg?.param_map as Record<string, string[]> | undefined) ?? {
-      // Default mapping for the merchant's `order_cancel` template:
-      //   1 = customer name, 2 = order#, 3 = product, 4 = pickup link, 5 = ""
-      // (we abuse the cancel template as the only working positional one)
       order_cancel: [
         "customer_name",
         "order_number",
@@ -124,7 +116,6 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     if (cfg?.provider !== "karzoun" || !appToken || !integrationId) {
       result.failed.push({ channel: "whatsapp", error: "Karzoun Chat not configured for this store" });
     } else {
-      // Source values for placeholder substitution.
       const src: Record<string, string> = {
         customer_name: args.customerName,
         order_number: args.orderNumber,
@@ -147,40 +138,16 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
         template: defaultTemplate,
         config: { host, appToken, integrationId, defaultTemplate, language },
       });
-      r.ok ? result.succeeded.push("whatsapp") : result.failed.push({ channel: "whatsapp", error: r.error });
+      r.ok
+        ? result.succeeded.push("whatsapp")
+        : result.failed.push({ channel: "whatsapp", error: r.error });
     }
   }
 
-  // ─── Telegram (operator mirror) ─────────────────────────────────────────
-  if (channels.includes("telegram")) {
-    result.attempted.push("telegram");
-    const tg = configByChannel.get("telegram");
-    const botToken = tg?.bot_token as string | undefined;
-    const chatId = tg?.chat_id as string | undefined;
-    const mirror = (tg?.mirror_orders as boolean | undefined) ?? true;
-    if (!botToken || !chatId) {
-      result.failed.push({ channel: "telegram", error: "Telegram bot not configured" });
-    } else if (!mirror) {
-      // Channel exists but mirroring disabled; treat as a no-op success.
-      result.succeeded.push("telegram");
-    } else {
-      const { sendTelegramMessage } = await import("./telegram");
-      const text = renderTelegramOrderText({
-        customerName: args.customerName,
-        orderNumber: args.orderNumber,
-        productName: args.productName,
-        pickupUrl: args.pickupUrl,
-      });
-      const r = await sendTelegramMessage({
-        text,
-        config: { botToken, chatId },
-        buttons: [{ text: "📦 صفحة الاستلام", url: args.pickupUrl }],
-      });
-      r.ok
-        ? result.succeeded.push("telegram")
-        : result.failed.push({ channel: "telegram", error: r.error });
-    }
-  }
+  // ─── Telegram operator mirror (always-on if configured) ────────────────
+  await sendOperatorOrderMirror(args).catch(() => {
+    /* best-effort */
+  });
 
   // Persist what fired so admin can see it on the orders page
   await sb
@@ -199,55 +166,34 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
 }
 
 /**
- * Localized WhatsApp body — kept for reference if we wire a free-text
- * provider later. Karzoun Chat's GraphQL API only accepts pre-approved
- * templates with positional params, so this body isn't sent today.
+ * Posts a "new order ready" card to the operator's Telegram chat when
+ * the bot is configured + `mirror_orders` is on. Independent of the
+ * per-product channel toggles.
  */
-function renderWhatsAppText(args: {
-  customerName: string;
-  orderNumber: string;
-  productName: string;
-  pickupUrl: string;
-}): string {
-  return [
-    `مرحباً ${args.customerName} 👋`,
-    "",
-    `طلبك #${args.orderNumber} جاهز للاستلام ✅`,
-    `المنتج: ${args.productName}`,
-    "",
-    "اضغط على الرابط أدناه لاستلام بيانات حسابك:",
-    args.pickupUrl,
-    "",
-    "ملاحظة: لا تشارك بيانات الحساب مع أحد.",
-  ].join("\n");
-}
-
-/**
- * Telegram HTML message body for the merchant mirror feed. Plain HTML
- * is the safest parse mode here — escapes are minimal and emoji pass
- * through cleanly.
- */
-function renderTelegramOrderText(args: {
-  customerName: string;
-  orderNumber: string;
-  productName: string;
-  pickupUrl: string;
-}): string {
-  const safeName = escapeHtml(args.customerName || "—");
-  const safeOrder = escapeHtml(args.orderNumber || "—");
-  const safeProduct = escapeHtml(args.productName || "—");
-  return [
+async function sendOperatorOrderMirror(args: NotifyArgs): Promise<void> {
+  const sb = createServiceClient();
+  const { data: row } = await sb
+    .from("telegram_bot_settings")
+    .select("bot_token, operator_chat_id, mirror_orders, enabled")
+    .limit(1)
+    .maybeSingle();
+  if (!row?.enabled || !row?.bot_token || !row?.operator_chat_id) return;
+  if (!row.mirror_orders) return;
+  const { sendTelegramMessage } = await import("./telegram");
+  const text = [
     `📦 <b>طلب جاهز للاستلام</b>`,
     ``,
-    `👤 العميل: <b>${safeName}</b>`,
-    `🔖 رقم الطلب: <code>${safeOrder}</code>`,
-    `🛒 المنتج: ${safeProduct}`,
+    `👤 العميل: <b>${escapeHtml(args.customerName || "—")}</b>`,
+    `🔖 رقم الطلب: <code>${escapeHtml(args.orderNumber || "—")}</code>`,
+    `🛒 المنتج: ${escapeHtml(args.productName || "—")}`,
   ].join("\n");
+  await sendTelegramMessage({
+    text,
+    config: { botToken: row.bot_token, chatId: row.operator_chat_id },
+    buttons: [{ text: "📦 صفحة الاستلام", url: args.pickupUrl }],
+  });
 }
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

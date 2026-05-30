@@ -7,11 +7,9 @@ import {
   getActiveStoreId,
   type ChannelKind,
   type WhatsAppConfig,
-  type TelegramConfig,
   type EmailConfig,
 } from "@/lib/db/notifications";
 import { verifyKarzoun, sendKarzounWhatsApp } from "@/lib/notifications/whatsapp-karzoun";
-import { verifyTelegramBot, sendTelegramMessage } from "@/lib/notifications/telegram";
 import { verifyResendKey, sendOrderReadyEmail } from "@/lib/notifications/email";
 
 export type ActionResult<T = void> =
@@ -86,53 +84,6 @@ export async function sendWhatsAppTestMessageAction(input: {
       defaultTemplate: input.template,
       language: (cfg.language as string | undefined) ?? "ar",
     },
-  });
-  return r.ok ? { ok: true } : { ok: false, error: r.error };
-}
-
-/* ─── Telegram ───────────────────────────────────────────────────────── */
-
-export async function saveTelegramConfigAction(input: {
-  enabled: boolean;
-  config: TelegramConfig;
-}): Promise<ActionResult> {
-  const storeId = await getActiveStoreId();
-  if (!storeId) return { ok: false, error: "لا يوجد متجر مرتبط حالياً" };
-
-  const c = input.config;
-  if (!c.bot_token?.trim() || !c.chat_id?.trim()) {
-    return { ok: false, error: "Bot Token و Chat ID مطلوبان" };
-  }
-  await upsertNotificationChannel({
-    storeId,
-    channel: "telegram",
-    enabled: input.enabled,
-    config: {
-      bot_token: c.bot_token.trim(),
-      chat_id: c.chat_id.trim(),
-      mirror_orders: !!c.mirror_orders,
-      mirror_bans: !!c.mirror_bans,
-    },
-  });
-  revalidatePath("/admin/notifications");
-  return { ok: true };
-}
-
-export async function testTelegramConnectionAction(input: {
-  botToken: string;
-}): Promise<ActionResult<{ username: string }>> {
-  const r = await verifyTelegramBot({ botToken: input.botToken });
-  return r.ok ? { ok: true, data: { username: r.username } } : { ok: false, error: r.error };
-}
-
-export async function sendTelegramTestMessageAction(input: {
-  botToken: string;
-  chatId: string;
-  text: string;
-}): Promise<ActionResult> {
-  const r = await sendTelegramMessage({
-    text: input.text,
-    config: { botToken: input.botToken, chatId: input.chatId },
   });
   return r.ok ? { ok: true } : { ok: false, error: r.error };
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Mail,
   MessageCircle,
-  Send,
   CheckCircle2,
   XCircle,
   BellRing,
@@ -15,10 +14,9 @@ import type {
   NotificationDispatchSummary,
 } from "@/lib/db/notifications";
 import { WhatsAppConfigDialog } from "./whatsapp-config-dialog";
-import { TelegramConfigDialog } from "./telegram-config-dialog";
 import { EmailConfigDialog } from "./email-config-dialog";
 
-type ChannelKind = "email" | "whatsapp" | "telegram";
+type ChannelKind = "email" | "whatsapp";
 
 const CHANNEL_META: Record<
   ChannelKind,
@@ -34,11 +32,6 @@ const CHANNEL_META: Record<
     icon: MessageCircle,
     color: "text-emerald-400 bg-emerald-400/10",
   },
-  telegram: {
-    label: "تليجرام",
-    icon: Send,
-    color: "text-sky-400 bg-sky-400/10",
-  },
 };
 
 export function NotificationsClient({
@@ -49,7 +42,6 @@ export function NotificationsClient({
   dispatches: NotificationDispatchSummary[];
 }) {
   const [openWhatsApp, setOpenWhatsApp] = useState(false);
-  const [openTelegram, setOpenTelegram] = useState(false);
   const [openEmail, setOpenEmail] = useState(false);
 
   const byKind = (k: ChannelKind) => channels.find((c) => c.channel === k);
@@ -69,11 +61,6 @@ export function NotificationsClient({
             kind="email"
             cfg={byKind("email")}
             onConfigure={() => setOpenEmail(true)}
-          />
-          <ChannelCard
-            kind="telegram"
-            cfg={byKind("telegram")}
-            onConfigure={() => setOpenTelegram(true)}
           />
         </div>
       </section>
@@ -153,12 +140,6 @@ export function NotificationsClient({
         onOpenChange={setOpenWhatsApp}
         initial={(byKind("whatsapp")?.config as Record<string, unknown> | undefined) ?? {}}
         initialEnabled={byKind("whatsapp")?.enabled ?? false}
-      />
-      <TelegramConfigDialog
-        open={openTelegram}
-        onOpenChange={setOpenTelegram}
-        initial={(byKind("telegram")?.config as Record<string, unknown> | undefined) ?? {}}
-        initialEnabled={byKind("telegram")?.enabled ?? false}
       />
       <EmailConfigDialog
         open={openEmail}
@@ -241,12 +222,6 @@ function describe(kind: ChannelKind, cfg?: NotificationChannel): string {
     }
     const tpl = (cfg.config.default_template as string) ?? "—";
     return `قالب التسليم: ${tpl}. يرسل رسالة معتمدة من ميتا فور تنفيذ كل طلب.`;
-  }
-  if (kind === "telegram") {
-    if (!cfg?.config?.bot_token) {
-      return "أنشئ بوت من BotFather واربطه هنا لاستقبال نسخة من كل طلب وكل حظر.";
-    }
-    return "متصل ببوت تيليجرام. كل طلب وكل حظر يصل لك مباشرة على المحادثة.";
   }
   // email
   if (!cfg) {
