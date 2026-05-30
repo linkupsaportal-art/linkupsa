@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import type { AppStoreAuthorizeData, SallaWebhookEnvelope } from "./types";
+import { refreshStoreInfo } from "./store-info";
 
 /**
  * Synchronous post-receive dispatch — kept tiny on purpose so the route
@@ -88,6 +89,14 @@ async function persistStoreTokens(envelope: SallaWebhookEnvelope) {
       },
       { onConflict: "store_id" },
     );
+
+  // Best-effort enrich with storefront URL / domain / logo. Runs after the
+  // upsert so the row exists before we update it. Failures here are silent —
+  // the integrations page has a manual "Refresh" button as a fallback.
+  void refreshStoreInfo({
+    storeId: envelope.merchant,
+    accessToken: data.access_token,
+  });
 }
 
 /**

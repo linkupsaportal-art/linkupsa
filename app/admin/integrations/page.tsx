@@ -2,13 +2,29 @@ import { PageHeader } from "@/components/admin/page-header";
 import { createServiceClient } from "@/lib/supabase/server";
 import { Activity, AlertCircle, CheckCircle2, Clock, Store, Webhook } from "lucide-react";
 import { IntegrationsClient } from "@/components/admin/integrations/integrations-client";
+import { StoresList } from "@/components/admin/integrations/stores-list";
 
 export const dynamic = "force-dynamic";
+
+export type ConnectedStore = {
+  store_id: number;
+  store_name: string | null;
+  store_url: string | null;
+  store_domain: string | null;
+  store_logo_url: string | null;
+  installed_at: string;
+  uninstalled_at: string | null;
+};
 
 async function loadIntegrationData() {
   const sb = createServiceClient();
   const [stores, recentEvents, eventStats] = await Promise.all([
-    sb.from("salla_stores").select("*").order("installed_at", { ascending: false }),
+    sb
+      .from("salla_stores")
+      .select(
+        "store_id, store_name, store_url, store_domain, store_logo_url, installed_at, uninstalled_at",
+      )
+      .order("installed_at", { ascending: false }),
     sb
       .from("webhook_events")
       .select("id, event, status, error, received_at, processed_at")
@@ -26,7 +42,7 @@ async function loadIntegrationData() {
   }, {});
 
   return {
-    stores: stores.data ?? [],
+    stores: (stores.data ?? []) as ConnectedStore[],
     events: recentEvents.data ?? [],
     counts,
     total: eventStats.data?.length ?? 0,
@@ -72,34 +88,7 @@ export default async function IntegrationsPage() {
 
         {/* Connected stores */}
         <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة.">
-          {active.length === 0 ? (
-            <p className="text-sm text-fg-muted text-center py-6">لا توجد متاجر مربوطة.</p>
-          ) : (
-            <div className="space-y-2">
-              {active.map((s) => (
-                <div
-                  key={s.store_id}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline))]"
-                >
-                  <div className="min-w-0">
-                    <div className="font-bold text-sm text-fg">{s.store_name}</div>
-                    <div className="text-[11px] text-fg-muted font-num" dir="ltr">
-                      ID: {s.store_id} · ربط منذ{" "}
-                      {new Date(s.installed_at).toLocaleDateString("en-US", {
-                        year: "2-digit",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
-                    <CheckCircle2 className="size-2.5" />
-                    نشط
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <StoresList stores={active} />
         </Section>
 
         {/* Webhook events with drain controls */}
