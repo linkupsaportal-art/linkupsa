@@ -52,11 +52,14 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  // Fire-and-forget: process the update in the background so we ack
-  // Telegram fast (their timeout is short).
-  handleTelegramUpdate(update as never, settings.bot_token).catch((err) => {
+  // Telegram considers a 200 within ~30s a success. We await the full
+  // handler so Vercel doesn't kill the process mid-write — earlier
+  // fire-and-forget left sessions empty in the DB.
+  try {
+    await handleTelegramUpdate(update as never, settings.bot_token);
+  } catch (err) {
     console.error("[telegram.webhook] handler error", err);
-  });
+  }
 
   return NextResponse.json({ ok: true });
 }
