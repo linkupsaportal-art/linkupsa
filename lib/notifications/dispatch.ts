@@ -116,12 +116,45 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     if (cfg?.provider !== "karzoun" || !appToken || !integrationId) {
       result.failed.push({ channel: "whatsapp", error: "Karzoun Chat not configured for this store" });
     } else {
+      // Resolve the merchant's storefront name from `salla_stores` so the
+      // WhatsApp body shows the real store at all times. Falls back to
+      // anything saved on the WhatsApp config row, then a sane default.
+      let storeName = (cfg.store_name as string | undefined) ?? "متجرنا";
+      const { data: storeRow } = await sb
+        .from("salla_stores")
+        .select("store_name")
+        .eq("store_id", args.storeId)
+        .maybeSingle();
+      if (storeRow?.store_name && String(storeRow.store_name).trim()) {
+        storeName = String(storeRow.store_name).trim();
+      }
+
+      // If the customer-facing Telegram bot is fully configured, append
+      // the bot link to the pickup_url param so the customer gets both
+      // entry points inside the same approved template.
+      let pickupUrlValue = args.pickupUrl;
+      const { data: tg } = await sb
+        .from("telegram_bot_settings")
+        .select("bot_username, enabled, webhook_url, pickup_flow_enabled")
+        .limit(1)
+        .maybeSingle();
+      if (
+        tg?.enabled &&
+        tg.bot_username &&
+        tg.webhook_url &&
+        tg.pickup_flow_enabled
+      ) {
+        const botLink = `https://t.me/${tg.bot_username}`;
+        // Single-line, no tabs, ≤3 consecutive spaces — passes Meta validation.
+        pickupUrlValue = `${args.pickupUrl} أو عبر تيليجرام ${botLink}`;
+      }
+
       const src: Record<string, string> = {
         customer_name: args.customerName,
         order_number: args.orderNumber,
         product_name: args.productName,
-        pickup_url: args.pickupUrl,
-        store_name: "PortalIosa",
+        pickup_url: pickupUrlValue,
+        store_name: storeName,
       };
       const positions = paramMap[defaultTemplate] ?? [
         "customer_name",

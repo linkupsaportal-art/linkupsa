@@ -112,6 +112,25 @@ const waCfg = (
   )
 )[0]?.config;
 if (waCfg?.app_token) {
+  // Pull live store name from salla_stores (matches what production does).
+  const storeRow = (
+    await sb("salla_stores?store_id=eq.1375098081&select=store_name")
+  )[0];
+  const storeName =
+    storeRow?.store_name ?? waCfg.store_name ?? "متجرنا";
+
+  // Pull bot info to inline its link into the pickup URL parameter.
+  const tg = (
+    await sb(
+      "telegram_bot_settings?select=bot_username,enabled,webhook_url,pickup_flow_enabled&limit=1",
+    )
+  )[0];
+  const includeBot =
+    tg?.enabled && tg?.bot_username && tg?.webhook_url && tg?.pickup_flow_enabled;
+  const pickupUrlValue = includeBot
+    ? `${APP_HOST}/pickup أو عبر تيليجرام https://t.me/${tg.bot_username}`
+    : `${APP_HOST}/pickup`;
+
   const sendQ = `mutation Send($integrationId: String!, $templateName: String!, $recipient: String!, $language: String!, $params: JSON) {
     whatsappSendTemplateMessage(integrationId: $integrationId, templateName: $templateName, recipient: $recipient, language: $language, params: $params) { __typename }
   }`;
@@ -123,11 +142,11 @@ if (waCfg?.app_token) {
     "pickup_url",
   ];
   const src = {
-    store_name: waCfg.store_name ?? "PortalIosa",
+    store_name: storeName,
     customer_name: "محمد - اختبار حقيقي",
     order_number: String(REF_ID),
     product_name: product.name,
-    pickup_url: `${APP_HOST}/pickup`,
+    pickup_url: pickupUrlValue,
   };
   const params = Object.fromEntries(
     positions.map((k, i) => [`BODY_{{${i + 1}}}`, src[k] ?? ""]),
