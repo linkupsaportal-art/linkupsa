@@ -1,9 +1,9 @@
 /**
  * Live ban-notification smoke test.
  *
- * Sends `phone_ban_alert_v1` to +213672661102 with a fake reason
- * via the merchant's Karzoun integration. Use to confirm the template
- * is approved and the WhatsApp arrives.
+ * Sends `phone_ban_alert_v1` to +213672661102 with a fake reason and
+ * a duration line so we verify both placeholders + the duration suffix
+ * the customer will see on WhatsApp.
  *
  * Run:  node scripts/test-ban-notify.mjs
  */
@@ -40,7 +40,26 @@ const TO = "213672661102";
 const TEMPLATE = "phone_ban_alert_v1";
 const STORE = "PortalIosa";
 const NAME = "محمد";
-const REASON = "اختبار: تجاوز عدد محاولات إدخال كود التحقق";
+const DURATION_MIN = 60 * 24; // 24h temp ban
+const REASON_BASE = "تم رصد محاولات متعددة فاشلة لطلب كود التحقق.";
+
+function humanizeMinutes(minutes) {
+  if (!minutes || minutes <= 0) return "دائم";
+  if (minutes < 60) return `${minutes} دقيقة`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    if (hours === 1) return "ساعة";
+    if (hours === 2) return "ساعتان";
+    return `${hours} ساعات`;
+  }
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "يوم";
+  if (days === 2) return "يومان";
+  return `${days} أيام`;
+}
+
+const durationLabel = humanizeMinutes(DURATION_MIN);
+const REASON = `${REASON_BASE} — مدة الحظر: ${durationLabel}`;
 
 const params = {
   "BODY_{{1}}": STORE,
@@ -67,6 +86,8 @@ const SEND = `mutation Send(
 }`;
 
 console.log(`→ Sending ${TEMPLATE} to +${TO}`);
+console.log(`  Duration: ${durationLabel}`);
+console.log(`  Reason  : ${REASON_BASE}`);
 const r = await fetch(`https://${cfg.host}/graphql`, {
   method: "POST",
   headers: { "content-type": "application/json", "x-app-token": cfg.app_token },

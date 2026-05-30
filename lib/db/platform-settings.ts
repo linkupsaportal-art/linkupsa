@@ -11,12 +11,23 @@ import { createServiceClient } from "@/lib/supabase/server";
  * `scope`:
  *   - "global"   → ban applies to every product (product_id = null).
  *   - "per-product" → ban applies only to the product of the failing order.
+ *
+ * `default_ban_minutes`:
+ *   - `0` → permanent ban (no expires_at on the row).
+ *   - any positive number → temp ban; row's `expires_at` set to now() + N min.
+ *
+ * `default_ban_reason`:
+ *   - The Arabic reason injected on every auto-ban row and shown to the
+ *     customer on the WhatsApp alert. Operators usually want a fixed
+ *     friendly explanation rather than the raw "5 attempts in 60 min".
  */
 export type AutoBanSettings = {
   enabled: boolean;
   failures_threshold: number;
   window_minutes: number;
   scope: "global" | "per-product";
+  default_ban_minutes: number;
+  default_ban_reason: string;
 };
 
 /**
@@ -37,6 +48,8 @@ const DEFAULT_AUTO_BAN: AutoBanSettings = {
   failures_threshold: 5,
   window_minutes: 60,
   scope: "global",
+  default_ban_minutes: 60 * 24, // 24h temp ban by default
+  default_ban_reason: "تجاوز عدد المحاولات الفاشلة المسموح بها لطلب كود التحقق.",
 };
 
 const DEFAULT_PICKUP_SESSION: PickupSessionSettings = {
@@ -57,11 +70,16 @@ export async function getAutoBanSettings(): Promise<AutoBanSettings> {
 
 export async function updateAutoBanSettings(next: AutoBanSettings): Promise<void> {
   const sb = createServiceClient();
+  const trimmedReason = (next.default_ban_reason ?? "").trim();
   const sanitized: AutoBanSettings = {
     enabled: !!next.enabled,
     failures_threshold: clamp(Math.round(next.failures_threshold), 1, 50),
     window_minutes: clamp(Math.round(next.window_minutes), 1, 24 * 60),
     scope: next.scope === "per-product" ? "per-product" : "global",
+    default_ban_minutes: clamp(Math.round(next.default_ban_minutes ?? 0), 0, 60 * 24 * 365),
+    default_ban_reason: trimmedReason.length > 0
+      ? trimmedReason.slice(0, 280)
+      : DEFAULT_AUTO_BAN.default_ban_reason,
   };
   await sb
     .from("platform_settings")

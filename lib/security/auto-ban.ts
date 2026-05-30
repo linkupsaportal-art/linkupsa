@@ -1,6 +1,7 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getAutoBanSettings } from "@/lib/db/platform-settings";
+import { humanizeBanDuration } from "@/lib/db/phone-bans";
 import { notifyPhoneBan } from "@/lib/notifications/ban-notify";
 
 /**
@@ -63,15 +64,27 @@ export async function evaluateAutoBan(args: {
 
   if (existing?.length) return;
 
-  const reason = `حظر تلقائي: ${fails.length} محاولة فاشلة خلال ${settings.window_minutes} دقيقة`;
+  const reason = (settings.default_ban_reason && settings.default_ban_reason.trim().length > 0)
+    ? settings.default_ban_reason.trim()
+    : `حظر تلقائي: ${fails.length} محاولة فاشلة خلال ${settings.window_minutes} دقيقة`;
+  const durationMinutes = Math.max(0, Math.round(settings.default_ban_minutes ?? 0));
+  const expiresAt = durationMinutes > 0
+    ? new Date(Date.now() + durationMinutes * 60_000).toISOString()
+    : null;
+
   await sb.from("phone_bans").insert({
     mobile: cleaned,
     product_id: productId,
     reason,
     active: true,
     auto_banned: true,
+    expires_at: expiresAt,
   });
 
   // Best-effort WhatsApp alert to the banned number.
-  void notifyPhoneBan({ mobile: cleaned, reason });
+  void notifyPhoneBan({
+    mobile: cleaned,
+    reason,
+    durationLabel: humanizeBanDuration(durationMinutes),
+  });
 }

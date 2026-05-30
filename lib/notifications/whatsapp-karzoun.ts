@@ -151,3 +151,51 @@ async function safeJson(r: Response): Promise<unknown> {
   const text = await r.text();
   try { return JSON.parse(text); } catch { return text; }
 }
+
+/**
+ * Verifies Karzoun credentials by fetching the integration's templates
+ * list. Returns the count of approved templates and the integration's
+ * inbox name for the admin "Test connection" button.
+ */
+export async function verifyKarzoun(opts: {
+  host?: string;
+  appToken: string;
+  integrationId: string;
+}): Promise<
+  | { ok: true; approvedTemplates: number; templates: { name: string; status: string }[] }
+  | { ok: false; error: string }
+> {
+  const host = opts.host ?? DEFAULT_HOST;
+  const QUERY = `query Q($id: String!) {
+    whatsappGetTemplates(integrationId: $id) {
+      data { name status }
+    }
+  }`;
+  try {
+    const r = await fetch(`https://${host}/graphql`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json",
+        "x-app-token": opts.appToken,
+      },
+      body: JSON.stringify({ query: QUERY, variables: { id: opts.integrationId } }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const json = (await safeJson(r)) as
+      | { data?: { whatsappGetTemplates?: { data?: { name: string; status: string }[] } }; errors?: Array<{ message?: string }> }
+      | string;
+    if (typeof json === "string") return { ok: false, error: "غير قادر على قراءة استجابة Karzoun" };
+    if (json.errors?.length) {
+      return { ok: false, error: json.errors.map((e) => e.message).filter(Boolean).join("; ") || "خطأ غير معروف" };
+    }
+    const list = json.data?.whatsappGetTemplates?.data ?? [];
+    return {
+      ok: true,
+      approvedTemplates: list.filter((t) => t.status === "APPROVED").length,
+      templates: list,
+    };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message ?? "network error" };
+  }
+}

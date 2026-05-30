@@ -51,6 +51,7 @@ export function PhoneInput({
 }: PhoneInputProps) {
   const {
     phone,
+    inputValue,
     handlePhoneValueChange,
     inputRef,
     country,
@@ -59,7 +60,10 @@ export function PhoneInput({
     defaultCountry: lockedTo ?? defaultCountry,
     value,
     onChange: (phoneData) => {
-      onChange(phoneData.phone, { country: country.iso2 });
+      const cleanPhone = phoneData.phone.trim();
+      const dialCodeWithPlus = `+${country.dialCode}`;
+      const isJustDialCode = cleanPhone === dialCodeWithPlus || cleanPhone === "+";
+      onChange(isJustDialCode ? "" : cleanPhone, { country: country.iso2 });
     },
     disableDialCodeAndPrefix: true,
   });
@@ -183,7 +187,7 @@ export function PhoneInput({
         <input
           ref={inputRef}
           type="text"
-          value={phone}
+          value={value ? inputValue : ""}
           onChange={handlePhoneValueChange}
           disabled={disabled}
           placeholder={placeholder ?? "5X XXX XXXX"}

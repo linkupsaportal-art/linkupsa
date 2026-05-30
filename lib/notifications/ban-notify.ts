@@ -9,7 +9,9 @@ import { sendKarzounWhatsApp } from "./whatsapp-karzoun";
  * either manually from the admin Bans tab, or automatically by the
  * threshold evaluator. Uses the merchant's pre-approved template
  * `phone_ban_alert_v1` (positional placeholders: store_name,
- * customer_name, reason).
+ * customer_name, reason). Duration is folded into the reason string so
+ * we don't need a brand-new approved template every time the merchant
+ * changes their wording.
  *
  * If WhatsApp isn't configured, the merchant's store has no row in
  * `notification_channels`, or the customer's mobile is missing/invalid,
@@ -21,6 +23,11 @@ export type NotifyBanArgs = {
   reason: string | null;
   customerName?: string | null;
   storeName?: string;
+  /**
+   * Pre-formatted Arabic duration label, e.g. "ساعة" / "24 ساعة" / "دائم".
+   * Caller is expected to pass `humanizeBanDuration(minutes)`.
+   */
+  durationLabel?: string | null;
 };
 
 export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
@@ -64,7 +71,19 @@ export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
     customerName = (orderRow?.customer_name as string | undefined) ?? "العميل الكريم";
   }
 
-  const reasonText = (args.reason || "").trim() || "تم تقييد الرقم بناءً على سياسة الأمان";
+  // Fold duration into the reason placeholder so the merchant doesn't have
+  // to ask Meta to approve a new template every time wording changes.
+  // NOTE: WhatsApp template parameters CANNOT contain newlines, tabs, or
+  // 4+ consecutive spaces — those trigger Meta error #100. Use an inline
+  // separator instead.
+  const baseReason =
+    (args.reason || "").trim() ||
+    "تم تقييد الرقم بناءً على سياسة الأمان";
+  const flatBaseReason = baseReason.replace(/\s+/g, " ").trim();
+  const durationLabel = (args.durationLabel || "").trim();
+  const reasonText = durationLabel
+    ? `${flatBaseReason} — مدة الحظر: ${durationLabel}`
+    : flatBaseReason;
 
   await sendKarzounWhatsApp({
     to: cleanMobile,
@@ -80,4 +99,61 @@ export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
   }).catch(() => {
     /* best-effort: never block ban creation on WhatsApp errors */
   });
+
+  // Mirror the ban event to the Telegram channel if configured.
+  void mirrorBanToTelegram(sb, {
+    storeName,
+    mobile: cleanMobile,
+    customerName,
+    reason: reasonText,
+  });
+}
+
+/**
+ * Posts a copy of the ban event to the merchant's Telegram channel
+ * if `mirror_bans` is enabled in the channel config. Best-effort.
+ */
+async function mirrorBanToTelegram(
+  sb: ReturnType<typeof createServiceClient>,
+  args: {
+    storeName: string;
+    mobile: string;
+    customerName: string;
+    reason: string;
+  },
+): Promise<void> {
+  try {
+    const { data: tgRow } = await sb
+      .from("notification_channels")
+      .select("config")
+      .eq("channel", "telegram")
+      .eq("enabled", true)
+      .limit(1)
+      .maybeSingle();
+    const cfg = (tgRow?.config ?? {}) as Record<string, unknown>;
+    const botToken = cfg.bot_token as string | undefined;
+    const chatId = cfg.chat_id as string | undefined;
+    const mirrorBans = (cfg.mirror_bans as boolean | undefined) ?? true;
+    if (!botToken || !chatId || !mirrorBans) return;
+
+    const { sendTelegramMessage } = await import("./telegram");
+    const text = [
+      "🚫 <b>تم حظر رقم</b>",
+      "",
+      `🏪 المتجر: <b>${escapeHtml(args.storeName)}</b>`,
+      `👤 العميل: ${escapeHtml(args.customerName)}`,
+      `📱 الرقم: <code>${escapeHtml(args.mobile)}</code>`,
+      `📌 السبب: ${escapeHtml(args.reason)}`,
+    ].join("\n");
+    await sendTelegramMessage({ text, config: { botToken, chatId } });
+  } catch {
+    /* best-effort */
+  }
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

@@ -15,9 +15,9 @@
       "Supabase",
       "Zod"
     ],
-    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 178 files",
-    "analyzedAt": "2026-05-30T09:28:42.061Z",
-    "gitCommitHash": "b4680c1b48b6aadd7d238dce364bd166f7e904dc"
+    "description": "digital-delivery-platform — json, typescript, css, markdown, javascript project with 193 files",
+    "analyzedAt": "2026-05-30T10:23:32.729Z",
+    "gitCommitHash": "25d7c4ebe32b05ca46128f77fb7899a617506f7d"
   },
   "nodes": [
     {
@@ -553,6 +553,114 @@
       "complexity": "simple"
     },
     {
+      "id": "file:app/admin/otp-logs/actions.ts",
+      "type": "file",
+      "name": "actions.ts",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "summary": "actions.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#createPhoneBan",
+      "type": "function",
+      "name": "createPhoneBan",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        19,
+        25
+      ],
+      "summary": "createPhoneBan(input): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#togglePhoneBan",
+      "type": "function",
+      "name": "togglePhoneBan",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        53,
+        59
+      ],
+      "summary": "togglePhoneBan(id, active): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#deletePhoneBan",
+      "type": "function",
+      "name": "deletePhoneBan",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        61,
+        67
+      ],
+      "summary": "deletePhoneBan(id): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#getAutoBanSettingsAction",
+      "type": "function",
+      "name": "getAutoBanSettingsAction",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        71,
+        73
+      ],
+      "summary": "getAutoBanSettingsAction(): Promise<AutoBanSettings>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#updateAutoBanSettingsAction",
+      "type": "function",
+      "name": "updateAutoBanSettingsAction",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        75,
+        85
+      ],
+      "summary": "updateAutoBanSettingsAction(next): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:app/admin/otp-logs/actions.ts#updatePickupSessionSettingsAction",
+      "type": "function",
+      "name": "updatePickupSessionSettingsAction",
+      "filePath": "app/admin/otp-logs/actions.ts",
+      "lineRange": [
+        89,
+        100
+      ],
+      "summary": "updatePickupSessionSettingsAction(next): Promise<ActionResult>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:app/admin/otp-logs/page.tsx",
       "type": "file",
       "name": "page.tsx",
@@ -591,78 +699,6 @@
         "typescript"
       ],
       "complexity": "moderate"
-    },
-    {
-      "id": "file:app/admin/phone-bans/actions.ts",
-      "type": "file",
-      "name": "actions.ts",
-      "filePath": "app/admin/phone-bans/actions.ts",
-      "summary": "actions.ts — typescript source file",
-      "tags": [
-        "typescript",
-        "ts"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:app/admin/phone-bans/actions.ts#createPhoneBan",
-      "type": "function",
-      "name": "createPhoneBan",
-      "filePath": "app/admin/phone-bans/actions.ts",
-      "lineRange": [
-        9,
-        13
-      ],
-      "summary": "createPhoneBan(input): Promise<ActionResult>",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:app/admin/phone-bans/actions.ts#togglePhoneBan",
-      "type": "function",
-      "name": "togglePhoneBan",
-      "filePath": "app/admin/phone-bans/actions.ts",
-      "lineRange": [
-        32,
-        38
-      ],
-      "summary": "togglePhoneBan(id, active): Promise<ActionResult>",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:app/admin/phone-bans/actions.ts#deletePhoneBan",
-      "type": "function",
-      "name": "deletePhoneBan",
-      "filePath": "app/admin/phone-bans/actions.ts",
-      "lineRange": [
-        40,
-        46
-      ],
-      "summary": "deletePhoneBan(id): Promise<ActionResult>",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "file:app/admin/phone-bans/page.tsx",
-      "type": "file",
-      "name": "page.tsx",
-      "filePath": "app/admin/phone-bans/page.tsx",
-      "summary": "page.tsx — typescript source file",
-      "tags": [
-        "typescript",
-        "tsx"
-      ],
-      "complexity": "simple"
     },
     {
       "id": "file:app/admin/products/actions.ts",
@@ -1302,15 +1338,27 @@
       "name": "logOtp",
       "filePath": "app/pickup/get-code-action.ts",
       "lineRange": [
-        130,
-        144
+        131,
+        163
       ],
       "summary": "logOtp(sb, ip, result, orderId?, accountId?)",
       "tags": [
         "function",
         "typescript"
       ],
-      "complexity": "simple"
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:app/pickup/idle-lock-overlay.tsx",
+      "type": "file",
+      "name": "idle-lock-overlay.tsx",
+      "filePath": "app/pickup/idle-lock-overlay.tsx",
+      "summary": "idle-lock-overlay.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
     },
     {
       "id": "file:app/pickup/order-details.tsx",
@@ -1354,15 +1402,43 @@
       "name": "PickupForm",
       "filePath": "app/pickup/pickup-form.tsx",
       "lineRange": [
-        9,
-        148
+        10,
+        10
       ],
-      "summary": "PickupForm()",
+      "summary": "PickupForm({)",
       "tags": [
         "function",
         "typescript"
       ],
-      "complexity": "complex"
+      "complexity": "simple"
+    },
+    {
+      "id": "file:app/pickup/session-timer.tsx",
+      "type": "file",
+      "name": "session-timer.tsx",
+      "filePath": "app/pickup/session-timer.tsx",
+      "summary": "session-timer.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:app/pickup/session-timer.tsx#SessionTimer",
+      "type": "function",
+      "name": "SessionTimer",
+      "filePath": "app/pickup/session-timer.tsx",
+      "lineRange": [
+        10,
+        13
+      ],
+      "summary": "SessionTimer({, totalSeconds, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
     },
     {
       "id": "file:app/pickup/totp-code-block.tsx",
@@ -1383,9 +1459,9 @@
       "filePath": "app/pickup/totp-code-block.tsx",
       "lineRange": [
         17,
-        23
+        24
       ],
-      "summary": "TotpCodeBlock({, lastFour, remaining, limit, handlerType, })",
+      "summary": "TotpCodeBlock({, lastFour, remaining, limit, handlerType, lifetimeSeconds, }, the)",
       "tags": [
         "function",
         "typescript"
@@ -1403,6 +1479,18 @@
         "ts"
       ],
       "complexity": "simple"
+    },
+    {
+      "id": "file:app/pickup/use-idle-timeout.ts",
+      "type": "file",
+      "name": "use-idle-timeout.ts",
+      "filePath": "app/pickup/use-idle-timeout.ts",
+      "summary": "use-idle-timeout.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
     },
     {
       "id": "file:cloudflare-workers/README.md",
@@ -1853,11 +1941,195 @@
       "complexity": "simple"
     },
     {
-      "id": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "id": "file:components/admin/otp-logs/auto-ban-tab.tsx",
       "type": "file",
-      "name": "otp-logs-client.tsx",
-      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
-      "summary": "otp-logs-client.tsx — typescript source file",
+      "name": "auto-ban-tab.tsx",
+      "filePath": "components/admin/otp-logs/auto-ban-tab.tsx",
+      "summary": "auto-ban-tab.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/auto-ban-tab.tsx#AutoBanTab",
+      "type": "function",
+      "name": "AutoBanTab",
+      "filePath": "components/admin/otp-logs/auto-ban-tab.tsx",
+      "lineRange": [
+        18,
+        18
+      ],
+      "summary": "AutoBanTab({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/auto-ban-tab.tsx#SettingCard",
+      "type": "function",
+      "name": "SettingCard",
+      "filePath": "components/admin/otp-logs/auto-ban-tab.tsx",
+      "lineRange": [
+        258,
+        265
+      ],
+      "summary": "SettingCard({, tone, title, description, disabled, children, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/auto-ban-tab.tsx#Field",
+      "type": "function",
+      "name": "Field",
+      "filePath": "components/admin/otp-logs/auto-ban-tab.tsx",
+      "lineRange": [
+        313,
+        317
+      ],
+      "summary": "Field({, hint, children, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/auto-ban-tab.tsx#humanizeMinutes",
+      "type": "function",
+      "name": "humanizeMinutes",
+      "filePath": "components/admin/otp-logs/auto-ban-tab.tsx",
+      "lineRange": [
+        372,
+        389
+      ],
+      "summary": "humanizeMinutes(minutes): string",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:components/admin/otp-logs/bans-tab.tsx",
+      "type": "file",
+      "name": "bans-tab.tsx",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "summary": "bans-tab.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#BansTab",
+      "type": "function",
+      "name": "BansTab",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        33,
+        36
+      ],
+      "summary": "BansTab({, products, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#BanRow",
+      "type": "function",
+      "name": "BanRow",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        217,
+        217
+      ],
+      "summary": "BanRow({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#Field",
+      "type": "function",
+      "name": "Field",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        298,
+        302
+      ],
+      "summary": "Field({, required, children, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        317,
+        329
+      ],
+      "summary": "EmptyState()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#ExpiryChip",
+      "type": "function",
+      "name": "ExpiryChip",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        332,
+        335
+      ],
+      "summary": "ExpiryChip({, active, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/bans-tab.tsx#humanizeMs",
+      "type": "function",
+      "name": "humanizeMs",
+      "filePath": "components/admin/otp-logs/bans-tab.tsx",
+      "lineRange": [
+        370,
+        377
+      ],
+      "summary": "humanizeMs(ms): string",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:components/admin/otp-logs/logs-tab.tsx",
+      "type": "file",
+      "name": "logs-tab.tsx",
+      "filePath": "components/admin/otp-logs/logs-tab.tsx",
+      "summary": "logs-tab.tsx — typescript source file",
       "tags": [
         "typescript",
         "tsx"
@@ -1865,10 +2137,10 @@
       "complexity": "moderate"
     },
     {
-      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#formatMobile",
+      "id": "fn:components/admin/otp-logs/logs-tab.tsx#formatMobile",
       "type": "function",
       "name": "formatMobile",
-      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "filePath": "components/admin/otp-logs/logs-tab.tsx",
       "lineRange": [
         30,
         46
@@ -1881,15 +2153,15 @@
       "complexity": "moderate"
     },
     {
-      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#OtpLogsClient",
+      "id": "fn:components/admin/otp-logs/logs-tab.tsx#LogsTab",
       "type": "function",
-      "name": "OtpLogsClient",
-      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "name": "LogsTab",
+      "filePath": "components/admin/otp-logs/logs-tab.tsx",
       "lineRange": [
         48,
         52
       ],
-      "summary": "OtpLogsClient({, total, stats, })",
+      "summary": "LogsTab({, total, stats, })",
       "tags": [
         "function",
         "typescript"
@@ -1897,13 +2169,13 @@
       "complexity": "simple"
     },
     {
-      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#Stat",
+      "id": "fn:components/admin/otp-logs/logs-tab.tsx#Stat",
       "type": "function",
       "name": "Stat",
-      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "filePath": "components/admin/otp-logs/logs-tab.tsx",
       "lineRange": [
-        237,
-        242
+        232,
+        237
       ],
       "summary": "Stat({, label, value, tone, })",
       "tags": [
@@ -1913,15 +2185,103 @@
       "complexity": "simple"
     },
     {
-      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#EmptyState",
+      "id": "fn:components/admin/otp-logs/logs-tab.tsx#EmptyState",
       "type": "function",
       "name": "EmptyState",
-      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "filePath": "components/admin/otp-logs/logs-tab.tsx",
       "lineRange": [
-        281,
-        291
+        276,
+        286
       ],
       "summary": "EmptyState()",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "type": "file",
+      "name": "otp-logs-client.tsx",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "summary": "otp-logs-client.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/otp-logs-client.tsx#OtpLogsClient",
+      "type": "function",
+      "name": "OtpLogsClient",
+      "filePath": "components/admin/otp-logs/otp-logs-client.tsx",
+      "lineRange": [
+        26,
+        34
+      ],
+      "summary": "OtpLogsClient({, total, stats, bans, products, autoBan, session, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:components/admin/otp-logs/session-tab.tsx",
+      "type": "file",
+      "name": "session-tab.tsx",
+      "filePath": "components/admin/otp-logs/session-tab.tsx",
+      "summary": "session-tab.tsx — typescript source file",
+      "tags": [
+        "typescript",
+        "tsx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/session-tab.tsx#SessionTab",
+      "type": "function",
+      "name": "SessionTab",
+      "filePath": "components/admin/otp-logs/session-tab.tsx",
+      "lineRange": [
+        38,
+        38
+      ],
+      "summary": "SessionTab({)",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/session-tab.tsx#SettingCard",
+      "type": "function",
+      "name": "SettingCard",
+      "filePath": "components/admin/otp-logs/session-tab.tsx",
+      "lineRange": [
+        175,
+        181
+      ],
+      "summary": "SettingCard({, tone, title, description, children, })",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:components/admin/otp-logs/session-tab.tsx#humanize",
+      "type": "function",
+      "name": "humanize",
+      "filePath": "components/admin/otp-logs/session-tab.tsx",
+      "lineRange": [
+        275,
+        286
+      ],
+      "summary": "humanize(seconds): string",
       "tags": [
         "function",
         "typescript"
@@ -1978,82 +2338,6 @@
         10
       ],
       "summary": "PageHeader({, eyebrow, description, actions, className, })",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "file:components/admin/phone-bans/phone-bans-client.tsx",
-      "type": "file",
-      "name": "phone-bans-client.tsx",
-      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
-      "summary": "phone-bans-client.tsx — typescript source file",
-      "tags": [
-        "typescript",
-        "tsx"
-      ],
-      "complexity": "moderate"
-    },
-    {
-      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#PhoneBansClient",
-      "type": "function",
-      "name": "PhoneBansClient",
-      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
-      "lineRange": [
-        17,
-        20
-      ],
-      "summary": "PhoneBansClient({, products, })",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#BanRow",
-      "type": "function",
-      "name": "BanRow",
-      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
-      "lineRange": [
-        162,
-        162
-      ],
-      "summary": "BanRow({)",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#Field",
-      "type": "function",
-      "name": "Field",
-      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
-      "lineRange": [
-        228,
-        228
-      ],
-      "summary": "Field({, required, children)",
-      "tags": [
-        "function",
-        "typescript"
-      ],
-      "complexity": "simple"
-    },
-    {
-      "id": "fn:components/admin/phone-bans/phone-bans-client.tsx#EmptyState",
-      "type": "function",
-      "name": "EmptyState",
-      "filePath": "components/admin/phone-bans/phone-bans-client.tsx",
-      "lineRange": [
-        239,
-        251
-      ],
-      "summary": "EmptyState()",
       "tags": [
         "function",
         "typescript"
@@ -4578,8 +4862,8 @@
       "name": "listPhoneBans",
       "filePath": "lib/db/phone-bans.ts",
       "lineRange": [
-        20,
-        41
+        24,
+        51
       ],
       "summary": "listPhoneBans(): Promise<PhoneBan[]>",
       "tags": [
@@ -4587,6 +4871,130 @@
         "typescript"
       ],
       "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/phone-bans.ts#humanizeBanDuration",
+      "type": "function",
+      "name": "humanizeBanDuration",
+      "filePath": "lib/db/phone-bans.ts",
+      "lineRange": [
+        95,
+        114
+      ],
+      "summary": "humanizeBanDuration(minutes): string",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/phone-bans.ts#describeExpiry",
+      "type": "function",
+      "name": "describeExpiry",
+      "filePath": "lib/db/phone-bans.ts",
+      "lineRange": [
+        121,
+        126
+      ],
+      "summary": "describeExpiry(expiresAt): string",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:lib/db/platform-settings.ts",
+      "type": "file",
+      "name": "platform-settings.ts",
+      "filePath": "lib/db/platform-settings.ts",
+      "summary": "platform-settings.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/platform-settings.ts#getAutoBanSettings",
+      "type": "function",
+      "name": "getAutoBanSettings",
+      "filePath": "lib/db/platform-settings.ts",
+      "lineRange": [
+        60,
+        69
+      ],
+      "summary": "getAutoBanSettings(): Promise<AutoBanSettings>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:lib/db/platform-settings.ts#updateAutoBanSettings",
+      "type": "function",
+      "name": "updateAutoBanSettings",
+      "filePath": "lib/db/platform-settings.ts",
+      "lineRange": [
+        71,
+        87
+      ],
+      "summary": "updateAutoBanSettings(next): Promise<void>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/db/platform-settings.ts#getPickupSessionSettings",
+      "type": "function",
+      "name": "getPickupSessionSettings",
+      "filePath": "lib/db/platform-settings.ts",
+      "lineRange": [
+        89,
+        98
+      ],
+      "summary": "getPickupSessionSettings(): Promise<PickupSessionSettings>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:lib/db/platform-settings.ts#updatePickupSessionSettings",
+      "type": "function",
+      "name": "updatePickupSessionSettings",
+      "filePath": "lib/db/platform-settings.ts",
+      "lineRange": [
+        100,
+        111
+      ],
+      "summary": "updatePickupSessionSettings(next): Promise<void>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "fn:lib/db/platform-settings.ts#clamp",
+      "type": "function",
+      "name": "clamp",
+      "filePath": "lib/db/platform-settings.ts",
+      "lineRange": [
+        113,
+        116
+      ],
+      "summary": "clamp(n, min, max): number",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
     },
     {
       "id": "file:lib/db/products-types.ts",
@@ -4771,6 +5179,34 @@
         "ts"
       ],
       "complexity": "simple"
+    },
+    {
+      "id": "file:lib/notifications/ban-notify.ts",
+      "type": "file",
+      "name": "ban-notify.ts",
+      "filePath": "lib/notifications/ban-notify.ts",
+      "summary": "ban-notify.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/notifications/ban-notify.ts#notifyPhoneBan",
+      "type": "function",
+      "name": "notifyPhoneBan",
+      "filePath": "lib/notifications/ban-notify.ts",
+      "lineRange": [
+        33,
+        98
+      ],
+      "summary": "notifyPhoneBan(args): Promise<void>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "complex"
     },
     {
       "id": "file:lib/notifications/dispatch.ts",
@@ -5141,6 +5577,34 @@
       "complexity": "simple"
     },
     {
+      "id": "file:lib/security/auto-ban.ts",
+      "type": "file",
+      "name": "auto-ban.ts",
+      "filePath": "lib/security/auto-ban.ts",
+      "summary": "auto-ban.ts — typescript source file",
+      "tags": [
+        "typescript",
+        "ts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:lib/security/auto-ban.ts#evaluateAutoBan",
+      "type": "function",
+      "name": "evaluateAutoBan",
+      "filePath": "lib/security/auto-ban.ts",
+      "lineRange": [
+        21,
+        26
+      ],
+      "summary": "evaluateAutoBan(args): Promise<void>",
+      "tags": [
+        "function",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:lib/split-text.ts",
       "type": "file",
       "name": "split-text.ts",
@@ -5417,6 +5881,46 @@
       "complexity": "simple"
     },
     {
+      "id": "file:scripts/check-ban-template-status.mjs",
+      "type": "file",
+      "name": "check-ban-template-status.mjs",
+      "filePath": "scripts/check-ban-template-status.mjs",
+      "summary": "check-ban-template-status.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/create-ban-template.mjs",
+      "type": "file",
+      "name": "create-ban-template.mjs",
+      "filePath": "scripts/create-ban-template.mjs",
+      "summary": "create-ban-template.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:scripts/create-ban-template.mjs#gql",
+      "type": "function",
+      "name": "gql",
+      "filePath": "scripts/create-ban-template.mjs",
+      "lineRange": [
+        25,
+        32
+      ],
+      "summary": "gql(query, variables)",
+      "tags": [
+        "function",
+        "javascript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:scripts/drawer-output.txt",
       "type": "file",
       "name": "drawer-output.txt",
@@ -5453,6 +5957,46 @@
       "complexity": "simple"
     },
     {
+      "id": "file:scripts/inspect-whatsapp-cfg.mjs",
+      "type": "file",
+      "name": "inspect-whatsapp-cfg.mjs",
+      "filePath": "scripts/inspect-whatsapp-cfg.mjs",
+      "summary": "inspect-whatsapp-cfg.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:scripts/list-karzoun-templates.mjs",
+      "type": "file",
+      "name": "list-karzoun-templates.mjs",
+      "filePath": "scripts/list-karzoun-templates.mjs",
+      "summary": "list-karzoun-templates.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:scripts/list-karzoun-templates.mjs#gql",
+      "type": "function",
+      "name": "gql",
+      "filePath": "scripts/list-karzoun-templates.mjs",
+      "lineRange": [
+        28,
+        35
+      ],
+      "summary": "gql(query, variables)",
+      "tags": [
+        "function",
+        "javascript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:scripts/place-real-order.mjs",
       "type": "file",
       "name": "place-real-order.mjs",
@@ -5477,6 +6021,34 @@
       "complexity": "moderate"
     },
     {
+      "id": "file:scripts/poll-and-send-ban-test.mjs",
+      "type": "file",
+      "name": "poll-and-send-ban-test.mjs",
+      "filePath": "scripts/poll-and-send-ban-test.mjs",
+      "summary": "poll-and-send-ban-test.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:scripts/poll-and-send-ban-test.mjs#gql",
+      "type": "function",
+      "name": "gql",
+      "filePath": "scripts/poll-and-send-ban-test.mjs",
+      "lineRange": [
+        32,
+        39
+      ],
+      "summary": "gql(query, variables)",
+      "tags": [
+        "function",
+        "javascript"
+      ],
+      "complexity": "simple"
+    },
+    {
       "id": "file:scripts/probe-karzoun.mjs",
       "type": "file",
       "name": "probe-karzoun.mjs",
@@ -5496,6 +6068,34 @@
       "lineRange": [
         7,
         14
+      ],
+      "summary": "gql(query, variables)",
+      "tags": [
+        "function",
+        "javascript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/probe-template-create.mjs",
+      "type": "file",
+      "name": "probe-template-create.mjs",
+      "filePath": "scripts/probe-template-create.mjs",
+      "summary": "probe-template-create.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "fn:scripts/probe-template-create.mjs#gql",
+      "type": "function",
+      "name": "gql",
+      "filePath": "scripts/probe-template-create.mjs",
+      "lineRange": [
+        25,
+        32
       ],
       "summary": "gql(query, variables)",
       "tags": [
@@ -5691,6 +6291,18 @@
         "javascript"
       ],
       "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/test-ban-notify.mjs",
+      "type": "file",
+      "name": "test-ban-notify.mjs",
+      "filePath": "scripts/test-ban-notify.mjs",
+      "summary": "test-ban-notify.mjs — javascript source file",
+      "tags": [
+        "javascript",
+        "mjs"
+      ],
+      "complexity": "moderate"
     },
     {
       "id": "file:scripts/test-karzoun.mjs",
@@ -6049,29 +6661,50 @@
       "weight": 0.9
     },
     {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#createPhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#togglePhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#deletePhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#getAutoBanSettingsAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#updateAutoBanSettingsAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:app/admin/otp-logs/actions.ts",
+      "target": "fn:app/admin/otp-logs/actions.ts#updatePickupSessionSettingsAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:app/admin/page.tsx",
       "target": "fn:app/admin/page.tsx#UpgradeCard",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:app/admin/phone-bans/actions.ts",
-      "target": "fn:app/admin/phone-bans/actions.ts#createPhoneBan",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:app/admin/phone-bans/actions.ts",
-      "target": "fn:app/admin/phone-bans/actions.ts#togglePhoneBan",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:app/admin/phone-bans/actions.ts",
-      "target": "fn:app/admin/phone-bans/actions.ts#deletePhoneBan",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -6311,6 +6944,30 @@
       "weight": 0.7
     },
     {
+      "source": "file:app/pickup/order-details.tsx",
+      "target": "file:app/pickup/use-idle-timeout.ts",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { useIdleTimeout }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/pickup/order-details.tsx",
+      "target": "file:app/pickup/idle-lock-overlay.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { IdleLockOverlay }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:app/pickup/order-details.tsx",
+      "target": "file:app/pickup/session-timer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { SessionTimer }",
+      "weight": 0.7
+    },
+    {
       "source": "file:app/pickup/page.tsx",
       "target": "file:app/pickup/pickup-form.tsx",
       "type": "imports",
@@ -6348,6 +7005,13 @@
       "direction": "forward",
       "description": "imports { PickupResult }",
       "weight": 0.7
+    },
+    {
+      "source": "file:app/pickup/session-timer.tsx",
+      "target": "fn:app/pickup/session-timer.tsx#SessionTimer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
     },
     {
       "source": "file:app/pickup/totp-code-block.tsx",
@@ -6477,8 +7141,99 @@
       "weight": 0.9
     },
     {
-      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
-      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#formatMobile",
+      "source": "file:components/admin/otp-logs/auto-ban-tab.tsx",
+      "target": "fn:components/admin/otp-logs/auto-ban-tab.tsx#AutoBanTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/auto-ban-tab.tsx",
+      "target": "fn:components/admin/otp-logs/auto-ban-tab.tsx#SettingCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/auto-ban-tab.tsx",
+      "target": "fn:components/admin/otp-logs/auto-ban-tab.tsx#Field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/auto-ban-tab.tsx",
+      "target": "fn:components/admin/otp-logs/auto-ban-tab.tsx#humanizeMinutes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#BansTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#BanRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#Field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#EmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#ExpiryChip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/bans-tab.tsx",
+      "target": "fn:components/admin/otp-logs/bans-tab.tsx#humanizeMs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/logs-tab.tsx",
+      "target": "fn:components/admin/otp-logs/logs-tab.tsx#formatMobile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/logs-tab.tsx",
+      "target": "fn:components/admin/otp-logs/logs-tab.tsx#LogsTab",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/logs-tab.tsx",
+      "target": "fn:components/admin/otp-logs/logs-tab.tsx#Stat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/logs-tab.tsx",
+      "target": "fn:components/admin/otp-logs/logs-tab.tsx#EmptyState",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -6492,14 +7247,53 @@
     },
     {
       "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
-      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#Stat",
+      "target": "file:components/admin/otp-logs/logs-tab.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { LogsTab }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "file:components/admin/otp-logs/bans-tab.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { BansTab }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "file:components/admin/otp-logs/auto-ban-tab.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { AutoBanTab }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
+      "target": "file:components/admin/otp-logs/session-tab.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { SessionTab }",
+      "weight": 0.7
+    },
+    {
+      "source": "file:components/admin/otp-logs/session-tab.tsx",
+      "target": "fn:components/admin/otp-logs/session-tab.tsx#SessionTab",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
     },
     {
-      "source": "file:components/admin/otp-logs/otp-logs-client.tsx",
-      "target": "fn:components/admin/otp-logs/otp-logs-client.tsx#EmptyState",
+      "source": "file:components/admin/otp-logs/session-tab.tsx",
+      "target": "fn:components/admin/otp-logs/session-tab.tsx#SettingCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:components/admin/otp-logs/session-tab.tsx",
+      "target": "fn:components/admin/otp-logs/session-tab.tsx#humanize",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -6514,34 +7308,6 @@
     {
       "source": "file:components/admin/page-header.tsx",
       "target": "fn:components/admin/page-header.tsx#PageHeader",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
-      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#PhoneBansClient",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
-      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#BanRow",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
-      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#Field",
-      "type": "contains",
-      "direction": "forward",
-      "weight": 0.9
-    },
-    {
-      "source": "file:components/admin/phone-bans/phone-bans-client.tsx",
-      "target": "fn:components/admin/phone-bans/phone-bans-client.tsx#EmptyState",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -7262,6 +8028,55 @@
       "weight": 0.9
     },
     {
+      "source": "file:lib/db/phone-bans.ts",
+      "target": "fn:lib/db/phone-bans.ts#humanizeBanDuration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/phone-bans.ts",
+      "target": "fn:lib/db/phone-bans.ts#describeExpiry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/platform-settings.ts",
+      "target": "fn:lib/db/platform-settings.ts#getAutoBanSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/platform-settings.ts",
+      "target": "fn:lib/db/platform-settings.ts#updateAutoBanSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/platform-settings.ts",
+      "target": "fn:lib/db/platform-settings.ts#getPickupSessionSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/platform-settings.ts",
+      "target": "fn:lib/db/platform-settings.ts#updatePickupSessionSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/db/platform-settings.ts",
+      "target": "fn:lib/db/platform-settings.ts#clamp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:lib/db/products.ts",
       "target": "fn:lib/db/products.ts#listProducts",
       "type": "contains",
@@ -7317,6 +8132,21 @@
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
+    },
+    {
+      "source": "file:lib/notifications/ban-notify.ts",
+      "target": "fn:lib/notifications/ban-notify.ts#notifyPhoneBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:lib/notifications/ban-notify.ts",
+      "target": "file:lib/notifications/whatsapp-karzoun.ts",
+      "type": "imports",
+      "direction": "forward",
+      "description": "imports { sendKarzounWhatsApp }",
+      "weight": 0.7
     },
     {
       "source": "file:lib/notifications/dispatch.ts",
@@ -7470,6 +8300,13 @@
       "weight": 0.9
     },
     {
+      "source": "file:lib/security/auto-ban.ts",
+      "target": "fn:lib/security/auto-ban.ts#evaluateAutoBan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:lib/split-text.ts",
       "target": "fn:lib/split-text.ts#splitChars",
       "type": "contains",
@@ -7533,8 +8370,36 @@
       "weight": 0.9
     },
     {
+      "source": "file:scripts/create-ban-template.mjs",
+      "target": "fn:scripts/create-ban-template.mjs#gql",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:scripts/list-karzoun-templates.mjs",
+      "target": "fn:scripts/list-karzoun-templates.mjs#gql",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:scripts/poll-and-send-ban-test.mjs",
+      "target": "fn:scripts/poll-and-send-ban-test.mjs#gql",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
       "source": "file:scripts/probe-karzoun.mjs",
       "target": "fn:scripts/probe-karzoun.mjs#gql",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:scripts/probe-template-create.mjs",
+      "target": "fn:scripts/probe-template-create.mjs#gql",
       "type": "contains",
       "direction": "forward",
       "weight": 0.9
@@ -7660,6 +8525,7 @@
         "file:lib/db/orders.ts",
         "file:lib/db/otp-logs.ts",
         "file:lib/db/phone-bans.ts",
+        "file:lib/db/platform-settings.ts",
         "file:lib/db/products-types.ts",
         "file:lib/db/products.ts"
       ]
@@ -7740,10 +8606,9 @@
         "file:app/admin/layout.tsx",
         "file:app/admin/notifications/page.tsx",
         "file:app/admin/orders/page.tsx",
+        "file:app/admin/otp-logs/actions.ts",
         "file:app/admin/otp-logs/page.tsx",
         "file:app/admin/page.tsx",
-        "file:app/admin/phone-bans/actions.ts",
-        "file:app/admin/phone-bans/page.tsx",
         "file:app/admin/products/actions.ts",
         "file:app/admin/products/page.tsx",
         "file:app/admin/profile/actions.ts",
@@ -7754,11 +8619,14 @@
         "file:app/page.tsx",
         "file:app/pickup/actions.ts",
         "file:app/pickup/get-code-action.ts",
+        "file:app/pickup/idle-lock-overlay.tsx",
         "file:app/pickup/order-details.tsx",
         "file:app/pickup/page.tsx",
         "file:app/pickup/pickup-form.tsx",
+        "file:app/pickup/session-timer.tsx",
         "file:app/pickup/totp-code-block.tsx",
         "file:app/pickup/types.ts",
+        "file:app/pickup/use-idle-timeout.ts",
         "file:cloudflare-workers/README.md",
         "file:cloudflare-workers/salla-webhook-proxy/package-lock.json",
         "file:cloudflare-workers/salla-webhook-proxy/package.json",
@@ -7775,10 +8643,13 @@
         "file:components/admin/nav-config.ts",
         "file:components/admin/notifications/notifications-client.tsx",
         "file:components/admin/orders/orders-client.tsx",
+        "file:components/admin/otp-logs/auto-ban-tab.tsx",
+        "file:components/admin/otp-logs/bans-tab.tsx",
+        "file:components/admin/otp-logs/logs-tab.tsx",
         "file:components/admin/otp-logs/otp-logs-client.tsx",
+        "file:components/admin/otp-logs/session-tab.tsx",
         "file:components/admin/overview-greeting.tsx",
         "file:components/admin/page-header.tsx",
-        "file:components/admin/phone-bans/phone-bans-client.tsx",
         "file:components/admin/products/products-client.tsx",
         "file:components/admin/profile/account-info-card.tsx",
         "file:components/admin/profile/avatar-card.tsx",
@@ -7835,6 +8706,7 @@
         "file:lib/env.ts",
         "file:lib/gsap.ts",
         "file:lib/images.ts",
+        "file:lib/notifications/ban-notify.ts",
         "file:lib/notifications/dispatch.ts",
         "file:lib/notifications/email.ts",
         "file:lib/notifications/whatsapp-karzoun.ts",
@@ -7843,6 +8715,7 @@
         "file:lib/salla/order-ingestor.ts",
         "file:lib/salla/types.ts",
         "file:lib/salla/verify.ts",
+        "file:lib/security/auto-ban.ts",
         "file:lib/split-text.ts",
         "file:lib/supabase/client.ts",
         "file:lib/supabase/server.ts",
@@ -7852,17 +8725,24 @@
         "file:package.json",
         "file:proxy.ts",
         "file:public/images/README.md",
+        "file:scripts/check-ban-template-status.mjs",
+        "file:scripts/create-ban-template.mjs",
         "file:scripts/drawer-output.txt",
         "file:scripts/fetch-salla-products.mjs",
         "file:scripts/find-karzoun-bundle.mjs",
+        "file:scripts/inspect-whatsapp-cfg.mjs",
+        "file:scripts/list-karzoun-templates.mjs",
         "file:scripts/place-real-order.mjs",
         "file:scripts/place-test-order.mjs",
+        "file:scripts/poll-and-send-ban-test.mjs",
         "file:scripts/probe-karzoun.mjs",
+        "file:scripts/probe-template-create.mjs",
         "file:scripts/real-order-test.mjs",
         "file:scripts/refire-algeria.mjs",
         "file:scripts/replay-real-order.mjs",
         "file:scripts/simulate-order.mjs",
         "file:scripts/spec-check.mjs",
+        "file:scripts/test-ban-notify.mjs",
         "file:scripts/test-karzoun.mjs",
         "file:scripts/test-real-order.mjs",
         "file:scripts/test-salla-api.mjs",
@@ -7889,12 +8769,13 @@
     {
       "order": 2,
       "title": "Data Layer",
-      "description": "Explore the data layer: notifications.ts, orders.ts, otp-logs.ts, phone-bans.ts, products-types.ts (+2 more)",
+      "description": "Explore the data layer: notifications.ts, orders.ts, otp-logs.ts, phone-bans.ts, platform-settings.ts (+3 more)",
       "nodeIds": [
         "file:lib/db/notifications.ts",
         "file:lib/db/orders.ts",
         "file:lib/db/otp-logs.ts",
         "file:lib/db/phone-bans.ts",
+        "file:lib/db/platform-settings.ts",
         "file:lib/db/products-types.ts",
         "file:lib/db/accounts.ts",
         "file:lib/db/products.ts"
@@ -7959,7 +8840,7 @@
     {
       "order": 8,
       "title": "Core Layer",
-      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+141 more)",
+      "description": "Explore the core layer: settings.json, actions.ts, layout.tsx, mfa-challenge-form.tsx, page.tsx (+155 more)",
       "nodeIds": [
         "file:.vscode/settings.json",
         "file:app/(auth)/actions.ts",
@@ -7975,10 +8856,9 @@
         "file:app/admin/layout.tsx",
         "file:app/admin/notifications/page.tsx",
         "file:app/admin/orders/page.tsx",
+        "file:app/admin/otp-logs/actions.ts",
         "file:app/admin/otp-logs/page.tsx",
         "file:app/admin/page.tsx",
-        "file:app/admin/phone-bans/actions.ts",
-        "file:app/admin/phone-bans/page.tsx",
         "file:app/admin/products/actions.ts",
         "file:app/admin/products/page.tsx",
         "file:app/admin/profile/actions.ts",
@@ -7988,7 +8868,10 @@
         "file:app/layout.tsx",
         "file:app/page.tsx",
         "file:app/pickup/get-code-action.ts",
+        "file:app/pickup/idle-lock-overlay.tsx",
+        "file:app/pickup/session-timer.tsx",
         "file:app/pickup/types.ts",
+        "file:app/pickup/use-idle-timeout.ts",
         "file:cloudflare-workers/README.md",
         "file:cloudflare-workers/salla-webhook-proxy/package-lock.json",
         "file:cloudflare-workers/salla-webhook-proxy/package.json",
@@ -8005,10 +8888,12 @@
         "file:components/admin/nav-config.ts",
         "file:components/admin/notifications/notifications-client.tsx",
         "file:components/admin/orders/orders-client.tsx",
-        "file:components/admin/otp-logs/otp-logs-client.tsx",
+        "file:components/admin/otp-logs/auto-ban-tab.tsx",
+        "file:components/admin/otp-logs/bans-tab.tsx",
+        "file:components/admin/otp-logs/logs-tab.tsx",
+        "file:components/admin/otp-logs/session-tab.tsx",
         "file:components/admin/overview-greeting.tsx",
         "file:components/admin/page-header.tsx",
-        "file:components/admin/phone-bans/phone-bans-client.tsx",
         "file:components/admin/products/products-client.tsx",
         "file:components/admin/profile/account-info-card.tsx",
         "file:components/admin/profile/avatar-card.tsx",
@@ -8070,6 +8955,7 @@
         "file:lib/salla/order-ingestor.ts",
         "file:lib/salla/types.ts",
         "file:lib/salla/verify.ts",
+        "file:lib/security/auto-ban.ts",
         "file:lib/split-text.ts",
         "file:lib/supabase/client.ts",
         "file:lib/supabase/server.ts",
@@ -8079,17 +8965,24 @@
         "file:package.json",
         "file:proxy.ts",
         "file:public/images/README.md",
+        "file:scripts/check-ban-template-status.mjs",
+        "file:scripts/create-ban-template.mjs",
         "file:scripts/drawer-output.txt",
         "file:scripts/fetch-salla-products.mjs",
         "file:scripts/find-karzoun-bundle.mjs",
+        "file:scripts/inspect-whatsapp-cfg.mjs",
+        "file:scripts/list-karzoun-templates.mjs",
         "file:scripts/place-real-order.mjs",
         "file:scripts/place-test-order.mjs",
+        "file:scripts/poll-and-send-ban-test.mjs",
         "file:scripts/probe-karzoun.mjs",
+        "file:scripts/probe-template-create.mjs",
         "file:scripts/real-order-test.mjs",
         "file:scripts/refire-algeria.mjs",
         "file:scripts/replay-real-order.mjs",
         "file:scripts/simulate-order.mjs",
         "file:scripts/spec-check.mjs",
+        "file:scripts/test-ban-notify.mjs",
         "file:scripts/test-karzoun.mjs",
         "file:scripts/test-real-order.mjs",
         "file:scripts/test-salla-api.mjs",
@@ -8101,6 +8994,8 @@
         "file:app/(auth)/login/mfa/page.tsx",
         "file:app/pickup/totp-code-block.tsx",
         "file:app/pickup/actions.ts",
+        "file:components/admin/otp-logs/otp-logs-client.tsx",
+        "file:lib/notifications/ban-notify.ts",
         "file:lib/notifications/dispatch.ts",
         "file:lib/salla/handlers.ts",
         "file:lib/salla/inbox.ts",

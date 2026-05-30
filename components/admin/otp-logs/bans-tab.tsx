@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { ShieldBan, Plus, Trash2, Power, PowerOff, Sparkles } from "lucide-react";
+import { useState, useTransition, useMemo } from "react";
+import { ShieldBan, Plus, Trash2, Power, PowerOff, Sparkles, Timer } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,18 @@ import {
   togglePhoneBan,
 } from "@/app/admin/otp-logs/actions";
 import type { PhoneBan } from "@/lib/db/phone-bans";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { CustomSelect } from "@/components/ui/select";
+
+const DURATION_OPTIONS: { label: string; minutes: number }[] = [
+  { label: "دائم", minutes: 0 },
+  { label: "1 ساعة", minutes: 60 },
+  { label: "6 ساعات", minutes: 360 },
+  { label: "12 ساعة", minutes: 720 },
+  { label: "24 ساعة", minutes: 1440 },
+  { label: "3 أيام", minutes: 4320 },
+  { label: "7 أيام", minutes: 10080 },
+];
 
 export function BansTab({
   bans,
@@ -26,9 +38,19 @@ export function BansTab({
   products: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
+  const productOptions = useMemo(() => {
+    return [
+      { value: "", label: "حظر عام (كل المنتجات)" },
+      ...products.map((p) => ({
+        value: p.id,
+        label: p.name,
+      })),
+    ];
+  }, [products]);
   const [mobile, setMobile] = useState("");
   const [productId, setProductId] = useState<string>("");
   const [reason, setReason] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -39,6 +61,7 @@ export function BansTab({
         mobile,
         productId: productId || null,
         reason: reason || null,
+        durationMinutes,
       });
       if (!res.ok) {
         setError(res.error);
@@ -47,6 +70,7 @@ export function BansTab({
       setMobile("");
       setProductId("");
       setReason("");
+      setDurationMinutes(0);
       setOpen(false);
     });
   }
@@ -85,27 +109,21 @@ export function BansTab({
             </DialogHeader>
             <div className="space-y-3 py-2">
               <Field label="رقم الجوال (مع رمز الدولة)" required>
-                <input
+                <PhoneInput
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="+966500000000"
-                  className="h-10 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full font-num focus:outline-none focus:border-accent/60"
-                  dir="ltr"
+                  onChange={(val) => setMobile(val)}
+                  disabled={isPending}
+                  placeholder="5X XXX XXXX"
                 />
               </Field>
               <Field label="المنتج المحظور (اختياري)">
-                <select
+                <CustomSelect
                   value={productId}
-                  onChange={(e) => setProductId(e.target.value)}
-                  className="h-10 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60"
-                >
-                  <option value="">— حظر عام (كل المنتجات) —</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setProductId(val)}
+                  options={productOptions}
+                  placeholder="حظر عام (كل المنتجات)"
+                  disabled={isPending}
+                />
               </Field>
               <Field label="السبب">
                 <textarea
@@ -115,6 +133,30 @@ export function BansTab({
                   placeholder="مثال: محاولات احتيال متكررة"
                   className="px-3 py-2 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 resize-none"
                 />
+              </Field>
+              <Field label="مدة الحظر">
+                <div className="flex flex-wrap gap-1.5">
+                  {DURATION_OPTIONS.map((opt) => {
+                    const active = durationMinutes === opt.minutes;
+                    return (
+                      <button
+                        key={opt.minutes}
+                        type="button"
+                        onClick={() => setDurationMinutes(opt.minutes)}
+                        className={`h-8 px-3 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                          active
+                            ? "bg-accent text-accent-fg"
+                            : "bg-surface-2 text-fg-muted border border-[hsl(var(--hairline-strong))] hover:bg-surface hover:text-fg"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[11px] text-fg-faint">
+                  دائم = لا يُرفع تلقائياً، أنت من يرفعه يدوياً.
+                </p>
               </Field>
               {error && (
                 <div className="text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
@@ -153,6 +195,7 @@ export function BansTab({
                   <th className="text-start px-4 py-3 font-semibold">المصدر</th>
                   <th className="text-start px-4 py-3 font-semibold">رقم الجوال</th>
                   <th className="text-start px-4 py-3 font-semibold">المنتج المحظور</th>
+                  <th className="text-start px-4 py-3 font-semibold">المدة</th>
                   <th className="text-start px-4 py-3 font-semibold">السبب</th>
                   <th className="text-start px-4 py-3 font-semibold">التاريخ</th>
                   <th className="text-end px-4 py-3 font-semibold">الإجراءات</th>
@@ -214,6 +257,9 @@ function BanRow({ ban }: { ban: PhoneBan }) {
       </td>
       <td className="px-4 py-3 text-sm text-fg">
         {ban.product_name ?? <span className="text-fg-faint italic">حظر عام</span>}
+      </td>
+      <td className="px-4 py-3">
+        <ExpiryChip expiresAt={ban.expires_at} active={ban.active} />
       </td>
       <td className="px-4 py-3 text-xs text-fg-muted max-w-xs">
         {ban.reason || <span className="text-fg-faint">—</span>}
@@ -280,4 +326,52 @@ function EmptyState() {
       </p>
     </div>
   );
+}
+
+/* ── ExpiryChip ─────────────────────────────────────────────────────── */
+function ExpiryChip({
+  expiresAt,
+  active,
+}: {
+  expiresAt: string | null;
+  active: boolean;
+}) {
+  if (!expiresAt) {
+    return (
+      <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+        <Timer className="size-2.5" />
+        دائم
+      </span>
+    );
+  }
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) {
+    return (
+      <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-fg-faint/10 text-fg-faint border border-fg-faint/20">
+        منتهي
+      </span>
+    );
+  }
+  const label = humanizeMs(ms);
+  return (
+    <span
+      className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold border ${
+        active
+          ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
+          : "bg-fg-faint/10 text-fg-faint border-fg-faint/20"
+      }`}
+    >
+      <Timer className="size-2.5" />
+      ينتهي خلال {label}
+    </span>
+  );
+}
+
+function humanizeMs(ms: number): string {
+  const minutes = Math.max(1, Math.round(ms / 60_000));
+  if (minutes < 60) return `${minutes} د`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} س`;
+  const days = Math.floor(hours / 24);
+  return `${days} ي`;
 }

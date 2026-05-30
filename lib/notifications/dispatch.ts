@@ -141,12 +141,39 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
   }
 
   // ─── SMS / Telegram ─────────────────────────────────────────────────────
-  // Stubs — Sprint 3 wires actual providers (Unifonic for SMS, Telegram Bot API).
+  // SMS still stubbed (Sprint 3 wires Unifonic / Mobily).
   if (channels.includes("sms")) {
     result.failed.push({ channel: "sms", error: "SMS provider not yet wired" });
   }
+
   if (channels.includes("telegram")) {
-    result.failed.push({ channel: "telegram", error: "Telegram provider not yet wired" });
+    result.attempted.push("telegram");
+    const tg = configByChannel.get("telegram");
+    const botToken = tg?.bot_token as string | undefined;
+    const chatId = tg?.chat_id as string | undefined;
+    const mirror = (tg?.mirror_orders as boolean | undefined) ?? true;
+    if (!botToken || !chatId) {
+      result.failed.push({ channel: "telegram", error: "Telegram bot not configured" });
+    } else if (!mirror) {
+      // Channel exists but mirroring disabled; treat as a no-op success.
+      result.succeeded.push("telegram");
+    } else {
+      const { sendTelegramMessage } = await import("./telegram");
+      const text = renderTelegramOrderText({
+        customerName: args.customerName,
+        orderNumber: args.orderNumber,
+        productName: args.productName,
+        pickupUrl: args.pickupUrl,
+      });
+      const r = await sendTelegramMessage({
+        text,
+        config: { botToken, chatId },
+        buttons: [{ text: "📦 صفحة الاستلام", url: args.pickupUrl }],
+      });
+      r.ok
+        ? result.succeeded.push("telegram")
+        : result.failed.push({ channel: "telegram", error: r.error });
+    }
   }
 
   // Persist what fired so admin can see it on the orders page
@@ -187,4 +214,34 @@ function renderWhatsAppText(args: {
     "",
     "ملاحظة: لا تشارك بيانات الحساب مع أحد.",
   ].join("\n");
+}
+
+/**
+ * Telegram HTML message body for the merchant mirror feed. Plain HTML
+ * is the safest parse mode here — escapes are minimal and emoji pass
+ * through cleanly.
+ */
+function renderTelegramOrderText(args: {
+  customerName: string;
+  orderNumber: string;
+  productName: string;
+  pickupUrl: string;
+}): string {
+  const safeName = escapeHtml(args.customerName || "—");
+  const safeOrder = escapeHtml(args.orderNumber || "—");
+  const safeProduct = escapeHtml(args.productName || "—");
+  return [
+    `📦 <b>طلب جاهز للاستلام</b>`,
+    ``,
+    `👤 العميل: <b>${safeName}</b>`,
+    `🔖 رقم الطلب: <code>${safeOrder}</code>`,
+    `🛒 المنتج: ${safeProduct}`,
+  ].join("\n");
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

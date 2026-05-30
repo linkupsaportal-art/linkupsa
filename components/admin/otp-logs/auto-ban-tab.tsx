@@ -1,9 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Sparkles, Save, AlertTriangle } from "lucide-react";
+import { Sparkles, Save, AlertTriangle, Clock, MessageSquare } from "lucide-react";
 import { updateAutoBanSettingsAction } from "@/app/admin/otp-logs/actions";
 import type { AutoBanSettings } from "@/lib/db/platform-settings";
+
+const DURATION_PRESETS: { label: string; minutes: number }[] = [
+  { label: "دائم", minutes: 0 },
+  { label: "1 ساعة", minutes: 60 },
+  { label: "6 ساعات", minutes: 360 },
+  { label: "12 ساعة", minutes: 720 },
+  { label: "24 ساعة", minutes: 1440 },
+  { label: "3 أيام", minutes: 4320 },
+  { label: "7 أيام", minutes: 10080 },
+];
 
 export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
   const [settings, setSettings] = useState<AutoBanSettings>(initial);
@@ -15,7 +25,9 @@ export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
     settings.enabled !== initial.enabled ||
     settings.failures_threshold !== initial.failures_threshold ||
     settings.window_minutes !== initial.window_minutes ||
-    settings.scope !== initial.scope;
+    settings.scope !== initial.scope ||
+    settings.default_ban_minutes !== initial.default_ban_minutes ||
+    settings.default_ban_reason !== initial.default_ban_reason;
 
   function save() {
     setError(null);
@@ -30,7 +42,7 @@ export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 w-full max-w-3xl mx-auto">
       {/* Hero card */}
       <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-5">
         <div className="flex items-start gap-4">
@@ -106,6 +118,83 @@ export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
         </div>
       </Field>
 
+      {/* Duration */}
+      <SettingCard
+        icon={<Clock className="size-4" />}
+        tone="violet"
+        title="مدة الحظر"
+        description="اختر مدة محددة لرفع الحظر تلقائياً، أو اتركه دائماً حتى يُرفع يدوياً من تبويب الأرقام المحظورة."
+        disabled={!settings.enabled}
+      >
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={0}
+            max={60 * 24 * 365}
+            value={settings.default_ban_minutes}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                default_ban_minutes: Math.max(0, Number(e.target.value) || 0),
+              })
+            }
+            disabled={!settings.enabled}
+            className="h-11 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-base font-num font-extrabold text-fg w-32 focus:outline-none focus:border-accent/60 disabled:opacity-50"
+          />
+          <span className="text-xs text-fg-muted">دقيقة</span>
+          <span className="text-xs text-fg-faint ms-auto">
+            ≈{" "}
+            <strong className="font-num font-extrabold">
+              {humanizeMinutes(settings.default_ban_minutes)}
+            </strong>
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {DURATION_PRESETS.map((p) => {
+            const active = p.minutes === settings.default_ban_minutes;
+            return (
+              <button
+                key={p.minutes}
+                type="button"
+                disabled={!settings.enabled}
+                onClick={() => setSettings({ ...settings, default_ban_minutes: p.minutes })}
+                className={`h-8 px-3 rounded-lg text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  active
+                    ? "bg-accent text-accent-fg"
+                    : "bg-surface-2 text-fg-muted border border-[hsl(var(--hairline-strong))] hover:bg-surface hover:text-fg"
+                }`}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      </SettingCard>
+
+      {/* Default reason */}
+      <SettingCard
+        icon={<MessageSquare className="size-4" />}
+        tone="amber"
+        title="رسالة سبب الحظر"
+        description="هذا النص يُرسل للعميل في الواتساب ويُعرض في تبويب الأرقام المحظورة. اجعله واضحاً ومفهوماً."
+        disabled={!settings.enabled}
+      >
+        <textarea
+          value={settings.default_ban_reason}
+          onChange={(e) =>
+            setSettings({ ...settings, default_ban_reason: e.target.value })
+          }
+          maxLength={280}
+          rows={3}
+          disabled={!settings.enabled}
+          placeholder="مثال: تم رصد محاولات متعددة فاشلة لطلب كود التحقق."
+          className="px-3 py-2 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 resize-none disabled:opacity-50"
+        />
+        <div className="text-[10px] text-fg-faint text-end">
+          {settings.default_ban_reason.length} / 280
+        </div>
+      </SettingCard>
+
       {/* Preview */}
       <div className="rounded-2xl bg-surface-2 border border-[hsl(var(--hairline))] p-4">
         <div className="text-[10px] font-bold tracking-widest text-fg-faint uppercase mb-2">
@@ -120,7 +209,15 @@ export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
               <strong className="font-num font-extrabold">{settings.window_minutes}</strong>{" "}
               دقيقة، سيتم حظره{" "}
               {settings.scope === "global" ? "من كل المنتجات" : "من المنتج المعني فقط"}{" "}
-              تلقائياً.
+              لمدة{" "}
+              <strong className="font-num font-extrabold">
+                {humanizeMinutes(settings.default_ban_minutes)}
+              </strong>{" "}
+              مع إرسال إشعار واتساب يحتوي السبب التالي:
+              <br />
+              <span className="block mt-2 ps-3 border-s-2 border-amber-500/40 italic text-fg-muted">
+                {settings.default_ban_reason || "—"}
+              </span>
             </>
           ) : (
             <span className="text-fg-muted">الحظر التلقائي غير مفعّل حالياً. كل الحظر يُضاف يدوياً.</span>
@@ -154,6 +251,43 @@ export function AutoBanTab({ initial }: { initial: AutoBanSettings }) {
           {isPending ? "جاري الحفظ..." : "حفظ الإعدادات"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function SettingCard({
+  icon,
+  tone,
+  title,
+  description,
+  disabled,
+  children,
+}: {
+  icon: React.ReactNode;
+  tone: "amber" | "violet";
+  title: string;
+  description: string;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  const toneClasses =
+    tone === "amber"
+      ? "bg-amber-500/15 text-amber-500"
+      : "bg-violet-500/15 text-violet-400";
+  return (
+    <div
+      className={`rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-4 space-y-3 ${disabled ? "opacity-60" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`size-8 shrink-0 rounded-lg flex items-center justify-center ${toneClasses}`}>
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-sm text-fg mb-0.5">{title}</h4>
+          <p className="text-xs text-fg-muted leading-relaxed">{description}</p>
+        </div>
+      </div>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 }
@@ -233,4 +367,23 @@ function ScopeOption({
       <p className="text-[11px] text-fg-muted mt-1 ms-6 leading-relaxed">{subtitle}</p>
     </button>
   );
+}
+
+function humanizeMinutes(minutes: number): string {
+  if (!minutes || minutes <= 0) return "دائم";
+  if (minutes < 60) return `${minutes} دقيقة`;
+  const hours = Math.floor(minutes / 60);
+  const remMin = minutes % 60;
+  if (hours < 24) {
+    if (remMin === 0) return hours === 1 ? "ساعة" : hours === 2 ? "ساعتان" : `${hours} ساعات`;
+    return `${hours} س و ${remMin} د`;
+  }
+  const days = Math.floor(hours / 24);
+  const remHours = hours % 24;
+  if (days < 7) {
+    if (remHours === 0) return days === 1 ? "يوم" : days === 2 ? "يومان" : `${days} أيام`;
+    return `${days} ي و ${remHours} س`;
+  }
+  const weeks = Math.floor(days / 7);
+  return weeks === 1 ? "أسبوع" : weeks === 2 ? "أسبوعان" : `${weeks} أسابيع`;
 }

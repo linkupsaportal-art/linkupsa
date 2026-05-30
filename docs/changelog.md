@@ -5,6 +5,30 @@
 
 ---
 
+# 2026-05-30 14:35
+
+- 🎨 **Official Brand Logo Integration in Sidebar Header — Razex Xelite**
+  - **Replaced Placeholder Plus Button**: Removed the generic, plain lime green background plus button in the upper right/left (depending on RTL direction) header of the admin sidebar in [sidebar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/sidebar.tsx).
+  - **Embedded LogoGlyph Component**: Integrated our high-fidelity, high-performance WebP official brand logo glyph (`LogoGlyph` displaying `linkup-logo.webp`) to replace the plus icon. Beautifully styled with transparent canvas and scaling hovers.
+  - **Cleaned Lucide Imports**: Cleaned up the unused `Plus` icon import in the sidebar file.
+  - **Perfect Diagnostics Health**: Confirmed 100% build integrity with a perfect diagnostics score of **100/100**.
+
+# 2026-05-30 14:30
+
+- 📐 **Horizontal Centering & Visual Balance for Settings Tabs — Razex Xelite**
+  - **Centered Tab Navigation**: Wrapped the OTP logs hub navigation tabs (`Tabs`) in a centered flex layout inside [otp-logs-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/otp-logs-client.tsx) to align perfectly in the middle of wide viewports under RTL dir.
+  - **Balanced Forms Alignment**: Added full centering wrappers (`w-full flex justify-center`) inside the client controller for both the auto-ban and session-timing tabs.
+  - **Responsive Sizing Unification**: Added the `w-full` class alongside `max-w-3xl mx-auto` to the root containers in [auto-ban-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/auto-ban-tab.tsx) and [session-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/session-tab.tsx) to achieve seamless layout compliance and eliminate awkward horizontal stretching or squishing.
+  - **Verified Compilation Health**: Ran comprehensive diagnostic scans using `react_doctor_diagnose` with all diagnostics enabled to confirm 100% build integrity.
+
+# 2026-05-30 14:25
+
+- 🛡️ **Premium Selector & Integrated PhoneInput for OTP Bans Modal — Razex Xelite**
+  - **PhoneInput Country Selector**: Swapped the raw input field in the "حظر رقم جوال" (Ban Phone Number) dialog inside [bans-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/bans-tab.tsx) with our high-end searchable `PhoneInput` component. Enables uniform Saudi Arabian flag triggers and standard international E.164 phone formats automatically.
+  - **Resolved Prefix Duplication Bug**: Implemented a defensive prefix filter in the `PhoneInput` callback to prevent the country dial code (e.g. `+213` or `+966`) from being duplicated in the text field when the input is empty or cleared.
+  - **Premium CustomSelect Dropdown**: Replaced the native default HTML `<select>` inside the dialog with our custom dynamic `CustomSelect` primitive, styled with unified HSL colors, active checks, and dynamic options mapping.
+  - **Type-Safety & Build Integrity**: Confirmed 100% typescript safety and zero linter warnings.
+
 # 2026-05-30 14:20
 
 - 📨 **WhatsApp Ban Alerts + Pickup Session Settings — Razex Xelite**

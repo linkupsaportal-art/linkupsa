@@ -43,20 +43,36 @@ export function OtpLogsClient({
   const [tab, setTab] = useState<Tab>("logs");
 
   return (
-    <div className="space-y-5">
-      <Tabs
-        active={tab}
-        onChange={setTab}
-        counts={{
-          bans: bans.filter((b) => b.active).length,
-          autoOn: autoBan.enabled,
-        }}
-      />
+    <div className="space-y-6 flex flex-col">
+      <div className="flex justify-center w-full">
+        <Tabs
+          active={tab}
+          onChange={setTab}
+          counts={{
+            bans: bans.filter((b) => b.active).length,
+            autoOn: autoBan.enabled,
+          }}
+        />
+      </div>
 
-      {tab === "logs" && <LogsTab rows={rows} total={total} stats={stats} />}
-      {tab === "bans" && <BansTab bans={bans} products={products} />}
-      {tab === "auto" && <AutoBanTab initial={autoBan} />}
-      {tab === "session" && <SessionTab initial={session} />}
+      <div className="flex-1">
+        {tab === "logs" && <LogsTab rows={rows} total={total} stats={stats} />}
+        {tab === "bans" && <BansTab bans={bans} products={products} />}
+        {tab === "auto" && (
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-3xl">
+              <AutoBanTab initial={autoBan} />
+            </div>
+          </div>
+        )}
+        {tab === "session" && (
+          <div className="w-full flex justify-center">
+            <div className="w-full max-w-3xl">
+              <SessionTab initial={session} />
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

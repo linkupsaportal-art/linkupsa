@@ -4,8 +4,9 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import {
-  Plus, Sparkles, PanelRightOpen, PanelRightClose, MousePointer2,
+  Sparkles, PanelRightOpen, PanelRightClose, MousePointer2,
 } from "lucide-react";
+import { LogoGlyph } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { STORE_NAV, GLOBAL_NAV, type NavItem } from "@/components/admin/nav-config";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -101,10 +102,10 @@ export function AdminSidebar({
         >
           <Link
             href="/admin"
-            className="grid place-items-center size-10 rounded-2xl bg-accent text-accent-fg hover:scale-[1.03] active:scale-95 transition-transform shadow-[0_4px_18px_-6px_hsl(var(--accent)/0.7)] shrink-0"
+            className="flex items-center justify-center size-10 rounded-xl hover:scale-[1.05] active:scale-95 transition-transform shrink-0"
             aria-label="LinkUp"
           >
-            <Plus className="size-5" strokeWidth={2.5} />
+            <LogoGlyph className="size-9" />
           </Link>
           {expanded && (
             <>

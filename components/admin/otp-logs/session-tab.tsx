@@ -64,7 +64,7 @@ export function SessionTab({ initial }: { initial: PickupSessionSettings }) {
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 w-full max-w-3xl mx-auto">
       {/* Hero card */}
       <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-5">
         <div className="flex items-start gap-4">

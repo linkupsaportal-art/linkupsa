@@ -1,15 +1,74 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
 
+export type ChannelKind = "email" | "whatsapp" | "sms" | "telegram";
+
 export type NotificationChannel = {
   id: string;
   store_id: number;
-  channel: "email" | "whatsapp" | "sms" | "telegram";
+  channel: ChannelKind;
   enabled: boolean;
   config: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 };
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Per-channel config shapes (live in `config jsonb`).
+ * The UI binds to these typed views; the DB stays a flexible bag.
+ * ───────────────────────────────────────────────────────────────────── */
+
+/**
+ * Karzoun Chat (WhatsApp BSP) configuration.
+ * - `provider` distinguishes future BSPs (Meta direct, Twilio, ...).
+ * - `param_map` keys the positional template params per template name.
+ * - `ban_template` overrides the default "phone_ban_alert_v1".
+ */
+export type WhatsAppConfig = {
+  provider: "karzoun";
+  host: string;
+  app_token: string;
+  integration_id: string;
+  default_template: string;
+  ban_template?: string;
+  language: string;
+  store_name?: string;
+  param_map?: Record<string, string[]>;
+};
+
+/**
+ * Telegram bot push notifications. Customer-side support requires a
+ * per-order chat_id (not yet collected); for now this drives a
+ * merchant-side mirror feed: every order-ready / ban event is
+ * cross-posted to the configured chat.
+ */
+export type TelegramConfig = {
+  bot_token: string;
+  /** Default chat to mirror events to (group / channel / DM). */
+  chat_id: string;
+  /** Whether to post a copy of every fulfilled order to chat_id. */
+  mirror_orders: boolean;
+  /** Whether to post a copy of every phone ban event to chat_id. */
+  mirror_bans: boolean;
+};
+
+/**
+ * Email config (Resend). RESEND_API_KEY stays in env; per-store wiring
+ * here just lets the merchant override the default From address.
+ */
+export type EmailConfig = {
+  from?: string;
+  reply_to?: string;
+};
+
+export type SmsConfig = {
+  /** Reserved for the upcoming local SA provider integration. */
+  provider?: "unifonic" | "mobily" | "twilio";
+  api_key?: string;
+  sender_id?: string;
+};
+
+/* ─── Read helpers ───────────────────────────────────────────────────── */
 
 /**
  * Loads every notification channel configured at any store level.
@@ -25,7 +84,64 @@ export async function listNotificationChannels(): Promise<NotificationChannel[]>
   return (data ?? []) as NotificationChannel[];
 }
 
-/** Returns the most-recent N notification dispatch results from orders. */
+export async function getNotificationChannel(opts: {
+  storeId: number;
+  channel: ChannelKind;
+}): Promise<NotificationChannel | null> {
+  const sb = createServiceClient();
+  const { data, error } = await sb
+    .from("notification_channels")
+    .select("*")
+    .eq("store_id", opts.storeId)
+    .eq("channel", opts.channel)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as NotificationChannel | null) ?? null;
+}
+
+/* ─── Mutation helpers ───────────────────────────────────────────────── */
+
+export async function upsertNotificationChannel(input: {
+  storeId: number;
+  channel: ChannelKind;
+  enabled: boolean;
+  config: Record<string, unknown>;
+}): Promise<NotificationChannel> {
+  const sb = createServiceClient();
+  const { data, error } = await sb
+    .from("notification_channels")
+    .upsert(
+      {
+        store_id: input.storeId,
+        channel: input.channel,
+        enabled: input.enabled,
+        config: input.config,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "store_id,channel" },
+    )
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as NotificationChannel;
+}
+
+export async function setChannelEnabled(opts: {
+  storeId: number;
+  channel: ChannelKind;
+  enabled: boolean;
+}): Promise<void> {
+  const sb = createServiceClient();
+  const { error } = await sb
+    .from("notification_channels")
+    .update({ enabled: opts.enabled, updated_at: new Date().toISOString() })
+    .eq("store_id", opts.storeId)
+    .eq("channel", opts.channel);
+  if (error) throw error;
+}
+
+/* ─── Order dispatch summary (unchanged) ─────────────────────────────── */
+
 export type NotificationDispatchSummary = {
   order_id: string;
   order_reference: number | null;
@@ -62,4 +178,20 @@ export async function listRecentDispatches(limit = 30): Promise<NotificationDisp
       notification_sent_at: r.notification_sent_at as string,
     };
   });
+}
+
+/**
+ * Returns the currently active store id. We are single-tenant for now,
+ * so picking the most recently installed Salla store is correct. If
+ * multi-tenant comes online later, this gets resolved via session.
+ */
+export async function getActiveStoreId(): Promise<number | null> {
+  const sb = createServiceClient();
+  const { data } = await sb
+    .from("salla_stores")
+    .select("store_id")
+    .order("installed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return ((data?.store_id as number | undefined) ?? null);
 }
