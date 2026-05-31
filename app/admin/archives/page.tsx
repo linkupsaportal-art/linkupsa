@@ -62,10 +62,10 @@ export default async function ArchivesPage() {
             <div>
               <h3 className="font-bold text-fg mb-1">سياسة الأرشفة الحالية</h3>
               <ul className="text-sm text-fg-muted leading-relaxed space-y-1 mt-2">
-                <li>• الطلبات تنتقل إلى الأرشيف بعد 90 يوم من إنشائها.</li>
-                <li>• سجلات أكواد التحقق تُحذف بعد 90 يوم تلقائياً.</li>
-                <li>• كل البيانات الحساسة (كلمات المرور، 2FA secrets) مشفرة بـ pgsodium.</li>
-                <li>• نسخ احتياطية يومية تلقائية على Supabase.</li>
+                <li>• الطلبات تُؤرشف تلقائياً بعد المدة المحددة في الإعدادات (افتراضي 90 يوم).</li>
+                <li>• سجلات أكواد التحقق تُحذف تلقائياً بعد المدة المحددة (افتراضي 90 يوم).</li>
+                <li>• كل البيانات الحساسة (كلمات المرور، أسرار 2FA و Steam) مشفّرة بـ AES-256-GCM.</li>
+                <li>• مهمة الصيانة الليلية تعمل تلقائياً عبر Vercel Cron، والنسخ الاحتياطي اليومي عبر قاعدة البيانات.</li>
               </ul>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default async function ArchivesPage() {
             تنظيف يدوي
           </h3>
           <p className="text-sm text-fg-muted mb-4">
-            عمليات التنظيف اليدوية ستكون متاحة قريباً. حالياً، النظام ينظّف تلقائياً البيانات القديمة كل ليلة عبر pg_cron.
+            النظام ينظّف البيانات القديمة تلقائياً كل ليلة عبر مهمة Vercel Cron حسب سياسة الاحتفاظ.
           </p>
           <div className="flex flex-wrap gap-2">
             <button

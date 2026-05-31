@@ -1,6 +1,7 @@
 import { PickupForm } from "./pickup-form";
 import { getPickupSessionSettings } from "@/lib/db/platform-settings";
 import { getTelegramBotSettings } from "@/lib/db/telegram-bot";
+import { env } from "@/lib/env";
 
 export const metadata = {
   title: "استلام الطلب",
@@ -61,7 +62,11 @@ export default async function PickupPage() {
           </p>
         </div>
 
-        <PickupForm sessionConfig={session} telegram={telegram} />
+        <PickupForm
+          sessionConfig={session}
+          telegram={telegram}
+          turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+        />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import "server-only";
 import { createServiceClient } from "@/lib/supabase/server";
+import { encryptSecretForBytea, decryptSecret } from "@/lib/security/crypto";
 import type { HandlerType } from "./products-types";
 
 export type Account = {
@@ -32,6 +33,8 @@ export type AccountCreateInput = {
   totp_secret?: string;        // plaintext — encrypted server-side
   steam_shared_secret?: string;
   card_code?: string;
+  /** JSON string with IMAP config for email-code accounts — encrypted. */
+  email_auth_config?: string;
   file_storage_path?: string;
   max_usage?: number;
   max_otp_requests?: number;
@@ -60,12 +63,10 @@ export async function listAccounts(productId?: string): Promise<Account[]> {
 export async function createAccount(input: AccountCreateInput): Promise<Account> {
   const sb = createServiceClient();
 
-  // Encrypt sensitive fields using pgsodium via RPC.
-  // For now we store them as base64-encoded text in the bytea columns.
-  // A follow-up migration will wire up pgsodium.crypto_aead_det_encrypt.
-  // The columns are bytea so we pass null when the value is absent.
-  const encryptField = (val?: string) =>
-    val ? Buffer.from(val, "utf8") : null;
+  // Encrypt sensitive fields with app-layer AES-256-GCM before they ever
+  // touch the DB. Stored in the bytea *_encrypted columns as the v1 envelope's
+  // bytes via the Postgres `\x` hex wire-format. Absent → NULL.
+  const enc = (val?: string) => encryptSecretForBytea(val);
 
   const { data, error } = await sb
     .from("accounts")
@@ -73,12 +74,13 @@ export async function createAccount(input: AccountCreateInput): Promise<Account>
       product_id: input.product_id,
       label: input.label,
       email: input.email ?? null,
-      password_encrypted: encryptField(input.password),
+      password_encrypted: enc(input.password),
       instructions: input.instructions ?? null,
       handler_type: input.handler_type,
-      totp_secret_encrypted: encryptField(input.totp_secret),
-      steam_shared_secret_encrypted: encryptField(input.steam_shared_secret),
-      card_code_encrypted: encryptField(input.card_code),
+      totp_secret_encrypted: enc(input.totp_secret),
+      steam_shared_secret_encrypted: enc(input.steam_shared_secret),
+      card_code_encrypted: enc(input.card_code),
+      email_auth_config_encrypted: enc(input.email_auth_config),
       file_storage_path: input.file_storage_path ?? null,
       max_usage: input.max_usage ?? 1,
       max_otp_requests: input.max_otp_requests ?? 10,
@@ -108,14 +110,13 @@ export async function deleteAccount(id: string): Promise<void> {
 }
 
 /**
- * Decrypt a password for display in the admin panel.
- * Currently returns the raw bytes as UTF-8 string (pre-pgsodium).
- * Will be replaced with pgsodium.crypto_aead_det_decrypt once the
- * encryption key is provisioned.
+ * Decrypt a stored secret for display in the admin panel (or for code
+ * generation). Uses the app-layer AES-256-GCM module, which also transparently
+ * handles legacy (pre-encryption) bytea/base64 rows during the migration window.
  */
 export async function getAccountSecret(
   id: string,
-  field: "password_encrypted" | "totp_secret_encrypted" | "steam_shared_secret_encrypted" | "card_code_encrypted",
+  field: "password_encrypted" | "totp_secret_encrypted" | "steam_shared_secret_encrypted" | "card_code_encrypted" | "email_auth_config_encrypted",
 ): Promise<string | null> {
   const sb = createServiceClient();
   const { data, error } = await sb
@@ -127,9 +128,5 @@ export async function getAccountSecret(
   if (error || !data) return null;
   const raw = data[field] as string | null;
   if (!raw) return null;
-  // Supabase REST returns bytea as hex-escaped: \x followed by hex pairs
-  if (raw.startsWith("\\x")) {
-    return Buffer.from(raw.slice(2), "hex").toString("utf8");
-  }
-  try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; }
+  return decryptSecret(raw);
 }

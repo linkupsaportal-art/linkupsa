@@ -14,6 +14,22 @@ export async function createAccountAction(formData: FormData) {
   const totp_secret = (formData.get("totp_secret") as string) || undefined;
   const steam_shared_secret = (formData.get("steam_shared_secret") as string) || undefined;
   const card_code = (formData.get("card_code") as string) || undefined;
+  // Email-code accounts: build the IMAP config JSON from discrete form fields.
+  const imap_host = (formData.get("imap_host") as string) || "";
+  const imap_user = (formData.get("imap_user") as string) || "";
+  const imap_password = (formData.get("imap_password") as string) || "";
+  const imap_port = Number(formData.get("imap_port") || 993);
+  const imap_from = (formData.get("imap_from") as string) || "";
+  let email_auth_config: string | undefined;
+  if (handler_type === "email_code_account" && imap_host && imap_user && imap_password) {
+    email_auth_config = JSON.stringify({
+      host: imap_host.trim(),
+      port: imap_port,
+      user: imap_user.trim(),
+      password: imap_password,
+      ...(imap_from.trim() ? { fromFilter: imap_from.trim() } : {}),
+    });
+  }
   const max_usage = Number(formData.get("max_usage") || 1);
   const max_otp_requests = Number(formData.get("max_otp_requests") || 10);
   const otp_cooldown_seconds = Number(formData.get("otp_cooldown_seconds") || 30);
@@ -37,6 +53,7 @@ export async function createAccountAction(formData: FormData) {
       totp_secret,
       steam_shared_secret,
       card_code,
+      email_auth_config,
       max_usage,
       max_otp_requests,
       otp_cooldown_seconds,

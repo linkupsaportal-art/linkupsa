@@ -5,21 +5,31 @@ import { lookupOrderAction } from "./actions";
 import { OrderDetails } from "./order-details";
 import type { PickupResult } from "./types";
 import type { PickupSessionSettings } from "@/lib/db/platform-settings";
+import { Turnstile } from "@/components/turnstile";
 import { Hash, Phone, AlertCircle, ArrowRight, Send } from "lucide-react";
 
 export function PickupForm({
   sessionConfig,
   telegram,
+  turnstileSiteKey,
 }: {
   sessionConfig: PickupSessionSettings;
   /** Set only when the merchant's Telegram pickup bot is live + enabled. */
   telegram: { username: string } | null;
+  /** Cloudflare Turnstile public site key. Empty → captcha disabled. */
+  turnstileSiteKey: string;
 }) {
   const [orderNumber, setOrderNumber] = useState("");
   const [lastFour, setLastFour] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PickupResult | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Captcha state. When no site key is configured the gate is satisfied
+  // immediately so local dev / unconfigured envs still work.
+  const captchaRequired = Boolean(turnstileSiteKey);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [resetCaptcha, setResetCaptcha] = useState<(() => void) | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,11 +44,18 @@ export function PickupForm({
       setError("يرجى إدخال آخر 4 أرقام من جوالك بشكل صحيح");
       return;
     }
+    if (captchaRequired && !captchaToken) {
+      setError("يرجى إكمال التحقق الأمني أولاً");
+      return;
+    }
 
     startTransition(async () => {
-      const res = await lookupOrderAction(orderNumber.trim(), lastFour);
+      const res = await lookupOrderAction(orderNumber.trim(), lastFour, captchaToken);
       if ("error" in res) {
         setError(res.error);
+        // One token = one use — reset so the customer can retry.
+        resetCaptcha?.();
+        setCaptchaToken(null);
       } else {
         setResult(res);
       }
@@ -125,6 +142,16 @@ export function PickupForm({
           />
         </div>
       </div>
+
+      {/* Cloudflare Turnstile — invisible/managed; appears only on suspicion */}
+      {captchaRequired && (
+        <Turnstile
+          siteKey={turnstileSiteKey}
+          onVerify={(token) => setCaptchaToken(token)}
+          onExpire={() => setCaptchaToken(null)}
+          onReady={(c) => setResetCaptcha(() => c.reset)}
+        />
+      )}
 
       {/* Submit Button */}
       <button

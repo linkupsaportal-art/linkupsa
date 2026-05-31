@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { ShoppingBag, RefreshCw, Search, X } from "lucide-react";
 import type { Order } from "@/lib/db/orders";
+import { OrderRowActions, type AccountOption } from "./order-row-actions";
 
 const PAYMENT_LABELS: Record<Order["payment_status"], string> = {
   pending: "بإنتظار الدفع",
@@ -38,10 +39,16 @@ export function OrdersClient({
   orders,
   total,
   initialQuery = "",
+  accounts = [],
+  canManage = false,
+  canDelete = false,
 }: {
   orders: Order[];
   total: number;
   initialQuery?: string;
+  accounts?: AccountOption[];
+  canManage?: boolean;
+  canDelete?: boolean;
 }) {
   const [filter, setFilter] = useState<"all" | "pending" | "fulfilled">("all");
   const [search, setSearch] = useState(initialQuery);
@@ -129,6 +136,9 @@ export function OrdersClient({
                   <th className="text-start px-4 py-3 font-semibold">الدفع</th>
                   <th className="text-start px-4 py-3 font-semibold">التسليم</th>
                   <th className="text-start px-4 py-3 font-semibold">التاريخ</th>
+                  {(canManage || canDelete) && (
+                    <th className="text-start px-4 py-3 font-semibold">إجراءات</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-[hsl(var(--hairline))]">
@@ -171,6 +181,16 @@ export function OrdersClient({
                         day: "numeric",
                       })}
                     </td>
+                    {(canManage || canDelete) && (
+                      <td className="px-4 py-3">
+                        <OrderRowActions
+                          order={order}
+                          accounts={accounts}
+                          canManage={canManage}
+                          canDelete={canDelete}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

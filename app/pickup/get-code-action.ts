@@ -3,19 +3,27 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { generateTotpCode } from "@/lib/handlers/totp";
+import { generateSteamGuardCode } from "@/lib/handlers/steam-guard";
+import {
+  fetchLatestEmailCode,
+  parseEmailAuthConfig,
+} from "@/lib/handlers/email-code";
+import { decryptSecret } from "@/lib/security/crypto";
 import { evaluateAutoBan } from "@/lib/security/auto-ban";
 
 /**
- * Generates a fresh TOTP code for an already-verified order.
+ * Generates a fresh verification code for an already-verified order, choosing
+ * the algorithm by the account's handler type:
+ *
+ *   - 2fa_account         → TOTP (RFC 6238), 6 digits
+ *   - steam_guard_account → Steam mobile authenticator, 5 chars
+ *   - email_code_account  → reads the latest code from the account inbox (IMAP)
  *
  * Security:
- *   1. Re-verifies (orderId, last4) on every call — a stolen orderId alone
- *      is useless without the phone last 4.
- *   2. Enforces per-order daily limit (`otp_request_limit`).
+ *   1. Re-verifies (orderId, last4) on every call.
+ *   2. Enforces per-order limit + per-account cooldown.
  *   3. Logs IP + result to otp_logs for audit + abuse detection.
- *   4. NEVER returns the TOTP secret itself.
- *
- * Returns: 6-digit code + countdown, OR an error string.
+ *   4. NEVER returns the underlying secret — only the generated code.
  */
 export async function getTotpCodeAction(input: {
   orderId: string;
@@ -47,7 +55,10 @@ export async function getTotpCodeAction(input: {
       account:accounts(
         id,
         status,
+        handler_type,
         totp_secret_encrypted,
+        steam_shared_secret_encrypted,
+        email_auth_config_encrypted,
         otp_cooldown_seconds
       )
     `)
@@ -75,11 +86,12 @@ export async function getTotpCodeAction(input: {
   }
 
   const accountData = Array.isArray(order.account) ? order.account[0] : order.account;
-  if (!accountData?.totp_secret_encrypted) {
-    return { error: "الحساب لا يدعم رمز التحقق" };
+  if (!accountData) {
+    return { error: "الحساب غير متاح" };
   }
+  const handler = accountData.handler_type as string;
 
-  // Cooldown check — the most recent successful OTP must be >= cooldown ago
+  // Cooldown check — the most recent successful code must be >= cooldown ago
   const cooldown = accountData.otp_cooldown_seconds ?? 30;
   const { data: recent } = await sb
     .from("otp_logs")
@@ -97,16 +109,35 @@ export async function getTotpCodeAction(input: {
     }
   }
 
-  // Decrypt the secret (bytea hex → utf8)
-  const raw = accountData.totp_secret_encrypted as unknown as string;
-  const secret = raw.startsWith("\\x")
-    ? Buffer.from(raw.slice(2), "hex").toString("utf8")
-    : raw;
+  // ── Generate by handler type ───────────────────────────────────────────
+  let code: string;
+  let expiresInSeconds = 30;
+  let totalPeriod = 30;
 
-  // Generate
-  let code: string, expiresInSeconds: number, totalPeriod: number;
   try {
-    ({ code, expiresInSeconds, totalPeriod } = generateTotpCode(secret));
+    if (handler === "steam_guard_account") {
+      const secret = decryptSecret(accountData.steam_shared_secret_encrypted as string | null);
+      if (!secret) return { error: "الحساب لا يدعم Steam Guard" };
+      ({ code, expiresInSeconds, totalPeriod } = generateSteamGuardCode(secret));
+    } else if (handler === "email_code_account") {
+      const cfgJson = decryptSecret(accountData.email_auth_config_encrypted as string | null);
+      const cfg = parseEmailAuthConfig(cfgJson);
+      if (!cfg) return { error: "إعدادات بريد الحساب غير مكتملة. تواصل مع المتجر." };
+      const res = await fetchLatestEmailCode(cfg);
+      if ("error" in res) {
+        await logOtp(sb, ip, "totp_error", order.id);
+        return { error: res.error };
+      }
+      code = res.code;
+      // Email codes don't rotate on a fixed window; give the UI a sane TTL.
+      expiresInSeconds = 0;
+      totalPeriod = 0;
+    } else {
+      // Default: TOTP (2fa_account)
+      const secret = decryptSecret(accountData.totp_secret_encrypted as string | null);
+      if (!secret) return { error: "الحساب لا يدعم رمز التحقق" };
+      ({ code, expiresInSeconds, totalPeriod } = generateTotpCode(secret));
+    }
   } catch {
     await logOtp(sb, ip, "totp_error", order.id);
     return { error: "خطأ في توليد الكود. تواصل مع المتجر." };

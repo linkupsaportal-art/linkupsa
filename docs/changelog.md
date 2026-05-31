@@ -5,7 +5,19 @@
 
 ---
 
-# 2026-05-30 17:10
+# 2026-05-31 18:30
+
+- 🔐 **Security + Delivery Completeness Pass — Razex Xelite**
+  - **Real encryption (AES-256-GCM)**: New [crypto.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/security/crypto.ts) — app-layer authenticated encryption (v1 envelope) for account secrets. Replaced the Base64-only storage in [accounts.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/accounts.ts) + pickup actions; reads decrypt transparently and still handle legacy rows. Migrated + verified the existing 4 accounts (all decrypt back to originals). Settings/Archives copy now states the truth (AES-256-GCM, not pgsodium).
+  - **Captcha (Cloudflare Turnstile)**: [turnstile.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/turnstile.tsx) widget + [turnstile.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/security/turnstile.ts) server verify, wired into the public pickup lookup. Graceful no-op when keys absent.
+  - **Steam Guard**: real [steam-guard.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/handlers/steam-guard.ts) generator (5-char Steam alphabet, HMAC-SHA1, 30s window).
+  - **Email Code**: [email-code.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/handlers/email-code.ts) IMAP reader (imapflow) extracting the latest verification code; per-account IMAP config entered in the Accounts form, stored encrypted. `get-code-action` now branches by handler type.
+  - **Cron + retention**: [/api/cron/maintenance](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/api/cron/maintenance/route.ts) (Vercel Cron 02:00 daily, CRON_SECRET-guarded) archives old orders + purges old OTP logs per configurable retention.
+  - **Order management actions**: [orders/actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/orders/actions.ts) + row kebab menu — raise limit, edit usage, reassign account, stop, archive/restore, delete (manager only).
+  - **Code-limit panel + audit log**: `code_limit_changes` table + [code-limit-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/code-limit-tab.tsx) — raise limits and view full change history.
+  - **Tests**: `test-crypto-handlers.mjs` 13/13 (encryption round-trip, tamper detection, Steam shape), `verify-decrypt.mjs` 5/5 (live decrypt). Build exit 0; search 14/14.
+
+
 
 - ⚡ **Instant Page Transitions — Suspense Loading Boundaries — Razex Xelite**
   - **Root cause**: every `/admin/*` route is `force-dynamic` with blocking DB queries and there were ZERO `loading.tsx` boundaries — so clicking a nav item froze on the old page until the full server render (auth → role → queries) returned. It also meant `<Link prefetch>` had nothing to prefetch.

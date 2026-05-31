@@ -39,4 +39,21 @@ export const env = {
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     process.env.SITE_URL?.replace(/\/$/, "") ||
     "https://linkupdash.portaliosa.com",
+  // Cloudflare Turnstile (captcha) on the public pickup page. Public site key
+  // ships to the browser; the secret verifies tokens server-side. When BOTH
+  // are empty the captcha gate is skipped (graceful no-op for local dev).
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
+  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "",
+  // App-layer AES-256-GCM key (base64, 32 bytes) for encrypting account
+  // secrets at rest (password, TOTP seed, Steam secret, card code, IMAP creds).
+  // Server-only. Empty → encryption helpers throw when invoked.
+  ENCRYPTION_KEY: process.env.ENCRYPTION_KEY ?? "",
+  // Shared secret guarding cron endpoints (archive / cleanup). Vercel Cron
+  // sends it in the Authorization header as `Bearer <CRON_SECRET>`.
+  CRON_SECRET: process.env.CRON_SECRET ?? "",
+  // Optional global IMAP fallback for Email-Code accounts (testing only).
+  IMAP_TEST_HOST: process.env.IMAP_TEST_HOST ?? "",
+  IMAP_TEST_PORT: process.env.IMAP_TEST_PORT ?? "993",
+  IMAP_TEST_USER: process.env.IMAP_TEST_USER ?? "",
+  IMAP_TEST_PASSWORD: process.env.IMAP_TEST_PASSWORD ?? "",
 } as const;

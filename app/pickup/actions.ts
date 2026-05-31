@@ -2,6 +2,8 @@
 
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
+import { decryptSecret } from "@/lib/security/crypto";
+import { verifyTurnstile } from "@/lib/security/turnstile";
 import type { PickupResult } from "./types";
 
 /**
@@ -20,6 +22,7 @@ import type { PickupResult } from "./types";
 export async function lookupOrderAction(
   orderNumber: string,
   lastFour: string,
+  captchaToken?: string | null,
 ): Promise<PickupResult | { error: string }> {
   // Basic input sanitization
   const cleanOrderNumber = orderNumber.replace(/\D/g, "");
@@ -33,6 +36,13 @@ export async function lookupOrderAction(
   const ip = h.get("x-forwarded-for")?.split(",")[0].trim()
     ?? h.get("x-real-ip")
     ?? "0.0.0.0";
+
+  // Captcha gate — blocks automated (order# + last-4) guessing before any DB
+  // work. No-op when Turnstile keys aren't configured (local dev).
+  const captcha = await verifyTurnstile(captchaToken, ip);
+  if (!captcha.ok) {
+    return { error: "فشل التحقق الأمني. حدّث الصفحة وحاول مجدداً." };
+  }
 
   // Look up order by reference_id OR salla_order_id (both could be entered)
   const orderNumberAsBigint = Number(cleanOrderNumber);
@@ -96,22 +106,10 @@ export async function lookupOrderAction(
     return { error: "خطأ في بيانات الطلب. تواصل مع المتجر." };
   }
 
-  // Decrypt password.
-  // Supabase REST returns bytea columns as hex-escaped strings: "\x50617373..."
-  // We decode that hex to get the original UTF-8 bytes.
-  const decryptBytea = (raw: unknown): string | undefined => {
-    if (!raw) return undefined;
-    const s = raw as string;
-    // Supabase hex format: \x followed by hex pairs
-    if (s.startsWith("\\x")) {
-      return Buffer.from(s.slice(2), "hex").toString("utf8");
-    }
-    // Fallback: try base64
-    try { return Buffer.from(s, "base64").toString("utf8"); } catch { return s; }
-  };
-
-  const password = decryptBytea(accountData.password_encrypted);
-  const cardCode = decryptBytea(accountData.card_code_encrypted);
+  // Decrypt secrets via the app-layer AES-256-GCM module. It transparently
+  // handles both the new v1 envelope and legacy bytea/base64 rows.
+  const password = decryptSecret(accountData.password_encrypted as string | null) ?? undefined;
+  const cardCode = decryptSecret(accountData.card_code_encrypted as string | null) ?? undefined;
 
   return {
     orderId: order.id,

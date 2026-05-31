@@ -43,6 +43,19 @@ export type PickupSessionSettings = {
   totp_max_seconds: number;
 };
 
+/**
+ * Data retention policy used by the nightly maintenance cron.
+ *   - `archive_orders_after_days` — orders older than this get archived
+ *     (archived_at set) so they drop out of the active dashboard.
+ *   - `delete_otp_logs_after_days` — otp_logs older than this are deleted.
+ *   - `enabled` — master switch; when off the cron is a no-op.
+ */
+export type RetentionSettings = {
+  enabled: boolean;
+  archive_orders_after_days: number;
+  delete_otp_logs_after_days: number;
+};
+
 const DEFAULT_AUTO_BAN: AutoBanSettings = {
   enabled: false,
   failures_threshold: 5,
@@ -55,6 +68,12 @@ const DEFAULT_AUTO_BAN: AutoBanSettings = {
 const DEFAULT_PICKUP_SESSION: PickupSessionSettings = {
   idle_timeout_seconds: 300, // 5 minutes
   totp_max_seconds: 180,     // 3 minutes (≈ 6 TOTP rotations)
+};
+
+const DEFAULT_RETENTION: RetentionSettings = {
+  enabled: true,
+  archive_orders_after_days: 90,
+  delete_otp_logs_after_days: 90,
 };
 
 export async function getAutoBanSettings(): Promise<AutoBanSettings> {
@@ -113,4 +132,27 @@ export async function updatePickupSessionSettings(
 function clamp(n: number, min: number, max: number): number {
   if (Number.isNaN(n)) return min;
   return Math.max(min, Math.min(max, n));
+}
+
+export async function getRetentionSettings(): Promise<RetentionSettings> {
+  const sb = createServiceClient();
+  const { data } = await sb
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "retention")
+    .maybeSingle();
+  if (!data?.value) return DEFAULT_RETENTION;
+  return { ...DEFAULT_RETENTION, ...(data.value as Partial<RetentionSettings>) };
+}
+
+export async function updateRetentionSettings(next: RetentionSettings): Promise<void> {
+  const sb = createServiceClient();
+  const sanitized: RetentionSettings = {
+    enabled: !!next.enabled,
+    archive_orders_after_days: clamp(Math.round(next.archive_orders_after_days), 7, 3650),
+    delete_otp_logs_after_days: clamp(Math.round(next.delete_otp_logs_after_days), 7, 3650),
+  };
+  await sb
+    .from("platform_settings")
+    .upsert({ key: "retention", value: sanitized, updated_at: new Date().toISOString() });
 }

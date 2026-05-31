@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { FileClock, ShieldBan, Sparkles, Timer } from "lucide-react";
+import { FileClock, ShieldBan, Sparkles, Timer, Gauge } from "lucide-react";
 import type { OtpLogRow, OtpLogStats } from "@/lib/db/otp-logs";
 import type { PhoneBan } from "@/lib/db/phone-bans";
 import type {
   AutoBanSettings,
   PickupSessionSettings,
 } from "@/lib/db/platform-settings";
+import type { CodeLimitChange, CodeLimitOrder } from "@/lib/db/code-limit";
 import { LogsTab } from "./logs-tab";
 import { BansTab } from "./bans-tab";
 import { AutoBanTab } from "./auto-ban-tab";
 import { SessionTab } from "./session-tab";
+import { CodeLimitTab } from "./code-limit-tab";
 
-type Tab = "logs" | "bans" | "auto" | "session";
+type Tab = "logs" | "bans" | "auto" | "session" | "codelimit";
 
 /**
  * Unified OTP & abuse-control hub. Four tabs:
@@ -31,6 +33,8 @@ export function OtpLogsClient({
   products,
   autoBan,
   session,
+  codeLimitOrders = [],
+  codeLimitHistory = [],
 }: {
   rows: OtpLogRow[];
   total: number;
@@ -39,6 +43,8 @@ export function OtpLogsClient({
   products: { id: string; name: string }[];
   autoBan: AutoBanSettings;
   session: PickupSessionSettings;
+  codeLimitOrders?: CodeLimitOrder[];
+  codeLimitHistory?: CodeLimitChange[];
 }) {
   const [tab, setTab] = useState<Tab>("logs");
 
@@ -71,6 +77,9 @@ export function OtpLogsClient({
               <SessionTab initial={session} />
             </div>
           </div>
+        )}
+        {tab === "codelimit" && (
+          <CodeLimitTab orders={codeLimitOrders} history={codeLimitHistory} />
         )}
       </div>
     </div>
@@ -114,6 +123,12 @@ function Tabs({
         label="إعدادات الجلسة"
         active={active === "session"}
         onClick={() => onChange("session")}
+      />
+      <TabButton
+        icon={<Gauge className="size-3.5" />}
+        label="رفع حد الأكواد"
+        active={active === "codelimit"}
+        onClick={() => onChange("codelimit")}
       />
     </div>
   );

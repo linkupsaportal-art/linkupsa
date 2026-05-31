@@ -566,6 +566,37 @@ function AccountForm({
           </div>
         )}
 
+        {handlerType === "email_code_account" && (
+          <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-[hsl(200_14%_97%)] border border-[hsl(220_18%_14%/0.08)] p-4">
+            <div className="sm:col-span-2">
+              <p className="text-[11px] font-bold text-fg-muted mb-1">
+                إعدادات بريد الحساب (IMAP) — لقراءة كود التحقق تلقائياً
+              </p>
+              <p className="text-[10px] text-fg-faint leading-relaxed">
+                لجيميل: المضيف <code className="font-mono">imap.gmail.com</code> والمنفذ <code className="font-mono">993</code>،
+                وكلمة المرور يجب أن تكون «App Password» (16 حرف) وليست كلمة مرور الحساب.
+              </p>
+            </div>
+            <Field label="IMAP Host">
+              <input name="imap_host" placeholder="imap.gmail.com" className="form-input font-mono" dir="ltr" />
+            </Field>
+            <Field label="Port">
+              <input name="imap_port" type="number" defaultValue={993} className="form-input font-mono" dir="ltr" />
+            </Field>
+            <Field label="البريد (User)">
+              <input name="imap_user" placeholder="account@gmail.com" className="form-input font-mono" dir="ltr" />
+            </Field>
+            <Field label="App Password">
+              <input name="imap_password" type="password" placeholder="xxxx xxxx xxxx xxxx" className="form-input font-mono" dir="ltr" />
+            </Field>
+            <div className="sm:col-span-2">
+              <Field label="فلتر المُرسِل (اختياري)">
+                <input name="imap_from" placeholder="netflix.com" className="form-input font-mono" dir="ltr" />
+              </Field>
+            </div>
+          </div>
+        )}
+
         <Field label="الحد الأقصى للاستخدام">
           <input
             name="max_usage"

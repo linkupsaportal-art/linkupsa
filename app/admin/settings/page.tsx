@@ -81,8 +81,8 @@ export default async function SettingsPage() {
             />
             <SecurityItem
               label="تشفير الأسرار"
-              status="pgsodium"
-              detail="كلمات المرور و TOTP secrets مشفرة في قاعدة البيانات."
+              status="AES-256-GCM"
+              detail="كلمات المرور و TOTP و Steam والبطاقات مشفّرة في قاعدة البيانات بمفتاح خادمي."
               ok
             />
             <SecurityItem
