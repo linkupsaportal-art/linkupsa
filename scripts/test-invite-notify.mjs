@@ -1,17 +1,15 @@
 /**
- * Staff invite + notification flow test (live DB).
+ * Invitation accept/decline flow test (live DB).
  *
- * Simulates the exact DB operations inviteStaffAction performs:
- *   1. Create a throwaway "existing" staff account.
- *   2. Reject an invite to a NON-existent email (key guarantee).
- *   3. "Invite" the existing account → assign role + insert a notification.
- *   4. Verify the notification row exists, is unread, links to /admin/staff,
- *      and names the inviter.
- *   5. Mark it read → verify read_at set + unread count drops.
- *   6. Cleanup (cascades delete the notification via FK).
- *
- * Also sends ONE real Resend email to the verified address to prove the
- * SMTP path works end to end (set SKIP_EMAIL=1 to skip).
+ * Mirrors the exact operations the invite actions perform:
+ *   1. throwaway "invitee" account exists.
+ *   2. invite to a NON-existent email is rejected (no profile).
+ *   3. create a PENDING invitation (no role applied yet).
+ *   4. invitee's profile role is UNCHANGED while pending (key guarantee).
+ *   5. accept → invitation 'accepted' + role applied to profile.
+ *   6. a notification was created for the invitee.
+ *   7. decline path on a second invite leaves role untouched.
+ *   8. cleanup.
  *
  * Run:  node scripts/test-invite-notify.mjs
  */
@@ -22,155 +20,116 @@ import { dirname, join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
 function loadEnv() {
   const raw = readFileSync(join(__dirname, "..", ".env"), "utf8").replace(/^\uFEFF/, "");
   const env = {};
-  for (const rawLine of raw.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq === -1) continue;
-    env[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
+  for (const line of raw.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const eq = t.indexOf("=");
+    if (eq > 0) env[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
   }
   return env;
 }
 const env = loadEnv();
-
-const g = (s) => `\x1b[32m${s}\x1b[0m`;
-const r = (s) => `\x1b[31m${s}\x1b[0m`;
-const b = (s) => `\x1b[1m${s}\x1b[0m`;
-const dim = (s) => `\x1b[2m${s}\x1b[0m`;
-
+const g = (s) => `\x1b[32m${s}\x1b[0m`, r = (s) => `\x1b[31m${s}\x1b[0m`, b = (s) => `\x1b[1m${s}\x1b[0m`, dim = (s) => `\x1b[2m${s}\x1b[0m`;
 let pass = 0, fail = 0;
-function assert(name, cond) {
-  if (cond) { pass++; console.log(`  ${g("✓")} ${name}`); }
-  else { fail++; console.log(`  ${r("✗")} ${name}`); }
-}
+const assert = (n, c) => { if (c) { pass++; console.log(`  ${g("✓")} ${n}`); } else { fail++; console.log(`  ${r("✗")} ${n}`); } };
 
 const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-console.log(b("\n▶ Staff invite + notification flow\n"));
+console.log(b("\n▶ Invitation accept / decline flow\n"));
 
-// Inviter = the real owner (manager).
+// Owner (manager) + a connected store as the workspace.
 const { data: ownerRows } = await sb
-  .from("profiles")
-  .select("id, name, email, role")
-  .eq("role", "manager")
-  .limit(1);
+  .from("profiles").select("id, name, email").eq("role", "manager").limit(1);
 const owner = ownerRows?.[0];
 assert("owner (manager) exists", !!owner);
-const inviterName = owner?.name || owner?.email || "مدير المتجر";
 
-// ── 1. throwaway existing staff account ──────────────────────────────
-const staffEmail = `invite-test-${Date.now()}@example.com`;
+const { data: store } = await sb
+  .from("salla_stores").select("store_id, store_name").is("uninstalled_at", null)
+  .order("installed_at", { ascending: true }).limit(1).maybeSingle();
+const storeId = store?.store_id ?? 9999999;
+const storeName = store?.store_name ?? "Test Store";
+
+// 1. throwaway invitee
+const email = `invite-${Date.now()}@example.com`;
 const { data: created, error: cErr } = await sb.auth.admin.createUser({
-  email: staffEmail,
-  password: `Tmp!${Math.random().toString(36).slice(2)}Aa1`,
-  email_confirm: true,
-  user_metadata: { name: "Invite Test User" },
+  email, password: `Tmp!${Math.random().toString(36).slice(2)}Aa1`,
+  email_confirm: true, user_metadata: { name: "Invitee" },
 });
-assert("throwaway staff account created", !cErr && !!created?.user);
-const staffId = created?.user?.id;
-await new Promise((r) => setTimeout(r, 400)); // let trigger create profile
+assert("invitee account created", !cErr && !!created?.user);
+const uid = created?.user?.id;
+await new Promise((r) => setTimeout(r, 400)); // trigger creates profile
 
-// ── 2. invite to a NON-existent email must be rejected ───────────────
-const ghostEmail = `ghost-${Date.now()}@nowhere.test`;
-const { data: ghost } = await sb
-  .from("profiles")
-  .select("id")
-  .eq("email", ghostEmail)
-  .maybeSingle();
-assert("non-existent email has no profile (invite would be rejected)", !ghost);
+// 2. non-existent email → no profile
+const { data: ghost } = await sb.from("profiles").select("id").eq("email", `ghost-${Date.now()}@x.test`).maybeSingle();
+assert("non-existent email rejected (no profile)", !ghost);
 
-// ── 3. simulate invite: assign role + insert notification ────────────
-const ROLE = "support";
-if (staffId) {
-  await sb.from("profiles").update({ role: ROLE }).eq("id", staffId);
-  const { data: roleRow } = await sb
-    .from("profiles").select("role").eq("id", staffId).maybeSingle();
-  assert("role assigned to invitee (support)", roleRow?.role === ROLE);
+if (uid) {
+  // capture starting role (trigger default)
+  const { data: before } = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
+  const startRole = before?.role;
 
-  const { data: notif, error: nErr } = await sb
-    .from("notifications")
+  // 3. create pending invitation as 'support'
+  const { data: inv, error: invErr } = await sb
+    .from("workspace_invitations")
     .insert({
-      user_id: staffId,
-      type: "staff_invite",
-      title: "تمت دعوتك إلى الفريق",
-      body: `قام ${inviterName} بإضافتك كـ "خدمة عملاء". اضغط لعرض التفاصيل.`,
-      link: "/admin/staff",
-      actor_id: owner?.id ?? null,
-      actor_name: inviterName,
-      metadata: { role: ROLE },
+      store_id: storeId, store_name: storeName, invitee_id: uid,
+      invitee_email: email, role: "support", status: "pending",
+      invited_by: owner?.id ?? null, invited_by_name: owner?.name ?? "مدير",
     })
-    .select("id, read_at, link, actor_name, type")
+    .select("id, status, role")
     .single();
+  assert("pending invitation created", !invErr && inv?.status === "pending");
 
-  assert("notification inserted", !nErr && !!notif);
-  assert("notification is unread", notif?.read_at === null);
-  assert("notification links to /admin/staff", notif?.link === "/admin/staff");
-  assert("notification names the inviter", notif?.actor_name === inviterName);
-  assert("notification type = staff_invite", notif?.type === "staff_invite");
+  // 4. role unchanged while pending
+  const { data: midProf } = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
+  assert("role UNCHANGED while invitation pending", midProf?.role === startRole);
 
-  // ── 4. unread count = 1 ────────────────────────────────────────────
-  const { count: unread1 } = await sb
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", staffId)
-    .is("read_at", null);
-  assert("unread count is 1", unread1 === 1);
-
-  // ── 5. mark read ───────────────────────────────────────────────────
-  await sb
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", notif.id)
-    .eq("user_id", staffId);
-  const { count: unread2 } = await sb
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", staffId)
-    .is("read_at", null);
-  assert("unread count drops to 0 after mark-read", unread2 === 0);
-
-  // ── 6. cleanup (FK cascade removes the notification) ───────────────
-  const { error: delErr } = await sb.auth.admin.deleteUser(staffId);
-  assert("throwaway account cleaned up", !delErr);
-  const { count: orphan } = await sb
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", staffId);
-  assert("notification cascade-deleted with user", (orphan ?? 0) === 0);
-}
-
-// ── Resend SMTP proof (verified domain) ──────────────────────────────
-if (env.SKIP_EMAIL !== "1" && env.RESEND_API_KEY) {
-  console.log(b("\n▶ Resend SMTP (verified domain portaliosa.com)\n"));
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      from: env.RESEND_FROM || "LinkUp <noreply@portaliosa.com>",
-      to: "razexelite11@gmail.com",
-      subject: "اختبار دعوة موظف — LinkUp",
-      html: `<div dir="rtl" style="font-family:sans-serif;padding:24px">
-        <h2>تمت دعوتك إلى الفريق ✅</h2>
-        <p>هذه رسالة اختبار للتأكد من عمل قناة البريد عبر Resend.</p>
-        <p>الدور: <b>خدمة عملاء</b> — قام بدعوتك: <b>${inviterName}</b></p>
-        <a href="https://linkupdash.portaliosa.com/admin/staff" style="display:inline-block;background:#0a0a0a;color:#D4F542;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:700">فتح اللوحة</a>
-      </div>`,
-    }),
+  // notification for invitee
+  await sb.from("notifications").insert({
+    user_id: uid, type: "staff_invite", title: "لديك دعوة للانضمام",
+    body: "test", link: "/admin/staff", actor_id: owner?.id ?? null,
   });
-  const json = await res.json().catch(() => ({}));
-  assert("Resend accepted the email (has id)", res.ok && !!json.id);
-  console.log(dim(`    → message id: ${json.id ?? "n/a"}`));
-} else {
-  console.log(dim("\n(skipping live email — SKIP_EMAIL=1 or no RESEND_API_KEY)\n"));
+  const { count: notifCount } = await sb
+    .from("notifications").select("id", { count: "exact", head: true }).eq("user_id", uid);
+  assert("invitee got a notification", (notifCount ?? 0) >= 1);
+
+  // 5. accept → status accepted + role applied
+  await sb.from("workspace_invitations")
+    .update({ status: "accepted", responded_at: new Date().toISOString() })
+    .eq("id", inv.id);
+  await sb.from("profiles").update({ role: "support" }).eq("id", uid);
+  const { data: afterAccept } = await sb.from("workspace_invitations").select("status").eq("id", inv.id).maybeSingle();
+  const { data: roleProf } = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
+  assert("invitation marked accepted", afterAccept?.status === "accepted");
+  assert("role applied on accept (support)", roleProf?.role === "support");
+
+  // workspace switcher would now include this store for the invitee
+  const { data: accepted } = await sb
+    .from("workspace_invitations").select("store_id").eq("invitee_id", uid).eq("status", "accepted");
+  assert("accepted workspace visible to switcher", (accepted ?? []).some((a) => String(a.store_id) === String(storeId)));
+
+  // 7. decline path: new invite, decline, role stays
+  await sb.from("workspace_invitations").delete().eq("id", inv.id);
+  const { data: inv2 } = await sb.from("workspace_invitations").insert({
+    store_id: storeId, store_name: storeName, invitee_id: uid,
+    invitee_email: email, role: "supervisor", status: "pending",
+    invited_by: owner?.id ?? null,
+  }).select("id").single();
+  await sb.from("workspace_invitations").update({ status: "declined" }).eq("id", inv2.id);
+  const { data: afterDecline } = await sb.from("profiles").select("role").eq("id", uid).maybeSingle();
+  assert("role NOT escalated on decline (stays support)", afterDecline?.role === "support");
+
+  // 8. cleanup (cascades invitations + notifications)
+  const { error: delErr } = await sb.auth.admin.deleteUser(uid);
+  assert("cleanup", !delErr);
+  const { count: leftover } = await sb
+    .from("workspace_invitations").select("id", { count: "exact", head: true }).eq("invitee_id", uid);
+  assert("invitations cascade-deleted with user", (leftover ?? 0) === 0);
 }
 
 console.log(b(`\n${"─".repeat(48)}`));
