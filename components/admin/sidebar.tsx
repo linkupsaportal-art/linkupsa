@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 import {
-  Sparkles, PanelRightOpen, PanelRightClose, MousePointer2,
+  Sparkles, PanelRightOpen, PanelRightClose, MousePointer2, Lock,
 } from "lucide-react";
 import { LogoGlyph } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSidebarMode, type SidebarMode } from "@/components/admin/sidebar-mode-context";
+import { useLinkStoreGate } from "@/components/admin/link-store-gate";
 
 /**
  * 3-mode admin sidebar — near-black surface, lime accent, full RTL.
@@ -43,18 +44,25 @@ export function AdminSidebar({
   avatarUrl,
   isMobile = false,
   role = DEFAULT_ROLE,
+  locked = false,
 }: {
   userName?: string;
   userEmail?: string;
   avatarUrl?: string | null;
   isMobile?: boolean;
   role?: Role;
+  /** When true, every nav item is shown but disabled — clicking opens the
+   *  link-store gate instead of navigating. Used for the onboarding shell of
+   *  a user who hasn't connected a store yet. */
+  locked?: boolean;
 }) {
   const { mode } = useSidebarMode();
   const [hovered, setHovered] = useState(false);
 
-  // Role-filtered nav — only shows links the role can actually open.
-  const storeNav = navForRole(STORE_NAV, role);
+  // Role-filtered nav — only shows links the role can actually open. In
+  // locked mode we show the FULL store nav (every section visible) so the
+  // user sees what they'll unlock once they connect their store.
+  const storeNav = locked ? STORE_NAV : navForRole(STORE_NAV, role);
   const globalNav = navForRole(GLOBAL_NAV, role);
 
   // Only "hover" mode actually expands on hover; the others stay fixed.
@@ -136,9 +144,9 @@ export function AdminSidebar({
 
         {/* Scrollable nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 no-scrollbar">
-          <NavSection groups={storeNav} expanded={expanded} />
+          <NavSection groups={storeNav} expanded={expanded} locked={locked} />
           <div className="my-3 mx-2 h-px bg-white/10" />
-          <NavSection groups={globalNav} expanded={expanded} />
+          <NavSection groups={globalNav} expanded={expanded} locked={locked} />
         </nav>
 
         {/* Footer — profile chip */}
@@ -258,9 +266,11 @@ function ModeToggle({ expanded }: { expanded: boolean }) {
 function NavSection({
   groups,
   expanded,
+  locked = false,
 }: {
   groups: typeof STORE_NAV;
   expanded: boolean;
+  locked?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -278,7 +288,7 @@ function NavSection({
           </p>
           <ul className="space-y-0.5 flex flex-col items-center">
             {group.items.map((item) => (
-              <UnifiedNavItem key={item.href} item={item} pathname={pathname} expanded={expanded} />
+              <UnifiedNavItem key={item.href} item={item} pathname={pathname} expanded={expanded} locked={locked} />
             ))}
           </ul>
         </div>
@@ -287,10 +297,65 @@ function NavSection({
   );
 }
 
-function UnifiedNavItem({ item, pathname, expanded }: { item: NavItem; pathname: string; expanded: boolean }) {
+function UnifiedNavItem({ item, pathname, expanded, locked = false }: { item: NavItem; pathname: string; expanded: boolean; locked?: boolean }) {
+  const { requestLink } = useLinkStoreGate();
   const active =
-    item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+    !locked && (item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href));
   const Icon = item.icon;
+
+  const className = cn(
+    "group relative flex items-center rounded-xl h-10 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+    expanded ? "w-full px-2.5 justify-start text-sm" : "w-10 px-0 justify-center mx-auto",
+    active
+      ? "bg-white/10 text-white font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+      : "text-white/55 hover:text-white hover:bg-white/5",
+    locked && "opacity-60",
+  );
+
+  const inner = (
+    <>
+      <Icon
+        className={cn(
+          "size-[18px] shrink-0 transition-colors duration-200",
+          active ? "text-accent" : "text-white/55 group-hover:text-white"
+        )}
+        strokeWidth={1.7}
+      />
+      <span
+        className={cn(
+          "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap text-start truncate",
+          expanded
+            ? "opacity-100 translate-x-0 w-auto relative ms-2.5 flex-1"
+            : "opacity-0 -translate-x-2 pointer-events-none w-0 absolute h-0 overflow-hidden"
+        )}
+      >
+        {item.label}
+      </span>
+      {locked ? (
+        <Lock
+          className={cn(
+            "size-3.5 shrink-0 text-white/40 transition-opacity duration-200",
+            expanded ? "opacity-100 delay-75" : "opacity-0 pointer-events-none absolute"
+          )}
+          strokeWidth={2}
+        />
+      ) : (
+        item.status === "soon" && (
+          <span
+            className={cn(
+              "text-[9px] uppercase tracking-widest border border-white/10 rounded-full px-1.5 py-px shrink-0 transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap",
+              expanded ? "opacity-40 delay-75" : "opacity-0 pointer-events-none absolute"
+            )}
+          >
+            قريباً
+          </span>
+        )
+      )}
+      {active && (
+        <span className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-accent shadow-[0_0_10px_hsl(var(--accent))]" />
+      )}
+    </>
+  );
 
   return (
     <li className="w-full list-none px-1">
@@ -299,55 +364,29 @@ function UnifiedNavItem({ item, pathname, expanded }: { item: NavItem; pathname:
         content={
           <>
             {item.label}
-            {item.status === "soon" && (
+            {locked && (
+              <span className="text-[9px] uppercase tracking-widest text-fg-faint">مقفل</span>
+            )}
+            {!locked && item.status === "soon" && (
               <span className="text-[9px] uppercase tracking-widest text-fg-faint">قريباً</span>
             )}
           </>
         }
       >
-        <Link
-          href={item.href}
-          prefetch
-          aria-current={active ? "page" : undefined}
-          className={cn(
-            "group relative flex items-center rounded-xl h-10 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            expanded ? "w-full px-2.5 justify-start text-sm" : "w-10 px-0 justify-center mx-auto",
-            active
-              ? "bg-white/10 text-white font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-              : "text-white/55 hover:text-white hover:bg-white/5",
-          )}
-        >
-          <Icon
-            className={cn(
-              "size-[18px] shrink-0 transition-colors duration-200",
-              active ? "text-accent" : "text-white/55 group-hover:text-white"
-            )}
-            strokeWidth={1.7}
-          />
-          <span
-            className={cn(
-              "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap text-start truncate",
-              expanded 
-                ? "opacity-100 translate-x-0 w-auto relative ms-2.5 flex-1" 
-                : "opacity-0 -translate-x-2 pointer-events-none w-0 absolute h-0 overflow-hidden"
-            )}
+        {locked ? (
+          <button type="button" onClick={requestLink} className={className}>
+            {inner}
+          </button>
+        ) : (
+          <Link
+            href={item.href}
+            prefetch
+            aria-current={active ? "page" : undefined}
+            className={className}
           >
-            {item.label}
-          </span>
-          {item.status === "soon" && (
-            <span
-              className={cn(
-                "text-[9px] uppercase tracking-widest border border-white/10 rounded-full px-1.5 py-px shrink-0 transition-opacity duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap",
-                expanded ? "opacity-40 delay-75" : "opacity-0 pointer-events-none absolute"
-              )}
-            >
-              قريباً
-            </span>
-          )}
-          {active && (
-            <span className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-accent shadow-[0_0_10px_hsl(var(--accent))]" />
-          )}
-        </Link>
+            {inner}
+          </Link>
+        )}
       </OptionalTooltip>
     </li>
   );

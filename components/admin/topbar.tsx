@@ -12,6 +12,7 @@ import { WorkspaceSwitcher, type WorkspaceOption } from "@/components/admin/work
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
+import { useLinkStoreGate } from "@/components/admin/link-store-gate";
 
 /**
  * Admin topbar — sits inside the workspace card. White surface, hairline
@@ -29,6 +30,7 @@ export function AdminTopbar({
   role = DEFAULT_ROLE,
   initialUnread = 0,
   workspaces = [],
+  locked = false,
 }: {
   userEmail?: string;
   userName?: string;
@@ -36,8 +38,11 @@ export function AdminTopbar({
   role?: Role;
   initialUnread?: number;
   workspaces?: WorkspaceOption[];
+  /** Onboarding shell: search + import CTA are locked behind the gate. */
+  locked?: boolean;
 }) {
   const [drawer, setDrawer] = useState(false);
+  const { requestLink } = useLinkStoreGate();
 
   return (
     <>
@@ -61,34 +66,53 @@ export function AdminTopbar({
 
         {/* Search */}
         <div className="hidden md:flex flex-1 max-w-lg mx-auto">
-          <SearchBar />
+          <SearchBar locked={locked} onLocked={requestLink} />
         </div>
 
         <div className="flex-1 md:hidden" />
 
         <div className="flex items-center gap-2">
-          <IconButton ariaLabel="الإعدادات" asChild>
-            <Link href="/admin/settings">
+          {locked ? (
+            <IconButton ariaLabel="الإعدادات" onClick={requestLink}>
               <SettingsIcon className="size-4" />
-            </Link>
-          </IconButton>
+            </IconButton>
+          ) : (
+            <IconButton ariaLabel="الإعدادات" asChild>
+              <Link href="/admin/settings">
+                <SettingsIcon className="size-4" />
+              </Link>
+            </IconButton>
+          )}
           <NotificationBell initialUnread={initialUnread} />
 
-          {/* Primary CTA — opens the order-import / refresh flow.
-              The spec doesn't ship a "create store" CTA in v1, so this CTA
-              points to Orders where the operator can re-fetch a paid order
-              from the storefront API. */}
-          <Link
-            href="/admin/orders"
-            className={cn(
-              "hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full font-semibold text-sm",
-              "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] transition-all",
-              "shadow-[0_8px_20px_-8px_hsl(220_30%_8%/0.4)]",
-            )}
-          >
-            <Plus className="size-4 text-accent" strokeWidth={2.5} />
-            استيراد طلب
-          </Link>
+          {/* Primary CTA — opens the order-import / refresh flow. In the
+              onboarding (locked) shell it opens the link-store gate instead. */}
+          {locked ? (
+            <button
+              type="button"
+              onClick={requestLink}
+              className={cn(
+                "hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full font-semibold text-sm",
+                "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] transition-all",
+                "shadow-[0_8px_20px_-8px_hsl(220_30%_8%/0.4)]",
+              )}
+            >
+              <Plus className="size-4 text-accent" strokeWidth={2.5} />
+              استيراد طلب
+            </button>
+          ) : (
+            <Link
+              href="/admin/orders"
+              className={cn(
+                "hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full font-semibold text-sm",
+                "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] transition-all",
+                "shadow-[0_8px_20px_-8px_hsl(220_30%_8%/0.4)]",
+              )}
+            >
+              <Plus className="size-4 text-accent" strokeWidth={2.5} />
+              استيراد طلب
+            </Link>
+          )}
 
           <ProfileMenu userEmail={userEmail} userName={userName} avatarUrl={avatarUrl} />
         </div>
@@ -118,7 +142,7 @@ export function AdminTopbar({
             )}
           >
             <Dialog.Title className="sr-only">قائمة التنقل</Dialog.Title>
-            <AdminSidebar userName={userName} userEmail={userEmail} role={role} isMobile />
+            <AdminSidebar userName={userName} userEmail={userEmail} role={role} isMobile locked={locked} />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
@@ -174,17 +198,20 @@ function IconButton({
   );
 }
 
-function SearchBar() {
+function SearchBar({ locked = false, onLocked }: { locked?: boolean; onLocked?: () => void }) {
   return (
     <div className="relative w-full">
       <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-fg-faint" />
       <input
         type="text"
+        readOnly={locked}
+        onClick={locked ? onLocked : undefined}
         placeholder="بحث في الطلبات والمنتجات…"
         className={cn(
           "w-full h-10 ps-9 pe-12 rounded-full border border-[hsl(var(--hairline-strong))] bg-surface text-sm text-fg",
           "placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-bg",
           "focus:bg-bg transition-colors",
+          locked && "cursor-pointer",
         )}
       />
       <kbd className="hidden md:inline-flex absolute end-3 top-1/2 -translate-y-1/2 h-5 items-center gap-0.5 rounded border border-[hsl(var(--hairline-strong))] bg-surface-2 px-1.5 font-mono text-[10px] text-fg-faint">

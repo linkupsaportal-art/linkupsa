@@ -5,7 +5,17 @@
 
 ---
 
-# 2026-05-30 15:10
+# 2026-05-30 15:40
+
+- 🔒 **Full Dashboard Shell in Locked Onboarding Mode — Razex Xelite**
+  - **New `LinkStoreGateProvider`**: Added [link-store-gate.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/link-store-gate.tsx) — a lightweight context + shared themed dialog («اربط متجرك أولاً») that any locked control calls via `useLinkStoreGate().requestLink()`. Safe no-op when no provider is mounted (normal member shell).
+  - **Locked sidebar**: [sidebar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/sidebar.tsx) now accepts `locked`. In locked mode it shows EVERY section (full `STORE_NAV`, no role filter) but renders each item as a disabled button with a lock glyph that opens the gate dialog instead of navigating.
+  - **Locked topbar**: [topbar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/topbar.tsx) — search box, settings icon, and «استيراد طلب» CTA all route to the gate dialog when locked; workspace switcher hidden.
+  - **Layout swap, not bounce**: [admin/layout.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/layout.tsx) renders the real shell for membership-less users with `locked`, and swaps `{children}` for the onboarding panel — so the global orders/analytics loaders never run for them (no cross-store data leak).
+  - **Onboarding panel reflow**: [onboarding-dashboard.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/onboarding-dashboard.tsx) is now an in-shell content panel (hero + ghost stat tiles + 3-step guide) instead of a standalone page.
+  - **Verified**: `npx next build` → exit 0, zero diagnostics.
+
+
 
 - 🚪 **Store-Connect Onboarding Dashboard (no dead-end notice) — Razex Xelite**
   - **New `OnboardingDashboard`**: Added [onboarding-dashboard.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/onboarding-dashboard.tsx) — a dashboard-styled welcome surface (same lime/black/cream theme, gradient canvas, ghost stat tiles, 3-step guide) shown to a signed-in user who has not linked a store yet. It exposes ZERO live data and drives a single CTA: «ربط المتجر الآن».
