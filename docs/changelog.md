@@ -5,7 +5,16 @@
 
 ---
 
-# 2026-05-30 16:40
+# 2026-05-30 17:10
+
+- ⚡ **Instant Page Transitions — Suspense Loading Boundaries — Razex Xelite**
+  - **Root cause**: every `/admin/*` route is `force-dynamic` with blocking DB queries and there were ZERO `loading.tsx` boundaries — so clicking a nav item froze on the old page until the full server render (auth → role → queries) returned. It also meant `<Link prefetch>` had nothing to prefetch.
+  - **Fix**: added a `loading.tsx` Suspense boundary to every admin route (dashboard, orders, products, accounts, otp-logs, archives, notifications, telegram, integrations, staff, settings, profile). Navigation now swaps the page slot for an instant skeleton while the shell (sidebar + topbar) stays mounted — perceived navigation is immediate.
+  - **Shared skeletons**: new [skeletons.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/skeletons.tsx) — pure-CSS `animate-pulse` shapes (Header, Cards, Table, Panel, Dashboard) that mirror each real layout to avoid layout shift. No JS, no images, near-zero cost.
+  - **Prefetch unlocked**: with loading boundaries present, the sidebar's `prefetch` links now warm each route's shell on hover/viewport, so the data is often already in flight before the click.
+  - **Verified**: `npx next build` → exit 0, all routes intact.
+
+
 
 - ⌘ **Smart Command Palette (⌘K) — Razex Xelite**
   - **Unified role-scoped search**: New [search.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/search.ts) sweeps orders, products, accounts, verification logs, and phone bans in parallel — each category gated by the same RBAC capability flags as the rest of the app. NEVER selects secret columns (passwords/TOTP/cards). Numeric-intent detection routes a digits query to order refs + phone tails.
