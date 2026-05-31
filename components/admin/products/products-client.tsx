@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle } from "lucide-react";
+import { useState, useTransition, useMemo } from "react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle, Search, X } from "lucide-react";
 import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products-types";
 import { CustomSelect } from "@/components/ui/select";
 import {
@@ -30,12 +30,13 @@ const HANDLER_TYPES: HandlerType[] = [
   "digital_file",
 ];
 
-export function ProductsClient({ initialProducts }: { initialProducts: Product[] }) {
+export function ProductsClient({ initialProducts, initialQuery = "" }: { initialProducts: Product[]; initialQuery?: string }) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [addOptionFor, setAddOptionFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState(initialQuery);
   const [isPending, startTransition] = useTransition();
 
   // Modern UI states
@@ -43,6 +44,16 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
   const [deleteOptionId, setDeleteOptionId] = useState<string | null>(null);
 
   function refresh() { window.location.reload(); }
+
+  const visibleProducts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return initialProducts;
+    return initialProducts.filter((p) =>
+      (p.name ?? "").toLowerCase().includes(q) ||
+      (p.name_ar ?? "").toLowerCase().includes(q) ||
+      String(p.salla_product_id ?? "").includes(q),
+    );
+  }, [initialProducts, search]);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -117,8 +128,27 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
         </div>
       )}
 
-      {/* Add button */}
-      <div className="flex justify-end">
+      {/* Toolbar: search + add */}
+      <div className="flex items-center gap-2 justify-between">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-fg-faint" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="بحث في المنتجات…"
+            className="h-10 w-full ps-9 pe-8 rounded-xl border border-[hsl(var(--hairline-strong))] bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="مسح البحث"
+              className="absolute end-2 top-1/2 -translate-y-1/2 grid place-items-center size-5 rounded-full text-fg-faint hover:bg-fg/10 hover:text-fg transition-colors"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => { setShowAddDialog(true); setError(null); }}
@@ -132,9 +162,13 @@ export function ProductsClient({ initialProducts }: { initialProducts: Product[]
       {/* Products list */}
       {initialProducts.length === 0 ? (
         <EmptyState onAdd={() => setShowAddDialog(true)} />
+      ) : visibleProducts.length === 0 ? (
+        <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-10 text-center text-sm text-fg-muted">
+          لا منتجات مطابقة لـ «{search}».
+        </div>
       ) : (
         <div className="space-y-3">
-          {initialProducts.map((product) => (
+          {visibleProducts.map((product) => (
             <div key={product.id} className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] overflow-hidden">
               <div className="flex items-center gap-3 p-4">
                 <button

@@ -4,7 +4,12 @@ import { ProductsClient } from "@/components/admin/products/products-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const products = await listProducts();
 
   return (
@@ -14,7 +19,7 @@ export default async function ProductsPage() {
         eyebrow="إدارة المخزون"
         description="أضف منتجاتك الرقمية وحدد نوع التسليم لكل منتج."
       />
-      <ProductsClient initialProducts={products} />
+      <ProductsClient initialProducts={products} initialQuery={q ?? ""} />
     </>
   );
 }

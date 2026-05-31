@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ShoppingBag, RefreshCw } from "lucide-react";
+import { useState, useMemo } from "react";
+import { ShoppingBag, RefreshCw, Search, X } from "lucide-react";
 import type { Order } from "@/lib/db/orders";
 
 const PAYMENT_LABELS: Record<Order["payment_status"], string> = {
@@ -34,12 +34,35 @@ const FULFILL_COLORS: Record<Order["fulfillment_status"], string> = {
   cancelled: "bg-fg-faint/15 text-fg-faint",
 };
 
-export function OrdersClient({ orders, total }: { orders: Order[]; total: number }) {
+export function OrdersClient({
+  orders,
+  total,
+  initialQuery = "",
+}: {
+  orders: Order[];
+  total: number;
+  initialQuery?: string;
+}) {
   const [filter, setFilter] = useState<"all" | "pending" | "fulfilled">("all");
+  const [search, setSearch] = useState(initialQuery);
 
-  const filtered = filter === "all"
-    ? orders
-    : orders.filter((o) => o.fulfillment_status === filter);
+  const filtered = useMemo(() => {
+    const byStatus =
+      filter === "all" ? orders : orders.filter((o) => o.fulfillment_status === filter);
+    const q = search.trim().toLowerCase();
+    if (!q) return byStatus;
+    return byStatus.filter((o) => {
+      const ref = String(o.salla_reference_id ?? o.salla_order_id ?? "");
+      return (
+        ref.includes(q) ||
+        (o.customer_name ?? "").toLowerCase().includes(q) ||
+        (o.customer_email ?? "").toLowerCase().includes(q) ||
+        (o.customer_mobile ?? "").includes(q) ||
+        (o.product_name ?? "").toLowerCase().includes(q) ||
+        (o.account_label ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [orders, filter, search]);
 
   return (
     <div className="space-y-4">
@@ -60,13 +83,34 @@ export function OrdersClient({ orders, total }: { orders: Order[]; total: number
             onClick={() => setFilter("fulfilled")}
           />
         </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg hover:bg-surface-2 transition-colors"
-        >
-          <RefreshCw className="size-3.5" />
-          تحديث
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-fg-faint" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="بحث في الطلبات…"
+              className="h-9 w-48 sm:w-60 ps-9 pe-8 rounded-xl border border-[hsl(var(--hairline-strong))] bg-surface text-sm text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-bg"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="مسح البحث"
+                className="absolute end-2 top-1/2 -translate-y-1/2 grid place-items-center size-5 rounded-full text-fg-faint hover:bg-fg/10 hover:text-fg transition-colors"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm text-fg hover:bg-surface-2 transition-colors"
+          >
+            <RefreshCw className="size-3.5" />
+            تحديث
+          </button>
+        </div>
       </div>
 
       {/* Orders list */}

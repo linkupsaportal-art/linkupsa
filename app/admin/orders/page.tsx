@@ -4,7 +4,12 @@ import { OrdersClient } from "@/components/admin/orders/orders-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const { orders, total } = await listOrders({ limit: 100 });
 
   return (
@@ -14,7 +19,7 @@ export default async function OrdersPage() {
         eyebrow="إدارة الطلبات"
         description="جميع الطلبات الواردة من سلة وحالة تسليمها."
       />
-      <OrdersClient orders={orders} total={total} />
+      <OrdersClient orders={orders} total={total} initialQuery={q ?? ""} />
     </>
   );
 }

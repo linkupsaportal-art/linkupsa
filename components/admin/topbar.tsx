@@ -9,6 +9,7 @@ import { ProfileMenu } from "@/components/admin/profile-menu";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { WorkspaceSwitcher, type WorkspaceOption } from "@/components/admin/workspace-switcher";
+import { CommandPalette } from "@/components/admin/command-palette";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
@@ -67,9 +68,14 @@ export function AdminTopbar({
         {/* Workspace switcher — which store dashboard you're viewing + role */}
         {workspaces.length > 0 && <WorkspaceSwitcher workspaces={workspaces} />}
 
-        {/* Search */}
+        {/* Search — smart command palette (⌘K). In locked onboarding mode the
+            field opens the link-store gate instead. */}
         <div className="hidden md:flex flex-1 max-w-lg mx-auto">
-          <SearchBar locked={locked} onLocked={requestLink} />
+          {locked ? (
+            <SearchBar locked onLocked={requestLink} />
+          ) : (
+            <CommandPalette role={role} />
+          )}
         </div>
 
         <div className="flex-1 md:hidden" />

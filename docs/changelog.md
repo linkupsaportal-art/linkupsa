@@ -5,7 +5,17 @@
 
 ---
 
-# 2026-05-30 16:05
+# 2026-05-30 16:40
+
+- ⌘ **Smart Command Palette (⌘K) — Razex Xelite**
+  - **Unified role-scoped search**: New [search.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/search.ts) sweeps orders, products, accounts, verification logs, and phone bans in parallel — each category gated by the same RBAC capability flags as the rest of the app. NEVER selects secret columns (passwords/TOTP/cards). Numeric-intent detection routes a digits query to order refs + phone tails.
+  - **Server action**: [search-actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/search-actions.ts) resolves the caller's membership role and returns nothing for membership-less users (no data leak).
+  - **Palette UI**: [command-palette.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/command-palette.tsx) — opens on ⌘K/Ctrl+K or the topbar trigger. Empty query = role-filtered quick actions + navigation launcher; typing (≥2 chars) = debounced live search with grouped, color-tinted, deep-linking results. Full keyboard nav (↑/↓/Enter/Esc), auto-scroll, out-of-order response guard.
+  - **Wired into topbar**: [topbar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/topbar.tsx) replaces the dead search input with the palette (locked shell still opens the link-store gate).
+  - **Deep-link pre-filter**: Orders + Products pages/clients now read `?q=` and filter live, so picking a palette result lands pre-filtered with an inline search box + clear button.
+  - **Verified**: `npx next build` exit 0; `node scripts/test-search.mjs` → 14/14 (role matrix + live query validity + secret-column safety).
+
+
 
 - 🔓 **Unlock Profile + Staff (invite accept) in Onboarding Shell — Razex Xelite**
   - **Membership-based route gate**: [session.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/supabase/session.ts) now gates `/admin/*` on `store_members` (real access) instead of the stale `profiles.role` (which defaulted to `manager` for every signup and risked leaking the owner's store). No-membership users may open `/admin` + `/admin/profile` always, and `/admin/staff` only when they have a pending invitation.
