@@ -8,6 +8,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ProfileMenu } from "@/components/admin/profile-menu";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { NotificationBell } from "@/components/admin/notification-bell";
+import { WorkspaceSwitcher, type WorkspaceOption } from "@/components/admin/workspace-switcher";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
@@ -27,12 +28,14 @@ export function AdminTopbar({
   avatarUrl,
   role = DEFAULT_ROLE,
   initialUnread = 0,
+  workspaces = [],
 }: {
   userEmail?: string;
   userName?: string;
   avatarUrl?: string | null;
   role?: Role;
   initialUnread?: number;
+  workspaces?: WorkspaceOption[];
 }) {
   const [drawer, setDrawer] = useState(false);
 
@@ -52,6 +55,9 @@ export function AdminTopbar({
         >
           <Menu className="size-4" />
         </button>
+
+        {/* Workspace switcher — which store dashboard you're viewing + role */}
+        {workspaces.length > 0 && <WorkspaceSwitcher workspaces={workspaces} />}
 
         {/* Search */}
         <div className="hidden md:flex flex-1 max-w-lg mx-auto">

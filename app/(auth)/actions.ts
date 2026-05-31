@@ -282,9 +282,13 @@ const verifySchema = z.object({
 
 /**
  * Confirms the OTP, marks the auth user's email as verified, flips
- * profiles.email_verified, and signs the user in via a magic-link token.
+ * profiles.email_verified, and (best-effort) auto-signs the user in so they
+ * land on the dashboard instead of the login page. `signedIn` tells the
+ * client which redirect to use.
  */
-export async function verifyEmailAction(input: unknown): Promise<ActionResult> {
+export async function verifyEmailAction(
+  input: unknown,
+): Promise<ActionResult<{ signedIn?: boolean }>> {
   const parsed = verifySchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
@@ -332,7 +336,34 @@ export async function verifyEmailAction(input: unknown): Promise<ActionResult> {
     return { ok: false, error: "تعذّر مزامنة الملف الشخصي. حاول مجدداً." };
   }
 
-  return { ok: true };
+  // Auto-login: establish a session right after verification so the user
+  // lands on the dashboard instead of the login page. We don't have the
+  // password here, so we mint a one-time magic-link token with the admin
+  // client and immediately consume it on the SSR client — this sets the
+  // auth cookies server-side without re-prompting for credentials.
+  try {
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+    const tokenHash = linkData?.properties?.hashed_token;
+    if (!linkErr && tokenHash) {
+      const ssr = await createClient();
+      const { error: otpErr } = await ssr.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: "magiclink",
+      });
+      if (!otpErr) {
+        return { ok: true, signedIn: true };
+      }
+    }
+  } catch (e) {
+    // Non-fatal — fall through to the verified-but-not-signed-in result so
+    // the user can still log in manually.
+    console.error("[verifyEmailAction] auto-login failed", e);
+  }
+
+  return { ok: true, signedIn: false };
 }
 
 export async function resendCodeAction(emailRaw: string): Promise<ActionResult> {

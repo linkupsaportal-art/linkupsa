@@ -13,6 +13,7 @@ import { RecentTransactions } from "@/components/admin/recent-transactions";
 import { DomainsCard } from "@/components/admin/domains-card";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { getDashboardAnalytics } from "@/lib/db/analytics";
+import { FadeInStagger } from "@/components/admin/fade-in";
 
 /**
  * Dashboard — original lime/black/cream design (chart · stat cards · quick links)
@@ -116,9 +117,10 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* ────────────────────────────────────────────────────────────────
-          Analytics blocks — same layout, now wired to live data
+          Analytics blocks — same layout, now wired to live data + a
+          staggered GSAP fade-in so cards cascade instead of snapping in.
           ──────────────────────────────────────────────────────────────── */}
-      <div className="mt-6 lg:mt-8 space-y-4 lg:space-y-5">
+      <FadeInStagger className="mt-6 lg:mt-8 space-y-4 lg:space-y-5">
         <OverviewStatsGrid data={analytics} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
@@ -139,7 +141,7 @@ export default async function AdminDashboardPage() {
             <DomainsCard />
           </div>
         </div>
-      </div>
+      </FadeInStagger>
     </>
   );
 }

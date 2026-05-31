@@ -52,8 +52,15 @@ function VerifyEmailForm() {
         setCode("");
         return;
       }
-      // Email verified — send the user to login with a hint.
-      router.replace("/login?verified=1");
+      // If we got auto-signed-in, go straight to the dashboard. Otherwise
+      // fall back to the login page with a verified hint.
+      if (res.signedIn) {
+        // Full navigation so the freshly-set auth cookies are picked up by
+        // the server on the very next request (middleware + layout).
+        window.location.assign("/admin");
+      } else {
+        router.replace("/login?verified=1");
+      }
     });
   }
 
