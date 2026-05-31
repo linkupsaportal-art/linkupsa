@@ -31,6 +31,7 @@ export function AdminTopbar({
   initialUnread = 0,
   workspaces = [],
   locked = false,
+  unlockedHrefs = [],
 }: {
   userEmail?: string;
   userName?: string;
@@ -40,6 +41,8 @@ export function AdminTopbar({
   workspaces?: WorkspaceOption[];
   /** Onboarding shell: search + import CTA are locked behind the gate. */
   locked?: boolean;
+  /** Hrefs that stay navigable in locked mode (forwarded to mobile sidebar). */
+  unlockedHrefs?: string[];
 }) {
   const [drawer, setDrawer] = useState(false);
   const { requestLink } = useLinkStoreGate();
@@ -142,7 +145,7 @@ export function AdminTopbar({
             )}
           >
             <Dialog.Title className="sr-only">قائمة التنقل</Dialog.Title>
-            <AdminSidebar userName={userName} userEmail={userEmail} role={role} isMobile locked={locked} />
+            <AdminSidebar userName={userName} userEmail={userEmail} role={role} isMobile locked={locked} unlockedHrefs={unlockedHrefs} />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

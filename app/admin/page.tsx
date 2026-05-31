@@ -11,9 +11,10 @@ import { StatusDistribution, type Slice } from "@/components/admin/status-distri
 import { RecentOrdersTable, type Order } from "@/components/admin/recent-orders-table";
 import { RecentTransactions } from "@/components/admin/recent-transactions";
 import { DomainsCard } from "@/components/admin/domains-card";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser, getCurrentRole } from "@/lib/supabase/server";
 import { getDashboardAnalytics } from "@/lib/db/analytics";
 import { FadeInStagger } from "@/components/admin/fade-in";
+import { OnboardingDashboard } from "@/components/admin/onboarding-dashboard";
 
 /**
  * Dashboard — original lime/black/cream design (chart · stat cards · quick links)
@@ -30,10 +31,21 @@ import { FadeInStagger } from "@/components/admin/fade-in";
  *      - full-width: KPI grid (8 tiles)
  */
 export default async function AdminDashboardPage() {
-  const [user, analytics] = await Promise.all([
-    getCurrentUser(),
-    getDashboardAnalytics(),
-  ]);
+  // Gate the analytics behind membership. A signed-in user with no store
+  // membership (fresh signup / pending invitee) sees the onboarding panel
+  // instead — so the global analytics loader never runs for them and no
+  // other store's data is ever fetched.
+  const role = await getCurrentRole();
+  const user = await getCurrentUser();
+  if (!role) {
+    const name =
+      (user?.user_metadata?.name as string | undefined) ??
+      (user?.user_metadata?.full_name as string | undefined) ??
+      user?.email?.split("@")[0];
+    return <OnboardingDashboard name={name} email={user?.email ?? undefined} />;
+  }
+
+  const analytics = await getDashboardAnalytics();
   const name =
     (user?.user_metadata?.name as string | undefined) ??
     (user?.user_metadata?.full_name as string | undefined) ??

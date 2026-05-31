@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
-import { canAccessRoute, homeRouteForRole, isRole, DEFAULT_ROLE } from "@/lib/auth/rbac";
+import { canAccessRoute, homeRouteForRole, isRole } from "@/lib/auth/rbac";
 
 /**
  * Refreshes the Supabase auth session cookie on every request and gates
@@ -88,30 +88,54 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ── RBAC route gating ───────────────────────────────────────────────
-  // Authenticated + MFA-clear users are checked against their role's route
-  // map. A staff member who can't open a route is redirected to their role's
-  // home (code_limit → /admin/otp-logs, others → /admin). This is the
-  // server-side guard; the UI also hides links, but this is what actually
-  // enforces it. We fetch the role from profiles via the anon client (the
-  // user's own row is readable under RLS by owner).
+  // Access is gated on STORE MEMBERSHIP (store_members), the real source of
+  // truth — NOT the stale global profiles.role (which defaults to 'manager'
+  // for every new signup and would otherwise leak the owner's store).
+  //
+  //   has membership   → enforce that role's route map
+  //   no membership    → allow only /admin (onboarding) + /admin/profile.
+  //                      Plus /admin/staff IF they have a pending invitation,
+  //                      so an invitee can reach the accept/decline banner.
+  //                      Anything else bounces to /admin.
   if (isProtected && user) {
-    let role = DEFAULT_ROLE;
-    try {
-      const { data } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (isRole(data?.role)) role = data.role;
-    } catch {
-      // On lookup failure, fail closed for non-managers by keeping default.
-    }
+    const { data: membership } = await supabase
+      .from("store_members")
+      .select("role")
+      .eq("user_id", user.id)
+      .order("is_owner", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (!canAccessRoute(role, pathname)) {
-      const url = request.nextUrl.clone();
-      url.pathname = homeRouteForRole(role);
-      url.search = "";
-      return NextResponse.redirect(url);
+    if (membership && isRole(membership.role)) {
+      const role = membership.role;
+      if (!canAccessRoute(role, pathname)) {
+        const url = request.nextUrl.clone();
+        url.pathname = homeRouteForRole(role);
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+    } else {
+      // No membership yet. Onboarding dashboard + own profile are always
+      // reachable; the store sections render locked in the UI.
+      const alwaysAllowed =
+        pathname === "/admin" || pathname.startsWith("/admin/profile");
+
+      let staffAllowed = false;
+      if (!alwaysAllowed && pathname.startsWith("/admin/staff")) {
+        const { count } = await supabase
+          .from("workspace_invitations")
+          .select("id", { count: "exact", head: true })
+          .eq("invitee_id", user.id)
+          .eq("status", "pending");
+        staffAllowed = (count ?? 0) > 0;
+      }
+
+      if (!alwaysAllowed && !staffAllowed) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
     }
   }
 

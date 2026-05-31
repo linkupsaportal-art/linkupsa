@@ -5,7 +5,16 @@
 
 ---
 
-# 2026-05-30 15:40
+# 2026-05-30 16:05
+
+- 🔓 **Unlock Profile + Staff (invite accept) in Onboarding Shell — Razex Xelite**
+  - **Membership-based route gate**: [session.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/supabase/session.ts) now gates `/admin/*` on `store_members` (real access) instead of the stale `profiles.role` (which defaulted to `manager` for every signup and risked leaking the owner's store). No-membership users may open `/admin` + `/admin/profile` always, and `/admin/staff` only when they have a pending invitation.
+  - **Selective unlock**: [sidebar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/sidebar.tsx) + [topbar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/topbar.tsx) accept `unlockedHrefs` — items that stay clickable in locked mode. The layout passes `/admin/profile` (always) and `/admin/staff` (when a pending invite exists), so a fresh user can still manage their account and an invitee can reach the accept/decline banner.
+  - **Dashboard self-gates**: [admin/page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/page.tsx) renders the onboarding panel when there's no membership, so `getDashboardAnalytics()` never runs for a membership-less user.
+  - **Fix**: invited user (`xelitedo`) was bounced from `/admin/staff` and saw it locked — now the staff link is enabled + reachable so they can accept the invitation.
+  - **Verified**: `npx next build` → exit 0, zero diagnostics.
+
+
 
 - 🔒 **Full Dashboard Shell in Locked Onboarding Mode — Razex Xelite**
   - **New `LinkStoreGateProvider`**: Added [link-store-gate.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/link-store-gate.tsx) — a lightweight context + shared themed dialog («اربط متجرك أولاً») that any locked control calls via `useLinkStoreGate().requestLink()`. Safe no-op when no provider is mounted (normal member shell).

@@ -45,16 +45,20 @@ export function AdminSidebar({
   isMobile = false,
   role = DEFAULT_ROLE,
   locked = false,
+  unlockedHrefs = [],
 }: {
   userName?: string;
   userEmail?: string;
   avatarUrl?: string | null;
   isMobile?: boolean;
   role?: Role;
-  /** When true, every nav item is shown but disabled — clicking opens the
+  /** When true, store sections are shown but disabled — clicking opens the
    *  link-store gate instead of navigating. Used for the onboarding shell of
    *  a user who hasn't connected a store yet. */
   locked?: boolean;
+  /** Hrefs that stay navigable even in locked mode (e.g. profile, and staff
+   *  when the user has a pending invitation to accept). */
+  unlockedHrefs?: string[];
 }) {
   const { mode } = useSidebarMode();
   const [hovered, setHovered] = useState(false);
@@ -144,9 +148,9 @@ export function AdminSidebar({
 
         {/* Scrollable nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 no-scrollbar">
-          <NavSection groups={storeNav} expanded={expanded} locked={locked} />
+          <NavSection groups={storeNav} expanded={expanded} locked={locked} unlockedHrefs={unlockedHrefs} />
           <div className="my-3 mx-2 h-px bg-white/10" />
-          <NavSection groups={globalNav} expanded={expanded} locked={locked} />
+          <NavSection groups={globalNav} expanded={expanded} locked={locked} unlockedHrefs={unlockedHrefs} />
         </nav>
 
         {/* Footer — profile chip */}
@@ -267,10 +271,12 @@ function NavSection({
   groups,
   expanded,
   locked = false,
+  unlockedHrefs = [],
 }: {
   groups: typeof STORE_NAV;
   expanded: boolean;
   locked?: boolean;
+  unlockedHrefs?: string[];
 }) {
   const pathname = usePathname();
 
@@ -288,7 +294,13 @@ function NavSection({
           </p>
           <ul className="space-y-0.5 flex flex-col items-center">
             {group.items.map((item) => (
-              <UnifiedNavItem key={item.href} item={item} pathname={pathname} expanded={expanded} locked={locked} />
+              <UnifiedNavItem
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                expanded={expanded}
+                locked={locked && !unlockedHrefs.includes(item.href)}
+              />
             ))}
           </ul>
         </div>
