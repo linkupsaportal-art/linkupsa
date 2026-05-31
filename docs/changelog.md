@@ -5,7 +5,14 @@
 
 ---
 
-# 2026-05-31 19:40
+# 2026-05-31 20:10
+
+- 🗄️ **Archive Restore — fully wired — Razex Xelite**
+  - **Archived-orders list + restore**: [archived-orders.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/archives/archived-orders.tsx) renders every archived order on the Archives page with search + a per-row restore button. Fulfils the spec's "إمكانية استعادة الأرشيف" (previously restore was coded but unreachable — archived orders were filtered out of the Orders list).
+  - **Data + action**: `listArchivedOrders()` in [orders.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/orders.ts) + `restoreOrderAction` in [archives/actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/archives/actions.ts). Added `archived_reason` to the Order type.
+  - **Tests**: e2e extended to cover archive→appears-in-list→restore→drops-from-list. `test-e2e-actions.mjs` → 21/21. Build exit 0.
+
+
 
 - 🎯 **Delivery Completeness Pass #2 — Razex Xelite**
   - **Signed URLs for digital files**: New private `digital-files` bucket + [digital-files.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/storage/digital-files.ts). Pickup now mints a 5-min signed URL instead of exposing a permanent path (spec: signed URLs ≤5min).

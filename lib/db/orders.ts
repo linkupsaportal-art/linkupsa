@@ -22,6 +22,7 @@ export type Order = {
   otp_request_limit: number;
   notification_sent_at: string | null;
   archived_at: string | null;
+  archived_reason: string | null;
   created_at: string;
   updated_at: string;
   // Joined
@@ -55,6 +56,34 @@ export async function listOrders(opts?: {
   if (opts?.payment_status) q = q.eq("payment_status", opts.payment_status);
 
   const { data, error, count } = await q;
+  if (error) throw new Error(error.message);
+
+  const orders = (data ?? []).map((row: Record<string, unknown>) => ({
+    ...(row as Order),
+    product_name: (row.products as { name: string } | null)?.name ?? null,
+    account_label: (row.accounts as { label: string } | null)?.label ?? null,
+  }));
+
+  return { orders, total: count ?? 0 };
+}
+
+/**
+ * Archived orders (archived_at IS NOT NULL) — powers the Archives page list
+ * + restore flow. Newest-archived first.
+ */
+export async function listArchivedOrders(opts?: {
+  limit?: number;
+}): Promise<{ orders: Order[]; total: number }> {
+  const sb = createServiceClient();
+  const limit = opts?.limit ?? 100;
+
+  const { data, error, count } = await sb
+    .from("orders")
+    .select(`*, products(name), accounts(label)`, { count: "exact" })
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false })
+    .limit(limit);
+
   if (error) throw new Error(error.message);
 
   const orders = (data ?? []).map((row: Record<string, unknown>) => ({

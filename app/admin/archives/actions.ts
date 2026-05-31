@@ -60,3 +60,20 @@ export async function cleanupOtpLogsAction(): Promise<CleanupResult> {
   revalidatePath("/admin/archives");
   return { ok: true, count: data?.length ?? 0, message: `تم حذف ${data?.length ?? 0} سجل.` };
 }
+
+/** Restore a single archived order back to the active list. */
+export async function restoreOrderAction(orderId: string): Promise<CleanupResult> {
+  if (!(await requireManager())) return { ok: false, error: "متاح للمدير فقط." };
+  if (!orderId) return { ok: false, error: "معرّف غير صالح." };
+
+  const sb = createServiceClient();
+  const { error } = await sb
+    .from("orders")
+    .update({ archived_at: null, archived_reason: null })
+    .eq("id", orderId);
+
+  if (error) return { ok: false, error: "تعذّرت الاستعادة." };
+  revalidatePath("/admin/archives");
+  revalidatePath("/admin/orders");
+  return { ok: true, count: 1, message: "تمت استعادة الطلب." };
+}

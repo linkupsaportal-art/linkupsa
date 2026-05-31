@@ -167,9 +167,27 @@ async function main() {
     ({ data } = await sb.from("orders").select("archived_at").eq("id", order.id).single());
     assert(!!data?.archived_at, "archive sets archived_at");
 
+    // Archived order must appear in the archived list query (not is null).
+    const { data: archivedList } = await sb
+      .from("orders")
+      .select("id, archived_at, archived_reason")
+      .not("archived_at", "is", null)
+      .order("archived_at", { ascending: false });
+    const inList = (archivedList ?? []).some((o) => o.id === order.id);
+    assert(inList, "archived order shows in the archived-orders list");
+
+    // Restore.
     await sb.from("orders").update({ archived_at: null, archived_reason: null }).eq("id", order.id);
     ({ data } = await sb.from("orders").select("archived_at").eq("id", order.id).single());
-    assert(!data?.archived_at, "restore clears archived_at");
+    assert(!data?.archived_at, "restore clears archived_at (back to active)");
+
+    // After restore it must drop OUT of the archived list.
+    const { data: afterList } = await sb
+      .from("orders")
+      .select("id")
+      .not("archived_at", "is", null);
+    const stillThere = (afterList ?? []).some((o) => o.id === order.id);
+    assert(!stillThere, "restored order no longer in archived list");
   }
 
   // ── Renew (reset usage, reactivate) ────────────────────────────────────

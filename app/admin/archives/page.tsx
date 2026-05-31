@@ -1,7 +1,9 @@
 import { Archive, RotateCcw, Trash2, Database } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { createServiceClient, getCurrentRole } from "@/lib/supabase/server";
+import { listArchivedOrders } from "@/lib/db/orders";
 import { CleanupButtons } from "@/components/admin/archives/cleanup-buttons";
+import { ArchivedOrders } from "@/components/admin/archives/archived-orders";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +29,11 @@ async function loadArchiveStats() {
 }
 
 export default async function ArchivesPage() {
-  const [stats, role] = await Promise.all([loadArchiveStats(), getCurrentRole()]);
+  const [stats, role, archived] = await Promise.all([
+    loadArchiveStats(),
+    getCurrentRole(),
+    listArchivedOrders({ limit: 200 }),
+  ]);
   const canManage = role === "manager";
 
   return (
@@ -55,6 +61,9 @@ export default async function ArchivesPage() {
             total={stats.totalOtpLogs}
           />
         </div>
+
+        {/* Archived orders list + restore */}
+        <ArchivedOrders orders={archived.orders} canManage={canManage} />
 
         <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-6 space-y-4">
           <div className="flex items-start gap-3">
