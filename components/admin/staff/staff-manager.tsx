@@ -236,17 +236,15 @@ function InviteCard() {
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("support");
 
   function submit() {
     setMsg(null);
     startTransition(async () => {
-      const res = await inviteStaffAction({ email, name, role });
+      const res = await inviteStaffAction({ email, role });
       if (res.ok) {
         setMsg({ kind: "ok", text: res.message ?? "تم الإرسال." });
         setEmail("");
-        setName("");
         setRole("support");
       } else {
         setMsg({ kind: "err", text: res.error });
@@ -263,21 +261,13 @@ function InviteCard() {
         <div>
           <h3 className="font-bold text-fg">دعوة موظف</h3>
           <p className="text-xs text-fg-muted mt-0.5">
-            يصل للموظف رابط لتعيين كلمة المرور، ثم يدخل بصلاحيات دوره فقط.
+            يجب أن يملك الموظف حساباً على المنصة. يصله إشعار + بريد، وتُفعّل صلاحياته فوراً.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label="الاسم">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="اسم الموظف"
-            className={inputCls}
-          />
-        </Field>
-        <Field label="البريد الإلكتروني">
+      <div className="grid grid-cols-1 gap-3">
+        <Field label="بريد الموظف (حساب مسجّل)">
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -314,7 +304,7 @@ function InviteCard() {
         <button
           type="button"
           onClick={submit}
-          disabled={pending || !email || !name}
+          disabled={pending || !email}
           className={cn(
             "inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-bold transition-all",
             "bg-fg text-bg hover:bg-[hsl(var(--surface-4))] active:scale-[0.98] disabled:opacity-50",

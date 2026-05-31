@@ -3,10 +3,11 @@
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { Bell, Menu, Plus, Search, Settings as SettingsIcon } from "lucide-react";
+import { Menu, Plus, Search, Settings as SettingsIcon } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ProfileMenu } from "@/components/admin/profile-menu";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { NotificationBell } from "@/components/admin/notification-bell";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
@@ -25,11 +26,13 @@ export function AdminTopbar({
   userName,
   avatarUrl,
   role = DEFAULT_ROLE,
+  initialUnread = 0,
 }: {
   userEmail?: string;
   userName?: string;
   avatarUrl?: string | null;
   role?: Role;
+  initialUnread?: number;
 }) {
   const [drawer, setDrawer] = useState(false);
 
@@ -63,11 +66,7 @@ export function AdminTopbar({
               <SettingsIcon className="size-4" />
             </Link>
           </IconButton>
-          <IconButton ariaLabel="الإشعارات" dot asChild>
-            <Link href="/admin/notifications">
-              <Bell className="size-4" />
-            </Link>
-          </IconButton>
+          <NotificationBell initialUnread={initialUnread} />
 
           {/* Primary CTA — opens the order-import / refresh flow.
               The spec doesn't ship a "create store" CTA in v1, so this CTA

@@ -3,7 +3,10 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createServiceClient, getCurrentUser, getCurrentRole } from "@/lib/supabase/server";
-import { ROLES, type Role } from "@/lib/auth/rbac";
+import { ROLES, ROLE_LABELS, type Role } from "@/lib/auth/rbac";
+import { createNotification } from "@/lib/db/notifications-center";
+import { sendStaffInviteEmail, sendAdminAlertEmail } from "@/lib/notifications/email";
+import { env } from "@/lib/env";
 
 /**
  * Staff management server actions. Every mutation re-checks that the caller
@@ -15,6 +18,17 @@ import { ROLES, type Role } from "@/lib/auth/rbac";
 export type StaffActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string };
+
+/** Resolves the inviter's display name for notifications/emails. */
+async function inviterName(userId: string): Promise<string> {
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("name, email")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data?.name as string | undefined) || (data?.email as string | undefined) || "مدير المتجر";
+}
 
 async function assertManager(): Promise<
   { ok: true; userId: string } | { ok: false; error: string }
@@ -86,23 +100,55 @@ export async function setStaffRoleAction(input: unknown): Promise<StaffActionRes
     .updateUserById(userId, { user_metadata: { role } })
     .catch(() => undefined);
 
+  // Notify the affected user (bell + email mirror).
+  const who = await inviterName(guard.userId);
+  const staffUrl = `${env.SITE_URL}/admin/staff`;
+  await createNotification({
+    userId,
+    type: "role_changed",
+    title: "تم تحديث دورك",
+    body: `قام ${who} بتعيين دورك إلى: ${ROLE_LABELS[role]}`,
+    link: "/admin/staff",
+    actorId: guard.userId,
+    actorName: who,
+    metadata: { role },
+  });
+  const { data: tgt } = await admin
+    .from("profiles")
+    .select("email, name")
+    .eq("id", userId)
+    .maybeSingle();
+  if (tgt?.email) {
+    void sendAdminAlertEmail({
+      to: tgt.email as string,
+      heading: "تم تحديث دورك في لوحة التحكم",
+      message: `قام ${who} بتعيين دورك إلى "${ROLE_LABELS[role]}". سجّل دخولك لرؤية صلاحياتك الجديدة.`,
+      actionUrl: staffUrl,
+      actionLabel: "فتح اللوحة",
+    });
+  }
+
   revalidatePath("/admin/staff");
   return { ok: true, message: "تم تحديث الدور." };
 }
 
 const inviteSchema = z.object({
   email: z.string().email("بريد إلكتروني غير صالح"),
-  name: z.string().min(2, "الاسم قصير").max(80),
   role: z.enum(ROLES),
 });
 
 /**
- * Invite a staff member. Creates the auth user with a temporary random
- * password and a password-recovery link emailed by Supabase, stamping the
- * chosen role into user_metadata so the signup trigger assigns it.
+ * Invite an EXISTING platform user to the team.
  *
- * The invitee sets their own password via the recovery link, then logs in
- * with exactly the permissions of their role.
+ * Flow:
+ *   1. Verify the email belongs to an existing account (else error — we do
+ *      not create new users here; staff must already have signed up).
+ *   2. Assign the chosen role on their profile + auth metadata.
+ *   3. Drop an in-app notification (navbar bell) linking to /admin/staff.
+ *   4. Mirror the invite to their inbox via Resend (verified domain).
+ *
+ * The invitee just logs in with their existing email + password and sees the
+ * new role active immediately — no password reset, no separate accept page.
  */
 export async function inviteStaffAction(input: unknown): Promise<StaffActionResult> {
   const guard = await assertManager();
@@ -112,27 +158,64 @@ export async function inviteStaffAction(input: unknown): Promise<StaffActionResu
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
-  const { email, name, role } = parsed.data;
+  const { email, role } = parsed.data;
   const normalized = email.trim().toLowerCase();
 
   const admin = createServiceClient();
 
-  // inviteUserByEmail sends Supabase's invite mail and creates the user with
-  // the role baked into metadata; the handle_new_user trigger reads it.
-  const { error } = await admin.auth.admin.inviteUserByEmail(normalized, {
-    data: { name, role, store_name: null },
-  });
+  // 1. The email MUST belong to an existing platform account.
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, name, email, role")
+    .eq("email", normalized)
+    .maybeSingle();
 
-  if (error) {
-    const msg = (error.message ?? "").toLowerCase();
-    if (msg.includes("already") || msg.includes("registered")) {
-      return { ok: false, error: "هذا البريد مسجَّل مسبقاً." };
-    }
-    return { ok: false, error: error.message ?? "تعذّر إرسال الدعوة." };
+  if (!target) {
+    return {
+      ok: false,
+      error: "لا يوجد حساب بهذا البريد. يجب أن يكون لدى الموظف حساب على المنصة أولاً.",
+    };
+  }
+  if (target.id === guard.userId) {
+    return { ok: false, error: "لا يمكنك دعوة نفسك." };
   }
 
+  // 2. Assign the role.
+  const { error: updErr } = await admin
+    .from("profiles")
+    .update({ role })
+    .eq("id", target.id);
+  if (updErr) return { ok: false, error: "تعذّر تعيين الدور. حاول مجدداً." };
+  await admin.auth.admin
+    .updateUserById(target.id as string, { user_metadata: { role } })
+    .catch(() => undefined);
+
+  // 3. In-app notification (bell ping) → links to staff page.
+  const who = await inviterName(guard.userId);
+  await createNotification({
+    userId: target.id as string,
+    type: "staff_invite",
+    title: "تمت دعوتك إلى الفريق",
+    body: `قام ${who} بإضافتك كـ "${ROLE_LABELS[role]}". اضغط لعرض التفاصيل.`,
+    link: "/admin/staff",
+    actorId: guard.userId,
+    actorName: who,
+    metadata: { role },
+  });
+
+  // 4. Email mirror via Resend (verified domain) — best-effort.
+  const inviteeName =
+    (target.name as string | undefined) || normalized.split("@")[0];
+  void sendStaffInviteEmail({
+    to: normalized,
+    inviteeName,
+    inviterName: who,
+    roleLabel: ROLE_LABELS[role],
+    staffUrl: `${env.SITE_URL}/admin/staff`,
+  });
+
   revalidatePath("/admin/staff");
-  return { ok: true, message: `تم إرسال دعوة إلى ${normalized}.` };
+  return { ok: true, message: `تمت دعوة ${normalized} كـ ${ROLE_LABELS[role]}.` };
 }
 
 const removeSchema = z.object({ userId: z.string().uuid() });

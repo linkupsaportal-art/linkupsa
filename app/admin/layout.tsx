@@ -4,6 +4,7 @@ import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { SidebarModeProvider } from "@/components/admin/sidebar-mode-context";
 import { getCurrentUser, getCurrentRole } from "@/lib/supabase/server";
+import { listNotifications } from "@/lib/db/notifications-center";
 
 /**
  * Admin shell — full-bleed, edge-to-edge with an internal scroll container.
@@ -31,6 +32,7 @@ export default async function AdminLayout({
   if (!user) redirect("/login");
 
   const role = (await getCurrentRole()) ?? "manager";
+  const { unread } = await listNotifications(user.id, 1);
 
   const name =
     (user.user_metadata?.name as string | undefined) ??
@@ -69,6 +71,7 @@ export default async function AdminLayout({
                 userEmail={user.email ?? undefined}
                 avatarUrl={avatarUrl}
                 role={role}
+                initialUnread={unread}
               />
               <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 sm:px-5 lg:px-7 pb-8">
                 <div className="mx-auto w-full max-w-[1600px]">{children}</div>

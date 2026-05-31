@@ -33,4 +33,10 @@ export const env = {
   SALLA_CLIENT_ID: process.env.SALLA_CLIENT_ID ?? "",
   SALLA_CLIENT_SECRET: process.env.SALLA_CLIENT_SECRET ?? "",
   SALLA_WEBHOOK_TOKEN: process.env.SALLA_WEBHOOK_TOKEN ?? "",
+  // Public site base URL used to build absolute links in emails (invites,
+  // notifications). Falls back to the production domain.
+  SITE_URL:
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    process.env.SITE_URL?.replace(/\/$/, "") ||
+    "https://linkupdash.portaliosa.com",
 } as const;
