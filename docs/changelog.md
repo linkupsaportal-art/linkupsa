@@ -5,7 +5,16 @@
 
 ---
 
-# 2026-05-31 18:30
+# 2026-05-31 19:40
+
+- 🎯 **Delivery Completeness Pass #2 — Razex Xelite**
+  - **Signed URLs for digital files**: New private `digital-files` bucket + [digital-files.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/storage/digital-files.ts). Pickup now mints a 5-min signed URL instead of exposing a permanent path (spec: signed URLs ≤5min).
+  - **Edit IMAP after creation**: `updateAccountEmailConfigAction` + an edit dialog on email-code account rows — swap host/user/password/sender-filter/regex without recreating (handles Abdullah's rotating mailboxes). Blank password keeps the current one.
+  - **Manual cleanup**: Archives page buttons now live — [archives/actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/archives/actions.ts) + [cleanup-buttons.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/archives/cleanup-buttons.tsx) run archive/purge on demand (manager-only, confirm dialogs).
+  - **Resend + Renew order actions**: `resendOrderNotificationAction` (re-fires email/WhatsApp via notifyOrderReady) and `renewOrderAction` (resets usage, reactivates, optional limit bump, journaled) wired into the order row menu.
+  - **Tests**: new `test-e2e-actions.mjs` → 19/19 (signed URLs, raise/usage/reassign/stop/archive/restore/renew, retention). crypto 13/13, search 14/14. Build exit 0.
+
+
 
 - 🔐 **Security + Delivery Completeness Pass — Razex Xelite**
   - **Real encryption (AES-256-GCM)**: New [crypto.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/security/crypto.ts) — app-layer authenticated encryption (v1 envelope) for account secrets. Replaced the Base64-only storage in [accounts.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/accounts.ts) + pickup actions; reads decrypt transparently and still handle legacy rows. Migrated + verified the existing 4 accounts (all decrypt back to originals). Settings/Archives copy now states the truth (AES-256-GCM, not pgsodium).

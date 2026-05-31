@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   MoreVertical, Gauge, RefreshCw, Repeat, Ban, Archive, ArchiveRestore,
-  Trash2, Loader2, X,
+  Trash2, Loader2, X, Send, RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/lib/db/orders";
@@ -19,6 +19,8 @@ import {
   stopOrderAction,
   setOrderArchivedAction,
   deleteOrderAction,
+  resendOrderNotificationAction,
+  renewOrderAction,
 } from "@/app/admin/orders/actions";
 
 export type AccountOption = {
@@ -55,6 +57,8 @@ export function OrderRowActions({
   const [confirmStop, setConfirmStop] = useState(false);
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmResend, setConfirmResend] = useState(false);
+  const [confirmRenew, setConfirmRenew] = useState(false);
   const [pending, startTransition] = useTransition();
 
   if (!canManage && !canDelete) return null;
@@ -93,6 +97,8 @@ export function OrderRowActions({
                   <MenuItem icon={Gauge} label="رفع حد الأكواد" onClick={() => { setOpen(false); setModal("limit"); }} />
                   <MenuItem icon={RefreshCw} label="تعديل الاستهلاك" onClick={() => { setOpen(false); setModal("usage"); }} />
                   <MenuItem icon={Repeat} label="تغيير الحساب" onClick={() => { setOpen(false); setModal("reassign"); }} />
+                  <MenuItem icon={Send} label="إعادة إرسال البيانات" onClick={() => { setOpen(false); setConfirmResend(true); }} />
+                  <MenuItem icon={RotateCw} label="تجديد الاشتراك" onClick={() => { setOpen(false); setConfirmRenew(true); }} />
                   <MenuItem icon={Ban} label="إيقاف الطلب" onClick={() => { setOpen(false); setConfirmStop(true); }} danger />
                   <MenuItem
                     icon={isArchived ? ArchiveRestore : Archive}
@@ -151,6 +157,24 @@ export function OrderRowActions({
         description="سيتم وضع الطلب كملغى ولن يتمكن العميل من الاستلام."
         confirmLabel="إيقاف الطلب"
         onConfirm={() => run(() => stopOrderAction({ orderId: order.id }))}
+      />
+
+      <ConfirmDialog
+        open={confirmResend}
+        onOpenChange={setConfirmResend}
+        title="إعادة إرسال البيانات؟"
+        description="سيُعاد إرسال رابط الاستلام للعميل عبر القنوات المفعّلة (إيميل/واتساب)."
+        confirmLabel="إعادة الإرسال"
+        onConfirm={() => run(() => resendOrderNotificationAction({ orderId: order.id }))}
+      />
+
+      <ConfirmDialog
+        open={confirmRenew}
+        onOpenChange={setConfirmRenew}
+        title="تجديد اشتراك الطلب؟"
+        description="سيُعاد تعيين عداد الاستهلاك إلى صفر وتفعيل الطلب من جديد، مع استعادته من الأرشيف إن كان مؤرشفاً."
+        confirmLabel="تجديد الاشتراك"
+        onConfirm={() => run(() => renewOrderAction({ orderId: order.id }))}
       />
 
       <ConfirmDialog

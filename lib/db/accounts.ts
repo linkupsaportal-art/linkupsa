@@ -109,6 +109,19 @@ export async function deleteAccount(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Re-encrypt + store an email-code account's IMAP config JSON. */
+export async function updateAccountEmailConfig(
+  id: string,
+  configJson: string,
+): Promise<void> {
+  const sb = createServiceClient();
+  const { error } = await sb
+    .from("accounts")
+    .update({ email_auth_config_encrypted: encryptSecretForBytea(configJson) })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 /**
  * Decrypt a stored secret for display in the admin panel (or for code
  * generation). Uses the app-layer AES-256-GCM module, which also transparently

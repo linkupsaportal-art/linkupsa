@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { decryptSecret } from "@/lib/security/crypto";
 import { verifyTurnstile } from "@/lib/security/turnstile";
+import { signDigitalFileUrl } from "@/lib/storage/digital-files";
 import type { PickupResult } from "./types";
 
 /**
@@ -111,6 +112,13 @@ export async function lookupOrderAction(
   const password = decryptSecret(accountData.password_encrypted as string | null) ?? undefined;
   const cardCode = decryptSecret(accountData.card_code_encrypted as string | null) ?? undefined;
 
+  // Digital files: mint a short-lived signed URL (≤5 min) instead of exposing
+  // a permanent path. Returns null if no file / signing fails.
+  const fileUrl =
+    productData.handler_type === "digital_file"
+      ? (await signDigitalFileUrl(accountData.file_storage_path as string | null)) ?? undefined
+      : undefined;
+
   return {
     orderId: order.id,
     orderNumber: String(order.salla_reference_id ?? order.salla_order_id),
@@ -122,7 +130,7 @@ export async function lookupOrderAction(
     password,
     instructions: accountData.instructions ?? undefined,
     cardCode,
-    fileUrl: accountData.file_storage_path ?? undefined,
+    fileUrl,
     otpRequestCount: order.otp_request_count,
     otpRequestLimit: order.otp_request_limit,
   };

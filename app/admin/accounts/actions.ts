@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAccount, deleteAccount, updateAccountStatus, getAccountSecret, type Account } from "@/lib/db/accounts";
+import { createAccount, deleteAccount, updateAccountStatus, getAccountSecret, updateAccountEmailConfig, type Account } from "@/lib/db/accounts";
 import type { HandlerType } from "@/lib/db/products-types";
 
 export async function createAccountAction(formData: FormData) {
@@ -98,6 +98,56 @@ export async function revealAccountSecretsAction(id: string) {
       steamSharedSecret,
       cardCode,
     };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/**
+ * Update an email-code account's IMAP settings after creation. Abdullah's
+ * mailboxes rotate, so the operator needs a quick way to swap host/user/
+ * password/sender-filter/code-regex without recreating the account. Stored
+ * encrypted as the email_auth_config JSON.
+ */
+export async function updateAccountEmailConfigAction(formData: FormData) {
+  const id = formData.get("account_id") as string;
+  const host = ((formData.get("imap_host") as string) || "").trim();
+  const user = ((formData.get("imap_user") as string) || "").trim();
+  const password = (formData.get("imap_password") as string) || "";
+  const port = Number(formData.get("imap_port") || 993);
+  const fromFilter = ((formData.get("imap_from") as string) || "").trim();
+  const codeRegex = ((formData.get("imap_code_regex") as string) || "").trim();
+
+  if (!id) return { error: "معرّف الحساب مطلوب" };
+  if (!host || !user) return { error: "الخادم والبريد مطلوبان" };
+
+  try {
+    // Keep the existing password if the field was left blank (so the operator
+    // can tweak the sender filter without re-typing the app password).
+    let finalPassword = password;
+    if (!finalPassword) {
+      const existing = await getAccountSecret(id, "email_auth_config_encrypted");
+      if (existing) {
+        try {
+          const prev = JSON.parse(existing) as { password?: string };
+          finalPassword = prev.password ?? "";
+        } catch { /* ignore */ }
+      }
+    }
+    if (!finalPassword) return { error: "كلمة مرور التطبيق مطلوبة" };
+
+    const config = JSON.stringify({
+      host,
+      port,
+      user,
+      password: finalPassword,
+      ...(fromFilter ? { fromFilter } : {}),
+      ...(codeRegex ? { codeRegex } : {}),
+    });
+
+    await updateAccountEmailConfig(id, config);
+    revalidatePath("/admin/accounts");
+    return { success: true };
   } catch (e) {
     return { error: (e as Error).message };
   }

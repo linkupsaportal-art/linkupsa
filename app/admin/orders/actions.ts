@@ -233,6 +233,106 @@ export async function deleteOrderAction(input: unknown): Promise<ActionResult> {
   return { ok: true, message: "تم حذف الطلب." };
 }
 
+/* ── Resend the delivery notification ───────────────────────────────────── */
+export async function resendOrderNotificationAction(input: unknown): Promise<ActionResult> {
+  const guard = await requireManageOrders();
+  if (!guard.ok) return guard;
+  const parsed = orderIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "معرّف غير صالح." };
+
+  const sb = createServiceClient();
+  const { data: order } = await sb
+    .from("orders")
+    .select(
+      "id, store_id, customer_name, customer_email, customer_mobile, salla_reference_id, salla_order_id, product_id, fulfillment_status, products(name, notification_channels)",
+    )
+    .eq("id", parsed.data.orderId)
+    .maybeSingle();
+  if (!order) return { ok: false, error: "الطلب غير موجود." };
+  if (order.fulfillment_status !== "fulfilled") {
+    return { ok: false, error: "لا يمكن إعادة الإرسال — الطلب غير مكتمل التسليم." };
+  }
+
+  const prod = Array.isArray(order.products) ? order.products[0] : order.products;
+  const channels = (prod?.notification_channels as { email?: boolean; whatsapp?: boolean } | null) ?? {
+    email: true,
+    whatsapp: false,
+  };
+
+  const origin =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://www.portaliosa.com");
+
+  const { notifyOrderReady } = await import("@/lib/notifications/dispatch");
+  await notifyOrderReady({
+    orderId: order.id as string,
+    storeId: (order.store_id as number) ?? 0,
+    customerName: (order.customer_name as string) ?? "",
+    customerEmail: (order.customer_email as string) ?? null,
+    customerMobile: (order.customer_mobile as string) ?? null,
+    orderNumber: String(order.salla_reference_id ?? order.salla_order_id ?? ""),
+    productName: prod?.name ?? "منتج رقمي",
+    productNotificationChannels: channels,
+    pickupUrl: `${origin}/pickup`,
+  });
+
+  revalidatePath("/admin/orders");
+  return { ok: true, message: "تمت إعادة إرسال بيانات الطلب للعميل." };
+}
+
+/* ── Renew subscription — resets usage + bumps the OTP limit window ──────── */
+const renewSchema = z.object({
+  orderId: z.string().uuid(),
+  addLimit: z.number().int().min(0).max(1000).optional(),
+});
+
+export async function renewOrderAction(input: unknown): Promise<ActionResult> {
+  const guard = await requireManageOrders();
+  if (!guard.ok) return guard;
+  const parsed = renewSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "بيانات غير صالحة." };
+  const { orderId, addLimit } = parsed.data;
+
+  const sb = createServiceClient();
+  const { data: order } = await sb
+    .from("orders")
+    .select("id, otp_request_limit, salla_reference_id")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!order) return { ok: false, error: "الطلب غير موجود." };
+
+  // Renewal = fresh cycle: reset the consumed count, optionally extend the
+  // limit, and re-activate fulfillment so the customer can pull codes again.
+  const newLimit = (order.otp_request_limit as number) + (addLimit ?? 0);
+  const { error } = await sb
+    .from("orders")
+    .update({
+      otp_request_count: 0,
+      otp_request_limit: newLimit,
+      fulfillment_status: "fulfilled",
+      archived_at: null,
+    })
+    .eq("id", orderId);
+  if (error) return { ok: false, error: "تعذّر تجديد الاشتراك." };
+
+  // Journal the limit bump (if any) for the audit panel.
+  if (addLimit && addLimit > 0) {
+    const user = await getCurrentUser();
+    await sb.from("code_limit_changes").insert({
+      order_id: orderId,
+      order_reference: order.salla_reference_id ?? null,
+      previous_limit: order.otp_request_limit as number,
+      new_limit: newLimit,
+      changed_by: user?.id ?? null,
+      changed_by_name: user ? await actorName(user.id) : null,
+      reason: "تجديد اشتراك",
+    });
+  }
+
+  revalidatePath("/admin/orders");
+  return { ok: true, message: "تم تجديد الاشتراك وإعادة تعيين الاستهلاك." };
+}
+
 /* ── shared guard ───────────────────────────────────────────────────────── */
 async function requireManageOrders(): Promise<ActionResult> {
   const user = await getCurrentUser();

@@ -1,6 +1,7 @@
 import { Archive, RotateCcw, Trash2, Database } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, getCurrentRole } from "@/lib/supabase/server";
+import { CleanupButtons } from "@/components/admin/archives/cleanup-buttons";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,8 @@ async function loadArchiveStats() {
 }
 
 export default async function ArchivesPage() {
-  const stats = await loadArchiveStats();
+  const [stats, role] = await Promise.all([loadArchiveStats(), getCurrentRole()]);
+  const canManage = role === "manager";
 
   return (
     <>
@@ -77,22 +79,13 @@ export default async function ArchivesPage() {
             تنظيف يدوي
           </h3>
           <p className="text-sm text-fg-muted mb-4">
-            النظام ينظّف البيانات القديمة تلقائياً كل ليلة عبر مهمة Vercel Cron حسب سياسة الاحتفاظ.
+            النظام ينظّف البيانات القديمة تلقائياً كل ليلة عبر مهمة Vercel Cron حسب سياسة الاحتفاظ. يمكنك أيضاً تشغيلها يدوياً الآن.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              disabled
-              className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-surface-2 text-sm text-fg-faint cursor-not-allowed"
-            >
-              أرشفة الطلبات الآن
-            </button>
-            <button
-              disabled
-              className="inline-flex items-center gap-2 h-9 px-3 rounded-xl bg-surface-2 text-sm text-fg-faint cursor-not-allowed"
-            >
-              تنظيف سجلات OTP الآن
-            </button>
-          </div>
+          {canManage ? (
+            <CleanupButtons />
+          ) : (
+            <p className="text-xs text-fg-faint">التشغيل اليدوي متاح للمدير فقط.</p>
+          )}
         </div>
       </div>
     </>

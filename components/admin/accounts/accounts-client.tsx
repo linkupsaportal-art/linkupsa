@@ -11,6 +11,7 @@ import {
   deleteAccountAction,
   updateAccountStatusAction,
   revealAccountSecretsAction,
+  updateAccountEmailConfigAction,
 } from "@/app/admin/accounts/actions";
 import {
   Dialog,
@@ -53,6 +54,7 @@ export function AccountsClient({
   const [viewAccountDetails, setViewAccountDetails] = useState<Account | null>(null);
   const [viewSecrets, setViewSecrets] = useState<{ password?: string | null; totpSecret?: string | null; steamSharedSecret?: string | null; cardCode?: string | null } | null>(null);
   const [loadingSecrets, setLoadingSecrets] = useState(false);
+  const [editEmailAccount, setEditEmailAccount] = useState<Account | null>(null);
 
   function refresh() { window.location.reload(); }
 
@@ -163,6 +165,7 @@ export function AccountsClient({
               onToggleReveal={() => handleViewDetails(account)}
               onDelete={() => setDeleteTargetId(account.id)}
               onStatusChange={(s) => handleStatusChange(account.id, s)}
+              onEditEmail={() => setEditEmailAccount(account)}
               isPending={isPending}
             />
           ))}
@@ -170,8 +173,7 @@ export function AccountsClient({
       )}
 
       {/* Modern UI Delete Dialog */}
-      <Dialog open={!!deleteTargetId} onOpenChange={(o) => !o && setDeleteTargetId(null)}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!deleteTargetId} onOpenChange={(o) => !o && setDeleteTargetId(null)}>        <DialogContent className="max-w-md">
           <DialogHeader dir="rtl">
             <div className="flex items-center gap-3 text-red-500 mb-2">
               <div className="size-10 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -308,6 +310,24 @@ export function AccountsClient({
           />
         </DialogContent>
       </Dialog>
+
+      {/* Edit IMAP settings for email-code accounts */}
+      <Dialog open={!!editEmailAccount} onOpenChange={(o) => !o && setEditEmailAccount(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>تعديل إعدادات البريد (IMAP)</DialogTitle>
+            <DialogDescription>
+              حدّث بيانات قراءة كود الإيميل لهذا الحساب. اترك كلمة مرور التطبيق فارغة للإبقاء على الحالية.
+            </DialogDescription>
+          </DialogHeader>
+          {editEmailAccount && (
+            <EditEmailForm
+              account={editEmailAccount}
+              onDone={() => { setEditEmailAccount(null); refresh(); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -318,12 +338,14 @@ function AccountRow({
   onToggleReveal,
   onDelete,
   onStatusChange,
+  onEditEmail,
   isPending,
 }: {
   account: Account;
   onToggleReveal: () => void;
   onDelete: () => void;
   onStatusChange: (s: Account["status"]) => void;
+  onEditEmail: () => void;
   isPending: boolean;
 }) {
   return (
@@ -368,6 +390,18 @@ function AccountRow({
           >
             <Eye className="size-4" />
           </button>
+
+          {account.handler_type === "email_code_account" && (
+            <button
+              type="button"
+              onClick={onEditEmail}
+              className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+              title="تعديل إعدادات البريد (IMAP)"
+              aria-label="تعديل إعدادات البريد"
+            >
+              <Mail className="size-4" />
+            </button>
+          )}
 
           {account.status === "active" ? (
             <button
@@ -683,5 +717,71 @@ function EmptyState({ onAdd, hasProducts }: { onAdd: () => void; hasProducts: bo
         </button>
       )}
     </div>
+  );
+}
+
+function EditEmailForm({
+  account,
+  onDone,
+}: {
+  account: Account;
+  onDone: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [msg, setMsg] = useState<string | null>(null);
+
+  function submit(formData: FormData) {
+    formData.set("account_id", account.id);
+    setMsg(null);
+    startTransition(async () => {
+      const res = await updateAccountEmailConfigAction(formData);
+      if (res && "error" in res && res.error) {
+        setMsg(res.error);
+      } else {
+        onDone();
+      }
+    });
+  }
+
+  return (
+    <form action={submit} className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="block">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">IMAP Host</span>
+          <input name="imap_host" defaultValue="imap.gmail.com" placeholder="imap.gmail.com" className="form-input font-mono" dir="ltr" required />
+        </label>
+        <label className="block">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">Port</span>
+          <input name="imap_port" type="number" defaultValue={993} className="form-input font-mono" dir="ltr" />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">البريد (User)</span>
+          <input name="imap_user" defaultValue={account.email ?? ""} placeholder="account@gmail.com" className="form-input font-mono" dir="ltr" required />
+        </label>
+        <label className="block sm:col-span-2">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">App Password (اتركه فارغاً للإبقاء على الحالي)</span>
+          <input name="imap_password" type="password" placeholder="••••••••••••••••" className="form-input font-mono" dir="ltr" />
+        </label>
+        <label className="block">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">فلتر المُرسِل (اختياري)</span>
+          <input name="imap_from" placeholder="netflix.com" className="form-input font-mono" dir="ltr" />
+        </label>
+        <label className="block">
+          <span className="block text-xs font-bold text-fg-muted mb-1.5">نمط الكود Regex (اختياري)</span>
+          <input name="imap_code_regex" placeholder="\\b(\\d{4,8})\\b" className="form-input font-mono" dir="ltr" />
+        </label>
+      </div>
+      {msg && <p className="text-xs text-danger font-semibold">{msg}</p>}
+      <DialogFooter>
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-accent text-accent-fg text-sm font-bold hover:bg-accent-hi disabled:opacity-50"
+        >
+          {pending && <RefreshCw className="size-4 animate-spin" />}
+          حفظ الإعدادات
+        </button>
+      </DialogFooter>
+    </form>
   );
 }
