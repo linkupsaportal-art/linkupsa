@@ -21,9 +21,22 @@ export type ActionResult<T = unknown> =
 
 const registerSchema = z.object({
   name: z.string().min(2, "الاسم قصير"),
-  storeName: z.string().min(2, "اسم المتجر قصير"),
   email: z.string().email("بريد إلكتروني غير صالح"),
   password: z.string().min(8, "كلمة المرور لا تقل عن 8 خانات"),
+  phone: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || /^\+[1-9]\d{6,17}$/.test(v), "رقم الجوال غير صالح")
+    .optional()
+    .default(""),
+  phoneCountry: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .length(2)
+    .or(z.literal(""))
+    .optional()
+    .default("sa"),
 });
 
 /**
@@ -37,7 +50,7 @@ export async function registerAction(input: unknown): Promise<ActionResult<{ ema
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة" };
   }
-  const { name, storeName, email, password } = parsed.data;
+  const { name, email, password, phone, phoneCountry } = parsed.data;
   const normalized = email.trim().toLowerCase();
 
   const admin = createServiceClient();
@@ -47,7 +60,11 @@ export async function registerAction(input: unknown): Promise<ActionResult<{ ema
     email: normalized,
     password,
     email_confirm: false,
-    user_metadata: { name, store_name: storeName },
+    user_metadata: {
+      name,
+      phone: phone || null,
+      phone_country: phoneCountry || null,
+    },
   });
 
   if (createErr) {

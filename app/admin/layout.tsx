@@ -6,6 +6,8 @@ import { SidebarModeProvider } from "@/components/admin/sidebar-mode-context";
 import { getCurrentUser, getCurrentRole } from "@/lib/supabase/server";
 import { listNotifications } from "@/lib/db/notifications-center";
 import { getWorkspacesForUser } from "@/lib/db/workspaces";
+import { hasPendingInvitation } from "@/lib/db/membership";
+import { OnboardingDashboard } from "@/components/admin/onboarding-dashboard";
 
 /**
  * Admin shell — full-bleed, edge-to-edge with an internal scroll container.
@@ -32,7 +34,28 @@ export default async function AdminLayout({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const role = (await getCurrentRole()) ?? "manager";
+  const role = await getCurrentRole();
+
+  // No store membership → no dashboard access yet. EXCEPTION: if the user has
+  // a pending invitation, let them in with a minimal shell so they can reach
+  // /admin/staff and accept it. Otherwise show the onboarding dashboard that
+  // walks them through linking their store (the action that grants access).
+  if (!role) {
+    const pending = await hasPendingInvitation(user.id);
+    if (!pending) {
+      return (
+        <OnboardingDashboard
+          email={user.email ?? undefined}
+          name={
+            (user.user_metadata?.name as string | undefined) ??
+            user.email?.split("@")[0]
+          }
+        />
+      );
+    }
+  }
+
+  const effectiveRole = role ?? "support";
   const { unread } = await listNotifications(user.id, 1);
   const workspaces = await getWorkspacesForUser(user.id);
 
@@ -64,7 +87,7 @@ export default async function AdminLayout({
                 userName={name}
                 userEmail={user.email ?? undefined}
                 avatarUrl={avatarUrl}
-                role={role}
+                role={effectiveRole}
               />
             </div>
             <div className="flex-1 min-w-0 min-h-0 flex flex-col">
@@ -72,7 +95,7 @@ export default async function AdminLayout({
                 userName={name}
                 userEmail={user.email ?? undefined}
                 avatarUrl={avatarUrl}
-                role={role}
+                role={effectiveRole}
                 initialUnread={unread}
                 workspaces={workspaces}
               />

@@ -5,7 +5,15 @@
 
 ---
 
-# 2026-05-30 14:35
+# 2026-05-30 15:10
+
+- 🚪 **Store-Connect Onboarding Dashboard (no dead-end notice) — Razex Xelite**
+  - **New `OnboardingDashboard`**: Added [onboarding-dashboard.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/onboarding-dashboard.tsx) — a dashboard-styled welcome surface (same lime/black/cream theme, gradient canvas, ghost stat tiles, 3-step guide) shown to a signed-in user who has not linked a store yet. It exposes ZERO live data and drives a single CTA: «ربط المتجر الآن».
+  - **Replaced bare notice**: [admin/layout.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/layout.tsx) now renders the onboarding dashboard instead of the old "لا يوجد متجر مرتبط" card for membership-less users. The layout still intercepts before any data page renders, so the owner's analytics/orders never leak.
+  - **Connect grants ownership**: [oauth/callback/route.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/api/salla/oauth/callback/route.ts) now upserts a `store_members` owner row for the signed-in user after the store tokens are saved (auto-owner only when the store has no owner yet; otherwise joins as manager — never hijacks). On success it bounces to `/admin?connected=1`, where the real dashboard renders.
+  - **Verified**: `npx next build` → exit 0, zero diagnostics.
+
+
 
 - 🎨 **Official Brand Logo Integration in Sidebar Header — Razex Xelite**
   - **Replaced Placeholder Plus Button**: Removed the generic, plain lime green background plus button in the upper right/left (depending on RTL direction) header of the admin sidebar in [sidebar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/sidebar.tsx).

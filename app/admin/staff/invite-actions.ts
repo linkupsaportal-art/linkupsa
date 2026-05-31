@@ -164,7 +164,7 @@ export async function respondInvitationAction(input: unknown): Promise<InviteRes
   // Load + verify ownership of the invitation.
   const { data: inv } = await admin
     .from("workspace_invitations")
-    .select("id, invitee_id, role, status, store_name, invited_by, invited_by_name")
+    .select("id, invitee_id, role, status, store_id, store_name, invited_by, invited_by_name")
     .eq("id", invitationId)
     .maybeSingle();
 
@@ -185,11 +185,18 @@ export async function respondInvitationAction(input: unknown): Promise<InviteRes
   if (updErr) return { ok: false, error: "تعذّر تحديث الدعوة." };
 
   if (accept) {
-    // Apply the granted role now (acceptance is what grants access).
-    await admin.from("profiles").update({ role: inv.role }).eq("id", user.id);
-    await admin.auth.admin
-      .updateUserById(user.id, { user_metadata: { role: inv.role } })
-      .catch(() => undefined);
+    // Acceptance grants access: create the store membership (this is the
+    // access-control source of truth) — NOT a global profile role.
+    await admin.from("store_members").upsert(
+      {
+        store_id: inv.store_id,
+        user_id: user.id,
+        role: inv.role,
+        is_owner: false,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "store_id,user_id" },
+    );
 
     // Tell the inviter their invite was accepted.
     if (inv.invited_by) {

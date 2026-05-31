@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, createClient } from "@/lib/supabase/server";
 import {
   computeTokenExpiry,
   exchangeCodeForToken,
@@ -129,6 +129,42 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // 3b. Grant the signed-in user an OWNER membership for this store. This is
+  //     what unlocks the real dashboard — access is gated on a store_members
+  //     row, not on having connected a store globally. We only auto-grant
+  //     ownership when the store has NO owner yet; if someone already owns it
+  //     the connector joins as a manager instead (never silently hijacks).
+  try {
+    const userClient = await createClient();
+    const {
+      data: { user },
+    } = await userClient.auth.getUser();
+
+    if (user) {
+      const { data: existingOwner } = await sb
+        .from("store_members")
+        .select("user_id")
+        .eq("store_id", merchantId)
+        .eq("is_owner", true)
+        .maybeSingle();
+
+      const isOwner = !existingOwner || existingOwner.user_id === user.id;
+
+      await sb.from("store_members").upsert(
+        {
+          store_id: merchantId,
+          user_id: user.id,
+          role: "manager",
+          is_owner: isOwner,
+        },
+        { onConflict: "store_id,user_id" },
+      );
+    }
+  } catch {
+    // Non-fatal: the store row is saved; if membership grant fails the user
+    // can retry "تحديث الحالة" which re-runs this path.
+  }
+
   // 4. Kick off a best-effort storefront info refresh — populates
   //    store_url / domain / logo so the dashboard shows linkup.sa instead
   //    of a bare merchant id. Failures are non-fatal.
@@ -137,9 +173,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     accessToken: tokens.access_token,
   });
 
-  // 5. Bounce to the integrations dashboard. Clear the OAuth cookies on
-  //    the way out — they're single-use.
-  const dest = new URL("/admin/integrations?installed=salla", origin);
+  // 5. Bounce to the dashboard. The user now has an owner membership so the
+  //    real shell + analytics render. Clear the single-use OAuth cookies.
+  const dest = new URL("/admin?connected=1", origin);
   const res = NextResponse.redirect(dest, 302);
   res.cookies.delete("salla_oauth_state");
   res.cookies.delete("salla_oauth_state_raw");

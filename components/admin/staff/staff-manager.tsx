@@ -23,6 +23,7 @@ export type StaffMember = {
   role: Role;
   has2fa: boolean;
   isSelf: boolean;
+  isOwner?: boolean;
 };
 
 export type PendingInvite = {
@@ -255,6 +256,9 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
+  // Owner and self rows are locked — no role change / removal.
+  const locked = member.isSelf || !!member.isOwner;
+
   function changeRole(role: Role) {
     setMenuOpen(false);
     if (role === member.role) return;
@@ -289,6 +293,9 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
               {member.isSelf && (
                 <span className="text-[10px] font-semibold text-fg-faint">(أنت)</span>
               )}
+              {member.isOwner && (
+                <span className="text-[10px] font-semibold text-accent">(المالك)</span>
+              )}
             </div>
             <div className="text-[11px] text-fg-muted flex items-center gap-1 font-num" dir="ltr">
               <Mail className="size-3" />
@@ -308,7 +315,7 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
             </span>
           )}
 
-          {canManage && !member.isSelf ? (
+          {canManage && !locked ? (
             <div className="relative">
               <button
                 type="button"
@@ -359,7 +366,7 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
             </span>
           )}
 
-          {canManage && !member.isSelf && (
+          {canManage && !locked && (
             <button
               type="button"
               onClick={() => setConfirmRemove(true)}
@@ -378,9 +385,9 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
         open={confirmRemove}
         onOpenChange={setConfirmRemove}
         tone="danger"
-        title={`إزالة ${member.name}؟`}
-        description="سيفقد هذا المستخدم الوصول إلى اللوحة نهائياً. لا يمكن التراجع عن هذا الإجراء."
-        confirmLabel="إزالة"
+        title={`إزالة ${member.name} من المتجر؟`}
+        description="سيفقد هذا المستخدم الوصول إلى لوحة هذا المتجر. حسابه يبقى سليماً ويمكن دعوته مجدداً لاحقاً."
+        confirmLabel="إزالة من المتجر"
         onConfirm={doRemove}
       />
     </div>

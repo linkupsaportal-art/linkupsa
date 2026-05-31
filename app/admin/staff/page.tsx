@@ -22,12 +22,10 @@ type SentInvite = {
 };
 
 /**
- * Loads the team. The staff list is NOT "every registered user" — it's:
- *   - the manager(s) (store owner)
- *   - users who ACCEPTED an invitation to this store
- *
- * This fixes the bug where a brand-new self-registered account appeared as
- * an employee: those users have no accepted invitation, so they're excluded.
+ * Loads the team from `store_members` (the access-control source of truth),
+ * scoped to the store the current user manages. This fixes the bug where a
+ * brand-new self-registered account appeared as an employee: only explicit
+ * members (owner + accepted invitees) of THIS store are listed.
  */
 async function loadTeam(currentUserId: string): Promise<{
   members: StaffMember[];
@@ -36,62 +34,68 @@ async function loadTeam(currentUserId: string): Promise<{
 }> {
   const sb = createServiceClient();
 
-  const [
-    { data: authList },
-    { data: profiles },
-    { data: accepted },
-    { data: mine },
-    { data: sent },
-  ] = await Promise.all([
-    sb.auth.admin.listUsers({ page: 1, perPage: 200 }),
-    sb.from("profiles").select("id, role, name, email"),
-    // Accepted memberships → who belongs to the team (besides managers).
-    sb.from("workspace_invitations").select("invitee_id").eq("status", "accepted"),
-    // Pending invitations addressed to ME (accept/decline banner).
-    sb
-      .from("workspace_invitations")
-      .select("id, store_name, role, invited_by_name, created_at")
-      .eq("invitee_id", currentUserId)
-      .eq("status", "pending"),
-    // Invitations I (manager) sent that are still pending.
-    sb
-      .from("workspace_invitations")
-      .select("id, invitee_email, role, status, created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
-  ]);
+  const { data: myMembership } = await sb
+    .from("store_members")
+    .select("store_id")
+    .eq("user_id", currentUserId)
+    .order("is_owner", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const storeId = myMembership?.store_id ?? null;
 
-  const roleById = new Map<string, Role>();
-  const nameById = new Map<string, string>();
-  for (const p of profiles ?? []) {
-    roleById.set(p.id as string, isRole(p.role) ? p.role : DEFAULT_ROLE);
-    if (p.name) nameById.set(p.id as string, p.name as string);
-  }
+  const [{ data: authList }, { data: rawMembers }, { data: mine }, { data: sent }] =
+    await Promise.all([
+      sb.auth.admin.listUsers({ page: 1, perPage: 200 }),
+      storeId
+        ? sb
+            .from("store_members")
+            .select("user_id, role, is_owner")
+            .eq("store_id", storeId)
+            .order("is_owner", { ascending: false })
+        : Promise.resolve({ data: [] as { user_id: string; role: string; is_owner: boolean }[] }),
+      sb
+        .from("workspace_invitations")
+        .select("id, store_name, role, invited_by_name, created_at")
+        .eq("invitee_id", currentUserId)
+        .eq("status", "pending"),
+      storeId
+        ? sb
+            .from("workspace_invitations")
+            .select("id, invitee_email, role, status, created_at")
+            .eq("store_id", storeId)
+            .eq("status", "pending")
+            .order("created_at", { ascending: false })
+        : Promise.resolve({
+            data: [] as {
+              id: string; invitee_email: string; role: string; status: string; created_at: string;
+            }[],
+          }),
+    ]);
 
-  // Team = managers + accepted invitees + the current user.
-  const teamIds = new Set<string>();
-  for (const p of profiles ?? []) {
-    if ((p.role as string) === "manager") teamIds.add(p.id as string);
-  }
-  for (const a of accepted ?? []) teamIds.add(a.invitee_id as string);
-  teamIds.add(currentUserId);
-
+  const memberRows = rawMembers ?? [];
+  const memberIds = memberRows.map((m) => m.user_id as string);
+  const { data: profiles } = memberIds.length
+    ? await sb.from("profiles").select("id, name").in("id", memberIds)
+    : { data: [] as { id: string; name: string | null }[] };
+  const nameById = new Map((profiles ?? []).map((p) => [p.id as string, (p.name as string) ?? ""]));
   const authById = new Map((authList?.users ?? []).map((u) => [u.id, u]));
-  const members: StaffMember[] = [...teamIds]
-    .map((id) => {
-      const u = authById.get(id);
+
+  const members: StaffMember[] = memberRows
+    .map((m) => {
+      const u = authById.get(m.user_id as string);
       if (!u) return null;
       return {
-        id,
+        id: m.user_id as string,
         email: u.email ?? "—",
         name:
-          nameById.get(id) ||
+          nameById.get(m.user_id as string) ||
           (u.user_metadata?.name as string | undefined) ||
           u.email?.split("@")[0] ||
           "—",
-        role: roleById.get(id) ?? DEFAULT_ROLE,
+        role: isRole(m.role) ? m.role : DEFAULT_ROLE,
         has2fa: Array.isArray(u.factors) && u.factors.length > 0,
-        isSelf: id === currentUserId,
+        isSelf: (m.user_id as string) === currentUserId,
+        isOwner: !!m.is_owner,
       } as StaffMember;
     })
     .filter((m): m is StaffMember => m !== null);

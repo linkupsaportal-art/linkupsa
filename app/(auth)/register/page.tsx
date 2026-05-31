@@ -3,20 +3,28 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Lock, User, Store, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import type { CountryIso2 } from "react-international-phone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { registerAction } from "@/app/(auth)/actions";
+
+const E164 = /^\+[1-9]\d{6,17}$/;
 
 const schema = z.object({
   name: z.string().min(2, "الاسم قصير"),
-  storeName: z.string().min(2, "اسم المتجر قصير"),
   email: z.string().email("بريد إلكتروني غير صالح"),
   password: z.string().min(8, "كلمة المرور لا تقل عن 8 خانات"),
+  phone: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || E164.test(v), "رقم الجوال غير صالح"),
+  phoneCountry: z.string().trim().toLowerCase().length(2).or(z.literal("")),
   agree: z.boolean().refine((v) => v === true, {
     message: "يجب الموافقة على الشروط للمتابعة",
   }),
@@ -31,11 +39,12 @@ export default function RegisterPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", storeName: "", email: "", password: "", agree: false },
+    defaultValues: { name: "", email: "", password: "", phone: "", phoneCountry: "sa", agree: false },
   });
 
   function onSubmit(values: FormValues) {
@@ -75,43 +84,23 @@ export default function RegisterPage() {
       )}
 
       <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="name" className="block mb-1.5">
-              الاسم الكامل
-            </Label>
-            <Input
-              id="name"
-              inputSize="lg"
-              autoComplete="name"
-              placeholder="عبدالله الراشد"
-              startAdornment={<User className="size-4" />}
-              invalid={!!errors.name}
-              disabled={pending}
-              {...register("name")}
-            />
-            {errors.name && (
-              <p className="mt-1.5 text-xs text-danger">{errors.name.message}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="storeName" className="block mb-1.5">
-              اسم المتجر
-            </Label>
-            <Input
-              id="storeName"
-              inputSize="lg"
-              autoComplete="organization"
-              placeholder="متجري على سلة"
-              startAdornment={<Store className="size-4" />}
-              invalid={!!errors.storeName}
-              disabled={pending}
-              {...register("storeName")}
-            />
-            {errors.storeName && (
-              <p className="mt-1.5 text-xs text-danger">{errors.storeName.message}</p>
-            )}
-          </div>
+        <div>
+          <Label htmlFor="name" className="block mb-1.5">
+            الاسم الكامل
+          </Label>
+          <Input
+            id="name"
+            inputSize="lg"
+            autoComplete="name"
+            placeholder="عبدالله الراشد"
+            startAdornment={<User className="size-4" />}
+            invalid={!!errors.name}
+            disabled={pending}
+            {...register("name")}
+          />
+          {errors.name && (
+            <p className="mt-1.5 text-xs text-danger">{errors.name.message}</p>
+          )}
         </div>
 
         <div>
@@ -131,6 +120,41 @@ export default function RegisterPage() {
           />
           {errors.email && (
             <p className="mt-1.5 text-xs text-danger">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div>
+          <Label htmlFor="phone" className="block mb-1.5">
+            رقم الجوال <span className="text-fg-faint font-normal">(اختياري)</span>
+          </Label>
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <Controller
+                name="phoneCountry"
+                control={control}
+                render={({ field: countryField }) => (
+                  <PhoneInput
+                    id="phone"
+                    value={field.value}
+                    onChange={(v, meta) => {
+                      field.onChange(v);
+                      countryField.onChange(meta.country);
+                    }}
+                    defaultCountry={
+                      ((countryField.value || "sa").toLowerCase() as CountryIso2)
+                    }
+                    disabled={pending}
+                    invalid={!!errors.phone}
+                    placeholder="5X XXX XXXX"
+                  />
+                )}
+              />
+            )}
+          />
+          {errors.phone && (
+            <p className="mt-1.5 text-xs text-danger">{errors.phone.message}</p>
           )}
         </div>
 

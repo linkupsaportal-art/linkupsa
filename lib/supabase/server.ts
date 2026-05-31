@@ -45,10 +45,10 @@ export const getCurrentUser = cache(async () => {
 });
 
 /**
- * Cached RBAC role lookup for the current user. Reads profiles.role via the
- * service client (bypasses RLS — trusted server context). Defaults to
- * "manager" if no row/role found so legacy users keep working, but returns
- * null when there's no authenticated user at all.
+ * Cached RBAC role lookup for the current user. Now reads the user's role
+ * from their ACTIVE store membership (store_members) — the access-control
+ * source of truth — instead of the global profiles.role. Returns null when
+ * the user has no membership (no dashboard access) OR no auth session.
  */
 export const getCurrentRole = cache(async (): Promise<import("@/lib/auth/rbac").Role | null> => {
   const user = await getCurrentUser();
@@ -56,16 +56,17 @@ export const getCurrentRole = cache(async (): Promise<import("@/lib/auth/rbac").
   try {
     const admin = createServiceClient();
     const { data } = await admin
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+      .from("store_members")
+      .select("role, is_owner")
+      .eq("user_id", user.id)
+      .order("is_owner", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    const role = data?.role;
-    const { isRole, DEFAULT_ROLE } = await import("@/lib/auth/rbac");
-    return isRole(role) ? role : DEFAULT_ROLE;
+    if (!data) return null; // no membership → no access
+    const { isRole } = await import("@/lib/auth/rbac");
+    return isRole(data.role) ? data.role : null;
   } catch {
-    const { DEFAULT_ROLE } = await import("@/lib/auth/rbac");
-    return DEFAULT_ROLE;
+    return null;
   }
 });
 

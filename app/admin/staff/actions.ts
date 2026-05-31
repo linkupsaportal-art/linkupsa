@@ -48,10 +48,11 @@ const setRoleSchema = z.object({
 });
 
 /**
- * Change a staff member's role. Guards:
+ * Change a staff member's role within the manager's store. Updates the
+ * store_members row (scoped to the store), not the global profile. Guards:
  *   - caller must be manager
- *   - you cannot change your own role (prevents a manager locking themselves out)
- *   - you cannot remove the last manager (store must always have one owner)
+ *   - cannot change own role
+ *   - cannot change the owner's role
  */
 export async function setStaffRoleAction(input: unknown): Promise<StaffActionResult> {
   const guard = await assertManager();
@@ -69,36 +70,37 @@ export async function setStaffRoleAction(input: unknown): Promise<StaffActionRes
 
   const admin = createServiceClient();
 
-  // Guard the last-manager invariant: if the target is currently a manager
-  // and we're demoting them, ensure at least one other manager remains.
-  if (role !== "manager") {
-    const { data: target } = await admin
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-    if (target?.role === "manager") {
-      const { count } = await admin
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("role", "manager");
-      if ((count ?? 0) <= 1) {
-        return { ok: false, error: "يجب أن يبقى مدير واحد على الأقل." };
-      }
-    }
+  // Scope to the manager's store.
+  const { data: myMembership } = await admin
+    .from("store_members")
+    .select("store_id")
+    .eq("user_id", guard.userId)
+    .order("is_owner", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const storeId = myMembership?.store_id;
+  if (!storeId) return { ok: false, error: "تعذّر تحديد المتجر." };
+
+  // Can't change the owner's role.
+  const { data: targetMembership } = await admin
+    .from("store_members")
+    .select("is_owner")
+    .eq("store_id", storeId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!targetMembership) {
+    return { ok: false, error: "هذا المستخدم ليس عضواً في المتجر." };
+  }
+  if (targetMembership.is_owner) {
+    return { ok: false, error: "لا يمكن تغيير دور مالك المتجر." };
   }
 
   const { error } = await admin
-    .from("profiles")
-    .update({ role })
-    .eq("id", userId);
-
+    .from("store_members")
+    .update({ role, updated_at: new Date().toISOString() })
+    .eq("store_id", storeId)
+    .eq("user_id", userId);
   if (error) return { ok: false, error: "تعذّر تحديث الدور. حاول مجدداً." };
-
-  // Keep auth metadata in sync so future signups/JWT inspections agree.
-  await admin.auth.admin
-    .updateUserById(userId, { user_metadata: { role } })
-    .catch(() => undefined);
 
   // Notify the affected user (bell + email mirror).
   const who = await inviterName(guard.userId);
@@ -115,7 +117,7 @@ export async function setStaffRoleAction(input: unknown): Promise<StaffActionRes
   });
   const { data: tgt } = await admin
     .from("profiles")
-    .select("email, name")
+    .select("email")
     .eq("id", userId)
     .maybeSingle();
   if (tgt?.email) {
@@ -135,8 +137,11 @@ export async function setStaffRoleAction(input: unknown): Promise<StaffActionRes
 const removeSchema = z.object({ userId: z.string().uuid() });
 
 /**
- * Remove a staff member entirely (deletes the auth user). Same invariants as
- * role change: can't remove yourself, can't remove the last manager.
+ * Remove a staff member from the store — revokes their MEMBERSHIP, it does
+ * NOT delete their account. The user keeps their login; they simply lose
+ * access to this store's dashboard. Invariants:
+ *   - can't remove yourself
+ *   - can't remove the store owner
  */
 export async function removeStaffAction(input: unknown): Promise<StaffActionResult> {
   const guard = await assertManager();
@@ -147,29 +152,59 @@ export async function removeStaffAction(input: unknown): Promise<StaffActionResu
   const { userId } = parsed.data;
 
   if (userId === guard.userId) {
-    return { ok: false, error: "لا يمكنك حذف حسابك الخاص." };
+    return { ok: false, error: "لا يمكنك إزالة نفسك." };
   }
 
   const admin = createServiceClient();
-  const { data: target } = await admin
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
 
-  if (target?.role === "manager") {
-    const { count } = await admin
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "manager");
-    if ((count ?? 0) <= 1) {
-      return { ok: false, error: "يجب أن يبقى مدير واحد على الأقل." };
-    }
+  // Find the store this manager owns/manages so we scope the removal.
+  const { data: myMembership } = await admin
+    .from("store_members")
+    .select("store_id")
+    .eq("user_id", guard.userId)
+    .order("is_owner", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const storeId = myMembership?.store_id;
+  if (!storeId) return { ok: false, error: "تعذّر تحديد المتجر." };
+
+  // Never remove the owner.
+  const { data: targetMembership } = await admin
+    .from("store_members")
+    .select("is_owner")
+    .eq("store_id", storeId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (targetMembership?.is_owner) {
+    return { ok: false, error: "لا يمكن إزالة مالك المتجر." };
   }
 
-  const { error } = await admin.auth.admin.deleteUser(userId);
-  if (error) return { ok: false, error: "تعذّر حذف المستخدم." };
+  // Drop the membership (revoke access) — account stays intact.
+  const { error: delErr } = await admin
+    .from("store_members")
+    .delete()
+    .eq("store_id", storeId)
+    .eq("user_id", userId);
+  if (delErr) return { ok: false, error: "تعذّر إزالة العضو." };
+
+  // Mark any accepted invitation as revoked so the switcher updates.
+  await admin
+    .from("workspace_invitations")
+    .update({ status: "revoked", responded_at: new Date().toISOString() })
+    .eq("store_id", storeId)
+    .eq("invitee_id", userId)
+    .eq("status", "accepted");
+
+  // Notify the removed user (bell). Best-effort.
+  const who = await inviterName(guard.userId);
+  await createNotification({
+    userId,
+    type: "system",
+    title: "تم إنهاء وصولك",
+    body: `قام ${who} بإزالة وصولك إلى لوحة التحكم.`,
+    link: "/admin/staff",
+  });
 
   revalidatePath("/admin/staff");
-  return { ok: true, message: "تم حذف المستخدم." };
+  return { ok: true, message: "تمت إزالة العضو من المتجر." };
 }

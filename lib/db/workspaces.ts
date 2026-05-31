@@ -34,70 +34,43 @@ export type Workspace = {
 export async function getWorkspacesForUser(userId: string): Promise<Workspace[]> {
   const sb = createServiceClient();
 
-  // The user's role + own store name.
-  const { data: profile } = await sb
-    .from("profiles")
-    .select("role, store_name")
-    .eq("id", userId)
-    .maybeSingle();
-  const ownRole = (profile?.role as Role) ?? "manager";
+  // Membership is the source of truth for which stores the user can access.
+  const { data: memberships } = await sb
+    .from("store_members")
+    .select("store_id, role, is_owner")
+    .eq("user_id", userId)
+    .order("is_owner", { ascending: false })
+    .order("created_at", { ascending: true });
 
   const list: Workspace[] = [];
-
-  // 1. If the user is a manager, their own store(s) are workspaces.
-  if (ownRole === "manager") {
-    const { data: stores } = await sb
-      .from("salla_stores")
-      .select("store_id, store_name, store_domain, store_logo_url")
-      .is("uninstalled_at", null)
-      .order("installed_at", { ascending: true });
-    for (const s of stores ?? []) {
-      list.push({
-        id: String(s.store_id),
-        name: (s.store_name as string | null) || "متجر سلة",
-        domain: (s.store_domain as string | null) ?? null,
-        role: "manager",
-        logoUrl: (s.store_logo_url as string | null) ?? null,
-        current: false,
-      });
-    }
-  }
-
-  // 2. Workspaces the user ACCEPTED an invitation for (this is what the
-  //    request means by "based on invitations he accepted").
-  const { data: accepted } = await sb
-    .from("workspace_invitations")
-    .select("store_id, store_name, role")
-    .eq("invitee_id", userId)
-    .eq("status", "accepted");
-
-  for (const inv of accepted ?? []) {
-    const sid = String(inv.store_id);
-    if (list.some((w) => w.id === sid)) continue; // already present (manager-owned)
-    // Enrich with store info if available.
+  for (const m of memberships ?? []) {
     const { data: store } = await sb
       .from("salla_stores")
       .select("store_name, store_domain, store_logo_url")
-      .eq("store_id", inv.store_id)
+      .eq("store_id", m.store_id)
       .maybeSingle();
     list.push({
-      id: sid,
-      name: (store?.store_name as string | null) || (inv.store_name as string | null) || "متجر سلة",
+      id: String(m.store_id),
+      name: (store?.store_name as string | null) || "متجر سلة",
       domain: (store?.store_domain as string | null) ?? null,
-      role: (inv.role as Role) ?? "support",
+      role: (m.role as Role) ?? "support",
       logoUrl: (store?.store_logo_url as string | null) ?? null,
       current: false,
     });
   }
 
-  // 3. Fallback: no workspace at all → show the user's own placeholder so the
-  //    switcher renders meaningfully right after signup.
+  // Fallback placeholder so the switcher renders for a user with no store.
   if (list.length === 0) {
+    const { data: profile } = await sb
+      .from("profiles")
+      .select("store_name")
+      .eq("id", userId)
+      .maybeSingle();
     list.push({
       id: "self",
       name: (profile?.store_name as string | null) || "متجري",
       domain: null,
-      role: ownRole,
+      role: "manager",
       logoUrl: null,
       current: true,
     });
