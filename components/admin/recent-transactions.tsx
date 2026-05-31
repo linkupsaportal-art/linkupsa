@@ -1,37 +1,37 @@
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, ArrowUpLeft } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ArrowUpLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Tx = {
+export type SecurityEvent = {
   id: string;
-  description: string;
+  label: string;
   date: string;
-  /** "+298.73" or "-298.73" — sign drives the visual */
-  amount: string;
-  type: "in" | "out";
+  detail: string;
+  kind: "success" | "blocked";
 };
 
-const TX: Tx[] = [
-  { id: "t1", description: "تجديد اشتراك المؤسسي (#95)", date: "2026-05-05", amount: "-298.73", type: "out" },
-  { id: "t2", description: "شحن محفظة عبر برق", date: "2026-05-05", amount: "+298.73", type: "in" },
-  { id: "t3", description: "تجديد اشتراك المؤسسي (#95)", date: "2026-04-07", amount: "-298.73", type: "out" },
-  { id: "t4", description: "شحن محفظة عبر برق", date: "2026-04-07", amount: "+298.73", type: "in" },
-  { id: "t5", description: "تجديد اشتراك المؤسسي (#95)", date: "2026-03-10", amount: "-298.73", type: "out" },
+const DEMO: SecurityEvent[] = [
+  { id: "t1", label: "#9660479 · محمد", date: "2026-05-30", detail: "تم تسليم رمز التحقق", kind: "success" },
+  { id: "t2", label: "#6043550 · محمد", date: "2026-05-30", detail: "تم تسليم رمز التحقق", kind: "success" },
+  { id: "t3", label: "#1989505 · زائر", date: "2026-05-29", detail: "رقم جوال غير مطابق", kind: "blocked" },
+  { id: "t4", label: "#4484853 · محمد", date: "2026-05-29", detail: "طلب متكرر سريع", kind: "blocked" },
+  { id: "t5", label: "#3383241 · عميل", date: "2026-05-29", detail: "تم تسليم رمز التحقق", kind: "success" },
 ];
 
-/** Recent wallet transactions feed. */
-export function RecentTransactions() {
+/** Recent verification / security activity feed (OTP requests + blocks). */
+export function RecentTransactions({ events }: { events?: SecurityEvent[] }) {
+  const rows = events && events.length ? events : DEMO;
   return (
     <article className="rounded-3xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft">
       <header className="flex items-center justify-between p-5 border-b border-[hsl(var(--hairline))]">
         <div>
           <h3 className="font-display text-base font-bold tracking-tight text-fg">
-            أحدث المعاملات
+            نشاط التحقق
           </h3>
-          <p className="text-xs text-fg-muted mt-0.5">حركة المحفظة</p>
+          <p className="text-xs text-fg-muted mt-0.5">آخر عمليات استلام الرموز</p>
         </div>
         <Link
-          href="/admin/orders"
+          href="/admin/otp-logs"
           className="inline-flex items-center gap-1 text-xs font-semibold text-fg hover:text-accent-fg hover:bg-accent rounded-full px-3 py-1.5 transition-colors"
         >
           عرض الكل
@@ -40,36 +40,27 @@ export function RecentTransactions() {
       </header>
 
       <ul className="divide-y divide-[hsl(var(--hairline))]">
-        {TX.map((tx) => (
-          <li key={tx.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2 transition-colors">
+        {rows.map((ev) => (
+          <li key={ev.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-2 transition-colors">
             <span
               className={cn(
                 "grid place-items-center size-9 rounded-xl shrink-0",
-                tx.type === "in"
+                ev.kind === "success"
                   ? "bg-success/10 text-success"
-                  : "bg-fg/5 text-fg-muted",
+                  : "bg-danger/10 text-danger",
               )}
             >
-              {tx.type === "in" ? (
-                <ArrowDownLeft className="size-4" />
+              {ev.kind === "success" ? (
+                <ShieldCheck className="size-4" />
               ) : (
-                <ArrowUpRight className="size-4" />
+                <ShieldAlert className="size-4" />
               )}
             </span>
             <span className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-fg truncate">{tx.description}</p>
+              <p className="text-sm font-semibold text-fg truncate">{ev.detail}</p>
               <p className="text-[11px] text-fg-faint font-num mt-0.5" dir="ltr">
-                {tx.date}
+                {ev.label} · {ev.date}
               </p>
-            </span>
-            <span
-              className={cn(
-                "shrink-0 font-num font-extrabold text-sm",
-                tx.type === "in" ? "text-success" : "text-fg",
-              )}
-              dir="ltr"
-            >
-              {tx.amount} <span className="text-[10px] text-fg-muted font-semibold">ر.س</span>
             </span>
           </li>
         ))}

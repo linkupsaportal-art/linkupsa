@@ -8,18 +8,18 @@ export type Order = {
   id: string;
   date: string;
   customer: string;
-  /** Pre-formatted amount string (the table is presentational only). */
+  /** Repurposed: product name (the table is presentational only). */
   amount: string;
   status: OrderStatus;
 };
 
 /** Demo data — used as a fallback when no orders prop is provided. */
 const DEFAULT_ORDERS: Order[] = [
-  { id: "262887900", date: "2026-05-28", customer: "Hamad Al Farhan", amount: "299.00", status: "completed" },
-  { id: "262883328", date: "2026-05-28", customer: "رهف", amount: "299.00", status: "completed" },
-  { id: "262828462", date: "2026-05-28", customer: "عبدالعزيز الغامدي", amount: "49.00", status: "completed" },
-  { id: "262768325", date: "2026-05-27", customer: "Mr. Qusai", amount: "399.00", status: "completed" },
-  { id: "262761822", date: "2026-05-27", customer: "Jawaher Alfaifi", amount: "40.00", status: "completed" },
+  { id: "262887900", date: "2026-05-28", customer: "Hamad Al Farhan", amount: "اشتراك شات جي بي تي", status: "completed" },
+  { id: "262883328", date: "2026-05-28", customer: "رهف", amount: "اشتراك شات جي بي تي", status: "completed" },
+  { id: "262828462", date: "2026-05-28", customer: "عبدالعزيز الغامدي", amount: "فستان تجريبي", status: "completed" },
+  { id: "262768325", date: "2026-05-27", customer: "Mr. Qusai", amount: "اشتراك شات جي بي تي", status: "completed" },
+  { id: "262761822", date: "2026-05-27", customer: "Jawaher Alfaifi", amount: "فستان تجريبي", status: "completed" },
 ];
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -71,7 +71,7 @@ export function RecentOrdersTable({
               <Th>الطلب #</Th>
               <Th>التاريخ</Th>
               <Th>العميل</Th>
-              <Th align="end">المبلغ</Th>
+              <Th align="end">المنتج</Th>
               <Th align="end">الحالة</Th>
             </tr>
           </thead>
@@ -102,10 +102,9 @@ export function RecentOrdersTable({
                     <span className="text-fg font-medium">{order.customer}</span>
                   </Td>
                   <Td align="end">
-                    <span className="font-num font-bold text-fg">
+                    <span className="text-fg font-medium">
                       {order.amount}
-                    </span>{" "}
-                    <span className="text-xs text-fg-muted">ر.س</span>
+                    </span>
                   </Td>
                   <Td align="end">
                     <span

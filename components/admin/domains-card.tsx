@@ -7,8 +7,9 @@ type Domain = {
 };
 
 const DOMAINS: Domain[] = [
-  { slug: "spektrum", status: "active" },
-  { slug: "other", status: "active" },
+  { slug: "linkup.portaliosa.com", status: "active" },
+  { slug: "linkupdash.portaliosa.com", status: "active" },
+  { slug: "linkuplimit.portaliosa.com", status: "active" },
 ];
 
 /** Registered subdomains — quick status overview + add button. */
@@ -40,7 +41,7 @@ export function DomainsCard() {
             className="flex items-center justify-between rounded-xl bg-surface-2 px-3 py-2.5"
           >
             <span className="font-mono text-xs font-semibold text-fg" dir="ltr">
-              {d.slug}.linkup.sa
+              {d.slug}
             </span>
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-success">
               <Check className="size-3" strokeWidth={3} />

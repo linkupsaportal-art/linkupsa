@@ -34,8 +34,29 @@ const DEMO: Day[] = [
   { date: "4 يول", ops: 0.40, data: 0.44 },
 ];
 
-export function DashboardChart() {
+/** One day of real order activity, as produced by getDashboardAnalytics(). */
+export type ChartDay = { label: string; date: string; total: number; fulfilled: number };
+
+/**
+ * Maps the analytics daily series onto the tube-chart shape. `ops` is the
+ * total-orders bar (black tube), `data` is the fulfilled portion (lime fill).
+ * Heights are normalised against the busiest day so the tallest bar fills the
+ * track. Days with zero orders render as the dashed "empty" tube.
+ */
+function toChartDays(days: ChartDay[]): Day[] {
+  const max = Math.max(1, ...days.map((d) => d.total));
+  return days.map((d) => {
+    if (d.total === 0) return { date: d.label, ops: 0, data: 0, empty: true };
+    const ops = d.total / max;
+    const data = d.total ? (d.fulfilled / d.total) * ops : 0;
+    const rate = d.total ? Math.round((d.fulfilled / d.total) * 100) : 0;
+    return { date: d.label, ops, data, badge: `${rate}%` };
+  });
+}
+
+export function DashboardChart({ days }: { days?: ChartDay[] }) {
   const trackH = 220; // px
+  const DATA: Day[] = days && days.length ? toChartDays(days) : DEMO;
 
   return (
     <section className="rounded-3xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft p-5 sm:p-6">
@@ -70,7 +91,7 @@ export function DashboardChart() {
 
         {/* Bars */}
         <ul className="relative grid grid-cols-8 gap-3 ps-10 pe-2" style={{ height: trackH }}>
-          {DEMO.map((day, i) => (
+          {DATA.map((day, i) => (
             <li key={i} className="relative flex items-end justify-center">
               {/* Tube — operations (black pill) */}
               <div
@@ -104,7 +125,7 @@ export function DashboardChart() {
 
         {/* X-axis labels */}
         <ul className="grid grid-cols-8 gap-3 ps-10 pe-2 mt-3 text-[11px] text-fg-muted tabular-nums">
-          {DEMO.map((day, i) => (
+          {DATA.map((day, i) => (
             <li key={i} className="text-center font-medium">{day.date}</li>
           ))}
         </ul>

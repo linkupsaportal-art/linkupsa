@@ -3,27 +3,27 @@
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Point = { month: string; orders: number; revenue: number };
+type Point = { month: string; orders: number };
 
-const TREND: Point[] = [
-  { month: "يناير", orders: 1240, revenue: 42150 },
-  { month: "فبراير", orders: 1480, revenue: 51200 },
-  { month: "مارس", orders: 1620, revenue: 58730 },
-  { month: "أبريل", orders: 1390, revenue: 49400 },
-  { month: "مايو", orders: 1980, revenue: 71200 },
-  { month: "يونيو", orders: 2110, revenue: 78900 },
-  { month: "يوليو", orders: 1860, revenue: 65300 },
-  { month: "أغسطس", orders: 2240, revenue: 81000 },
-  { month: "سبتمبر", orders: 2390, revenue: 86200 },
-  { month: "أكتوبر", orders: 2680, revenue: 96400 },
-  { month: "نوفمبر", orders: 2950, revenue: 105800 },
-  { month: "ديسمبر", orders: 3210, revenue: 118200 },
+const DEMO_TREND: Point[] = [
+  { month: "يناير", orders: 1240 },
+  { month: "فبراير", orders: 1480 },
+  { month: "مارس", orders: 1620 },
+  { month: "أبريل", orders: 1390 },
+  { month: "مايو", orders: 1980 },
+  { month: "يونيو", orders: 2110 },
+  { month: "يوليو", orders: 1860 },
+  { month: "أغسطس", orders: 2240 },
+  { month: "سبتمبر", orders: 2390 },
+  { month: "أكتوبر", orders: 2680 },
+  { month: "نوفمبر", orders: 2950 },
+  { month: "ديسمبر", orders: 3210 },
 ];
 
-const MAX = Math.max(...TREND.map((p) => p.orders));
-
 /** Monthly orders trend — black bars with lime hover, top-of-bar pill labels. */
-export function MonthlyTrend() {
+export function MonthlyTrend({ points }: { points?: Point[] }) {
+  const TREND = points && points.length ? points : DEMO_TREND;
+  const MAX = Math.max(1, ...TREND.map((p) => p.orders));
   return (
     <article className="rounded-3xl bg-surface border border-[hsl(var(--hairline-strong))] card-soft p-5 sm:p-6">
       <header className="flex flex-wrap items-center justify-between gap-3 mb-6">

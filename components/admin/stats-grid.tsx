@@ -1,6 +1,6 @@
 import {
-  ShoppingBag, Users, Megaphone, Wallet, TrendingUp,
-  CheckCircle2, XCircle, Receipt, type LucideIcon,
+  ShoppingBag, Users, Boxes, ShieldCheck, TrendingUp,
+  CheckCircle2, Clock, Webhook, type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -81,67 +81,100 @@ export function MetricTile({
 }
 
 /**
- * The full overview KPI grid. Eight tiles arranged in a responsive grid:
- *   - row 1 (4 wide): الطلبات · العملاء · الحملات · المحفظة
- *   - row 2 (4 wide): الإيرادات · متوسط الطلب · مكتملة · ملغية
+ * The full overview KPI grid. Eight tiles arranged in a responsive grid,
+ * driven by live data from getDashboardAnalytics(). Falls back to zeros so
+ * the dashboard still renders if the query is unavailable.
+ *
+ *   - row 1: إجمالي الطلبات · العملاء · المنتجات النشطة · الحسابات المتاحة
+ *   - row 2: نسبة التسليم · مكتملة · بانتظار التسليم · أحداث الربط
  */
-export function OverviewStatsGrid() {
+export function OverviewStatsGrid({ data }: { data?: OverviewStats }) {
+  const d = data ?? EMPTY_STATS;
   return (
     <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
       <MetricTile
         icon={ShoppingBag}
         label="إجمالي الطلبات"
-        value="17,575"
-        hint="آخر 30 يوم"
+        value={d.totalOrders.toLocaleString("en-US")}
+        hint="كل الطلبات المستلمة"
       />
       <MetricTile
         icon={Users}
-        label="إجمالي العملاء"
-        value="9,087"
+        label="العملاء"
+        value={d.uniqueCustomers.toLocaleString("en-US")}
         hint="عميل فريد"
       />
       <MetricTile
-        icon={Megaphone}
-        label="الحملات النشطة"
-        value="0"
-        hint="جاهز للإطلاق"
+        icon={Boxes}
+        label="المنتجات النشطة"
+        value={`${d.productsActive}`}
+        unit={`/ ${d.productsTotal}`}
+        hint="منتج معروض"
       />
       <MetricTile
         variant="accent"
-        icon={Wallet}
-        label="رصيد المحفظة"
-        value="2.81"
-        unit="ر.س"
-        hint="متاح للسحب"
+        icon={ShieldCheck}
+        label="الحسابات المتاحة"
+        value={d.slotsAvailable.toLocaleString("en-US")}
+        unit="فتحة"
+        hint={`${d.accountsAvailable} حساب جاهز`}
       />
 
       <MetricTile
         variant="dark"
         icon={TrendingUp}
-        label="إجمالي الإيرادات"
-        value="617,952.91"
-        unit="ر.س"
-        hint="منذ بداية النشاط"
-      />
-      <MetricTile
-        icon={Receipt}
-        label="متوسط قيمة الطلب"
-        value="35.16"
-        unit="ر.س"
-        hint="آخر 30 يوم"
+        label="نسبة التسليم الناجح"
+        value={`${d.fulfillRate}`}
+        unit="%"
+        hint="من إجمالي الطلبات"
       />
       <MetricTile
         icon={CheckCircle2}
         label="الطلبات المكتملة"
-        value="6,874"
-        hint="بنجاح"
+        value={d.fulfilled.toLocaleString("en-US")}
+        hint="سُلّمت بنجاح"
       />
       <MetricTile
-        icon={XCircle}
-        label="الطلبات الملغية"
-        value="0"
-        hint="هذا الشهر"
+        icon={Clock}
+        label="بانتظار التسليم"
+        value={d.pending.toLocaleString("en-US")}
+        hint="تحتاج متابعة"
+      />
+      <MetricTile
+        icon={Webhook}
+        label="أحداث الربط"
+        value={d.webhooksTotal.toLocaleString("en-US")}
+        hint={d.webhooksFailed > 0 ? `${d.webhooksFailed} فشل` : "كلها سليمة"}
       />
     </section>
   );
 }
+
+/** Subset of DashboardAnalytics consumed by the KPI grid. */
+export type OverviewStats = {
+  totalOrders: number;
+  uniqueCustomers: number;
+  productsActive: number;
+  productsTotal: number;
+  slotsAvailable: number;
+  accountsAvailable: number;
+  fulfillRate: number;
+  fulfilled: number;
+  pending: number;
+  webhooksTotal: number;
+  webhooksFailed: number;
+};
+
+const EMPTY_STATS: OverviewStats = {
+  totalOrders: 0,
+  uniqueCustomers: 0,
+  productsActive: 0,
+  productsTotal: 0,
+  slotsAvailable: 0,
+  accountsAvailable: 0,
+  fulfillRate: 0,
+  fulfilled: 0,
+  pending: 0,
+  webhooksTotal: 0,
+  webhooksFailed: 0,
+};

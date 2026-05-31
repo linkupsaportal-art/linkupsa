@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, Database, Sparkles, Wallet } from "lucide-react";
+import { ShoppingBag, ShieldCheck, Sparkles, PackageCheck } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { DashboardTabs } from "@/components/admin/dashboard-tabs";
 import { StatCard } from "@/components/admin/stat-card";
@@ -7,11 +7,12 @@ import { DashboardChart } from "@/components/admin/dashboard-chart";
 import { QuickLinks } from "@/components/admin/quick-links";
 import { OverviewStatsGrid } from "@/components/admin/stats-grid";
 import { MonthlyTrend } from "@/components/admin/monthly-trend";
-import { StatusDistribution } from "@/components/admin/status-distribution";
-import { RecentOrdersTable } from "@/components/admin/recent-orders-table";
+import { StatusDistribution, type Slice } from "@/components/admin/status-distribution";
+import { RecentOrdersTable, type Order } from "@/components/admin/recent-orders-table";
 import { RecentTransactions } from "@/components/admin/recent-transactions";
 import { DomainsCard } from "@/components/admin/domains-card";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { getDashboardAnalytics } from "@/lib/db/analytics";
 
 /**
  * Dashboard — original lime/black/cream design (chart · stat cards · quick links)
@@ -28,30 +29,51 @@ import { getCurrentUser } from "@/lib/supabase/server";
  *      - full-width: KPI grid (8 tiles)
  */
 export default async function AdminDashboardPage() {
-  const user = await getCurrentUser();
+  const [user, analytics] = await Promise.all([
+    getCurrentUser(),
+    getDashboardAnalytics(),
+  ]);
   const name =
     (user?.user_metadata?.name as string | undefined) ??
     (user?.user_metadata?.full_name as string | undefined) ??
     user?.email?.split("@")[0] ??
     "عبدالله";
 
+  // Order-status donut driven by live fulfillment counts.
+  const statusSlices: Slice[] = [
+    { label: "مكتمل", value: analytics.fulfilled, cls: "stroke-fg", dotCls: "bg-fg" },
+    { label: "بانتظار التسليم", value: analytics.pending, cls: "stroke-warn", dotCls: "bg-warn" },
+    { label: "فشل", value: analytics.failed, cls: "stroke-danger", dotCls: "bg-danger" },
+    { label: "ملغى", value: analytics.cancelled, cls: "stroke-accent", dotCls: "bg-accent" },
+  ];
+
+  // Recent orders table rows.
+  const recentOrders: Order[] = analytics.recentOrders.map((o) => ({
+    id: o.reference,
+    date: o.date,
+    customer: o.customer,
+    amount: o.product, // table renders this slot as plain text; show product name
+    status: o.status,
+  }));
+
   return (
     <>
       <PageHeader
         eyebrow="نظرة عامة"
         title={`مرحباً، ${name} 👋`}
-        description="ملخّص أداء متجرك خلال آخر 30 يوم. الأرقام تتحدث لحظياً مع كل طلب جديد."
+        description="ملخّص أداء متجرك لحظياً — الطلبات، التسليم، المخزون والتحقق."
         actions={
           <div className="inline-flex items-center gap-3 rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] px-4 py-3 card-soft">
             <div className="grid place-items-center size-9 rounded-xl pill-accent">
-              <Wallet className="size-4" strokeWidth={2} />
+              <PackageCheck className="size-4" strokeWidth={2} />
             </div>
             <div className="text-start">
               <p className="text-[10px] uppercase tracking-widest font-bold text-fg-faint">
-                رصيد المحفظة
+                نسبة التسليم
               </p>
               <p className="text-base font-extrabold tabular-nums text-fg">
-                2.81 <span className="text-xs text-fg-muted">ر.س</span>
+                {analytics.fulfillRate}
+                <span className="text-xs text-fg-muted"> %</span>
               </p>
             </div>
           </div>
@@ -65,26 +87,26 @@ export default async function AdminDashboardPage() {
 
           <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
             <StatCard
-              label="الطلبات"
-              value={780}
-              capacity="1 000"
-              percent={82}
+              label="الطلبات المُسلّمة"
+              value={analytics.fulfilled}
+              capacity={String(analytics.totalOrders)}
+              percent={analytics.fulfillRate}
               icon={ShoppingBag}
-              filledBlocks={6}
+              filledBlocks={Math.round((analytics.fulfillRate / 100) * 8)}
             />
             <StatCard
               variant="accent"
-              label="نقل البيانات"
-              value={163}
-              capacity="512 ميغا"
-              percent={68}
-              icon={Database}
-              filledBlocks={5}
+              label="الحسابات المتاحة"
+              value={analytics.slotsAvailable}
+              capacity={`${analytics.accountsAvailable} حساب`}
+              percent={analytics.otpSuccessRate}
+              icon={ShieldCheck}
+              filledBlocks={Math.min(8, Math.max(1, analytics.accountsAvailable))}
             />
             <UpgradeCard />
           </section>
 
-          <DashboardChart />
+          <DashboardChart days={analytics.daily} />
         </div>
 
         {/* Right rail — original quick-links preserved */}
@@ -94,26 +116,26 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* ────────────────────────────────────────────────────────────────
-          NEW analytics blocks — appended below, do not replace the above
+          Analytics blocks — same layout, now wired to live data
           ──────────────────────────────────────────────────────────────── */}
       <div className="mt-6 lg:mt-8 space-y-4 lg:space-y-5">
-        <OverviewStatsGrid />
+        <OverviewStatsGrid data={analytics} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
           <div className="lg:col-span-8">
-            <MonthlyTrend />
+            <MonthlyTrend points={analytics.monthly} />
           </div>
           <div className="lg:col-span-4">
-            <StatusDistribution />
+            <StatusDistribution slices={statusSlices} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5">
           <div className="lg:col-span-8">
-            <RecentOrdersTable />
+            <RecentOrdersTable orders={recentOrders} />
           </div>
           <div className="lg:col-span-4 grid gap-4 lg:gap-5">
-            <RecentTransactions />
+            <RecentTransactions events={analytics.recentSecurity} />
             <DomainsCard />
           </div>
         </div>
