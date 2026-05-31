@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
+import { canAccessRoute, homeRouteForRole, isRole, DEFAULT_ROLE } from "@/lib/auth/rbac";
 
 /**
  * Refreshes the Supabase auth session cookie on every request and gates
@@ -84,6 +85,34 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
     return NextResponse.redirect(url);
+  }
+
+  // ── RBAC route gating ───────────────────────────────────────────────
+  // Authenticated + MFA-clear users are checked against their role's route
+  // map. A staff member who can't open a route is redirected to their role's
+  // home (code_limit → /admin/otp-logs, others → /admin). This is the
+  // server-side guard; the UI also hides links, but this is what actually
+  // enforces it. We fetch the role from profiles via the anon client (the
+  // user's own row is readable under RLS by owner).
+  if (isProtected && user) {
+    let role = DEFAULT_ROLE;
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (isRole(data?.role)) role = data.role;
+    } catch {
+      // On lookup failure, fail closed for non-managers by keeping default.
+    }
+
+    if (!canAccessRoute(role, pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = homeRouteForRole(role);
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

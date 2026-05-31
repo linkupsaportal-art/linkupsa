@@ -9,6 +9,7 @@ import { ProfileMenu } from "@/components/admin/profile-menu";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
+import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
 
 /**
  * Admin topbar — sits inside the workspace card. White surface, hairline
@@ -23,10 +24,12 @@ export function AdminTopbar({
   userEmail,
   userName,
   avatarUrl,
+  role = DEFAULT_ROLE,
 }: {
   userEmail?: string;
   userName?: string;
   avatarUrl?: string | null;
+  role?: Role;
 }) {
   const [drawer, setDrawer] = useState(false);
 
@@ -110,7 +113,7 @@ export function AdminTopbar({
             )}
           >
             <Dialog.Title className="sr-only">قائمة التنقل</Dialog.Title>
-            <AdminSidebar userName={userName} userEmail={userEmail} isMobile />
+            <AdminSidebar userName={userName} userEmail={userEmail} role={role} isMobile />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>

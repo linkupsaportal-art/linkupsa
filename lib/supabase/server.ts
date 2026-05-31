@@ -45,6 +45,31 @@ export const getCurrentUser = cache(async () => {
 });
 
 /**
+ * Cached RBAC role lookup for the current user. Reads profiles.role via the
+ * service client (bypasses RLS — trusted server context). Defaults to
+ * "manager" if no row/role found so legacy users keep working, but returns
+ * null when there's no authenticated user at all.
+ */
+export const getCurrentRole = cache(async (): Promise<import("@/lib/auth/rbac").Role | null> => {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  try {
+    const admin = createServiceClient();
+    const { data } = await admin
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const role = data?.role;
+    const { isRole, DEFAULT_ROLE } = await import("@/lib/auth/rbac");
+    return isRole(role) ? role : DEFAULT_ROLE;
+  } catch {
+    const { DEFAULT_ROLE } = await import("@/lib/auth/rbac");
+    return DEFAULT_ROLE;
+  }
+});
+
+/**
  * Privileged client used ONLY in trusted server contexts (server actions,
  * route handlers) to bypass RLS for OTP verification, profile elevation,
  * etc. Never expose this client to the browser.

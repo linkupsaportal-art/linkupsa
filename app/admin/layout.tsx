@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { SidebarModeProvider } from "@/components/admin/sidebar-mode-context";
-import { getCurrentUser } from "@/lib/supabase/server";
+import { getCurrentUser, getCurrentRole } from "@/lib/supabase/server";
 
 /**
  * Admin shell — full-bleed, edge-to-edge with an internal scroll container.
@@ -29,6 +29,8 @@ export default async function AdminLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+
+  const role = (await getCurrentRole()) ?? "manager";
 
   const name =
     (user.user_metadata?.name as string | undefined) ??
@@ -58,6 +60,7 @@ export default async function AdminLayout({
                 userName={name}
                 userEmail={user.email ?? undefined}
                 avatarUrl={avatarUrl}
+                role={role}
               />
             </div>
             <div className="flex-1 min-w-0 min-h-0 flex flex-col">
@@ -65,6 +68,7 @@ export default async function AdminLayout({
                 userName={name}
                 userEmail={user.email ?? undefined}
                 avatarUrl={avatarUrl}
+                role={role}
               />
               <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 sm:px-5 lg:px-7 pb-8">
                 <div className="mx-auto w-full max-w-[1600px]">{children}</div>

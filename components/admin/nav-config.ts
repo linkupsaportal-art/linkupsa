@@ -13,6 +13,7 @@ import {
   Send,
   type LucideIcon,
 } from "lucide-react";
+import { canAccessRoute, type Role } from "@/lib/auth/rbac";
 
 export type NavItem = {
   href: string;
@@ -85,3 +86,17 @@ export const GLOBAL_NAV: NavGroup[] = [
     items: [{ href: "/admin/profile", label: "الملف الشخصي", icon: UserCircle2 }],
   },
 ];
+
+/**
+ * Filters nav groups down to the items the given role may open. Uses the
+ * same `canAccessRoute` map the middleware enforces, so the sidebar never
+ * shows a link the user would just get bounced from. Empty groups drop out.
+ */
+export function navForRole(groups: NavGroup[], role: Role): NavGroup[] {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => canAccessRoute(role, item.href)),
+    }))
+    .filter((group) => group.items.length > 0);
+}

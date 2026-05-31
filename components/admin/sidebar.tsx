@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { LogoGlyph } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
-import { STORE_NAV, GLOBAL_NAV, type NavItem } from "@/components/admin/nav-config";
+import { STORE_NAV, GLOBAL_NAV, navForRole, type NavItem } from "@/components/admin/nav-config";
+import { type Role, DEFAULT_ROLE } from "@/lib/auth/rbac";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -41,14 +42,20 @@ export function AdminSidebar({
   userEmail,
   avatarUrl,
   isMobile = false,
+  role = DEFAULT_ROLE,
 }: {
   userName?: string;
   userEmail?: string;
   avatarUrl?: string | null;
   isMobile?: boolean;
+  role?: Role;
 }) {
   const { mode } = useSidebarMode();
   const [hovered, setHovered] = useState(false);
+
+  // Role-filtered nav — only shows links the role can actually open.
+  const storeNav = navForRole(STORE_NAV, role);
+  const globalNav = navForRole(GLOBAL_NAV, role);
 
   // Only "hover" mode actually expands on hover; the others stay fixed.
   // Mobile drawer is always expanded.
@@ -129,9 +136,9 @@ export function AdminSidebar({
 
         {/* Scrollable nav */}
         <nav className="flex-1 overflow-y-auto px-2 py-3 no-scrollbar">
-          <NavSection groups={STORE_NAV} expanded={expanded} />
+          <NavSection groups={storeNav} expanded={expanded} />
           <div className="my-3 mx-2 h-px bg-white/10" />
-          <NavSection groups={GLOBAL_NAV} expanded={expanded} />
+          <NavSection groups={globalNav} expanded={expanded} />
         </nav>
 
         {/* Footer — profile chip */}
@@ -370,15 +377,17 @@ function OptionalTooltip({
 /* ------------------------------------------------------------------ */
 /*  Mobile drawer list — used only by the topbar's <Sheet>            */
 /* ------------------------------------------------------------------ */
-export function NavList({ className }: { className?: string }) {
+export function NavList({ className, role = DEFAULT_ROLE }: { className?: string; role?: Role }) {
   const pathname = usePathname();
+  const storeNav = navForRole(STORE_NAV, role);
+  const globalNav = navForRole(GLOBAL_NAV, role);
   return (
     <nav className={cn("px-3 py-4 space-y-6", className)}>
-      {STORE_NAV.map((group) => (
+      {storeNav.map((group) => (
         <DrawerGroup key={group.label} label={group.label} items={group.items} pathname={pathname} />
       ))}
       <div className="border-t border-[hsl(var(--hairline))] pt-4">
-        {GLOBAL_NAV.map((group) => (
+        {globalNav.map((group) => (
           <DrawerGroup key={group.label} label={group.label} items={group.items} pathname={pathname} />
         ))}
       </div>
