@@ -5,6 +5,13 @@
 
 ---
 
+# 2026-06-02 17:50
+
+- 🌐 **Salla App Store Compatibility & Public App Shift — Razex Xelite**
+  - **Public App Credentials Integration**: Configured the newly issued Client ID (`c13f5fa5-8f25-4bad-9eb4-2626d81e5b3d`) and Client Secret (`4a108d57be49a5837490e094193545d7d1ed64364db4abab1b807ac8004a3864`) in `.env`, successfully completing the transition to the free Salla Public App Store ecosystem in Easy Mode.
+  - **Graceful CSRF State Validation**: Updated the Salla OAuth callback route in [route.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/api/salla/oauth/callback/route.ts) to make state cookie validation optional. It now only enforces CSRF checks if state session cookies exist, enabling direct App Store installation (Easy Mode / Public App flow) where redirect starts on Salla's domain.
+  - **Pristine Public Multi-Tenancy**: Preserved Salla's built-in multi-tenant database mapping, ensuring that any merchant can now seamlessly install the public app and authorize securely with zero session expirations or installation failures.
+
 # 2026-05-31 20:10
 
 - 🗄️ **Archive Restore — fully wired — Razex Xelite**

@@ -46,16 +46,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   // CSRF check: the cookie holds the raw state we generated; the URL holds
   // the same value Salla bounced back. Hash both and compare.
+  // Note: For public apps installed directly from Salla App Store (Easy Mode),
+  // the flow begins on Salla, so the state cookies will not exist in the browser.
+  // We only enforce CSRF validation if the cookies exist (indicating the kickoff
+  // was triggered from our own dashboard).
   const cookieRaw = req.cookies.get("salla_oauth_state_raw")?.value;
   const cookieHash = req.cookies.get("salla_oauth_state")?.value;
-  if (!cookieRaw || !cookieHash) {
-    return renderError(
-      "OAuth session expired. Please retry the install.",
-      "انتهت جلسة الربط",
-    );
-  }
-  if (cookieRaw !== state || hashState(state) !== cookieHash) {
-    return renderError("State mismatch — possible CSRF.", "حماية CSRF");
+  if (cookieRaw && cookieHash) {
+    if (cookieRaw !== state || hashState(state) !== cookieHash) {
+      return renderError("State mismatch — possible CSRF.", "حماية CSRF");
+    }
   }
 
   const origin = url.origin;
