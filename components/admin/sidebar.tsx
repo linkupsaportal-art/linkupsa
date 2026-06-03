@@ -122,14 +122,14 @@ export function AdminSidebar({
           <Link
             href="/admin"
             className="flex items-center justify-center size-10 rounded-xl hover:scale-[1.05] active:scale-95 transition-transform shrink-0"
-            aria-label="LinkUp"
+            aria-label="Portalio SA"
           >
             <LogoGlyph className="size-9" />
           </Link>
           {expanded && (
             <>
               <span className="font-display text-base font-extrabold text-white tracking-tight whitespace-nowrap flex-1 truncate">
-                LinkUp
+                Portalio SA
               </span>
               {!isMobile && <ModeToggle expanded={expanded} />}
             </>

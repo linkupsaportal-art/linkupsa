@@ -59,7 +59,7 @@ export function LinkStoreGateProvider({ children }: { children: React.ReactNode 
             </div>
             <DialogTitle>اربط متجرك أولاً</DialogTitle>
             <DialogDescription>
-              هذا القسم يُفتح بعد ربط متجرك بتطبيق LinkUp. تستغرق العملية أقل من
+              هذا القسم يُفتح بعد ربط متجرك بتطبيق Portalio SA. تستغرق العملية أقل من
               دقيقة، وبعدها تظهر طلباتك ومنتجاتك وكل الأقسام تلقائياً.
             </DialogDescription>
           </DialogHeader>

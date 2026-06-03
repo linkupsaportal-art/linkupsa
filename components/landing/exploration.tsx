@@ -35,7 +35,7 @@ const PROJECTS = [
     title: "Steam",
     subtitle: "مع Steam Guard",
     description:
-      "حسابات Steam كاملة مع نظام حماية مدمج. يولّد LinkUp كود الحماية لعميلك تلقائياً عند الحاجة، بنفس آلية تطبيق Steam الرسمي.",
+      "حسابات Steam كاملة مع نظام حماية مدمج. يولّد Portalio SA كود الحماية لعميلك تلقائياً عند الحاجة، بنفس آلية تطبيق Steam الرسمي.",
     img1: IMG.prodSteamA,
     img2: IMG.prodSteamB,
     label1: "Product · Steam · A",

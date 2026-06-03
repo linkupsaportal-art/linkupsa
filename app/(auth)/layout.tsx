@@ -13,7 +13,7 @@ import { AuthBrandPanel } from "@/components/auth/auth-brand-panel";
  */
 
 export const metadata: Metadata = {
-  title: { default: "حسابك على LinkUp", template: "%s · LinkUp" },
+  title: { default: "حسابك على Portalio SA", template: "%s · Portalio SA" },
   robots: { index: false, follow: false },
 };
 

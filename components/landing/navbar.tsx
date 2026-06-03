@@ -280,7 +280,7 @@ export function Navbar() {
                 </p>
               </div>
               <h4 className="text-xl md:text-2xl font-bold font-display tracking-tight text-fg mb-4">
-                بوابة LinkUp الإدارية
+                بوابة Portalio SA الإدارية
               </h4>
               <p className="text-sm text-fg-muted leading-relaxed max-w-md">
                 منصة تسليم المنتجات الرقمية والتحقق الفوري. آلية بالكامل، آمنة، ومبنية لمتاجر سلة.
@@ -315,10 +315,10 @@ export function Navbar() {
                   تواصل معنا
                 </p>
                 <a
-                  href="mailto:hello@linkup.sa"
+                  href="mailto:hello@portaliosa.com"
                   className="text-sm font-semibold hover:text-accent transition-colors font-mono"
                 >
-                  hello@linkup.sa
+                  hello@portaliosa.com
                 </a>
               </div>
               <div>

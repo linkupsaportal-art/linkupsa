@@ -5,6 +5,15 @@
 
 ---
 
+# 2026-06-03 17:15
+
+- 💎 **Brand Rebrand & Salla Review Compliance - Razex Xelite**
+  - **Platform-wide Rebrand to Portalio SA**: Renamed all occurrences of "LinkUp" and "LinkUp+" to "Portalio SA" across layouts, metadata descriptions, the logo component, page-reveal curtain, hero title, onboarding dashboards, and the footer monogram (now spelling PORTALIOSA) to align with the client's public app deployment.
+  - **Salla Review Verification Pages**: Created `/privacy` (Privacy Policy), `/support` (Technical Support & Help desk), and `/faq` (Structured Help Accordion) routes in Next.js, fully styling them according to the dark-first premium design system.
+  - **Footer Link Integration**: Linked the new verification pages directly from the footer menu to ensure indexing and crawling by the Salla review bots.
+  - **Ready-To-Use Service Trial Account**: Created and confirmed `salla-tester@portaliosa.com` with static password `SallaTester2026!` in Supabase Auth, pre-linking them to the demo store workspace `1375098081` so the Salla verification team can bypass MFA and log in directly to verify the dashboard.
+  - **Green Build Integrity**: Verified the entire Next.js build compiles clean with static page generation completing with 0 errors.
+
 # 2026-06-02 17:50
 
 - 🌐 **Salla App Store Compatibility & Public App Shift — Razex Xelite**

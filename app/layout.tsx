@@ -41,14 +41,14 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: {
-    default: "LinkUp — استلم منتجك الرقمي خلال ثوانٍ",
-    template: "%s · LinkUp",
+    default: "Portalio SA — استلم منتجك الرقمي خلال ثوانٍ",
+    template: "%s · Portalio SA",
   },
   description:
     "منصة سعودية لتسليم المنتجات الرقمية تلقائياً. مستقلة بالكامل، آمنة، سريعة، ومصممة بمعايير عالمية.",
-  keywords: ["تسليم منتجات رقمية", "توزيع تلقائي", "حسابات", "Steam Guard", "بطاقات شحن", "LinkUp"],
-  authors: [{ name: "LinkUp" }],
-  applicationName: "LinkUp",
+  keywords: ["تسليم منتجات رقمية", "توزيع تلقائي", "حسابات", "Steam Guard", "بطاقات شحن", "Portalio SA", "portalio"],
+  authors: [{ name: "Portalio SA" }],
+  applicationName: "Portalio SA",
 };
 
 export const viewport: Viewport = {

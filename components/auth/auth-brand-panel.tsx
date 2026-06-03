@@ -95,7 +95,7 @@ export function AuthBrandPanel() {
       >
         <Quote className="size-5 text-accent mb-3" />
         <p className="text-sm leading-relaxed text-fg-muted">
-          “منذ ربط متجري بـ LinkUp، صارت طلبات المنتجات الرقمية تُسلَّم تلقائياً خلال ثوانٍ. وفّرت ساعات يومياً من العمل اليدوي.”
+          “منذ ربط متجري بـ Portalio SA، صارت طلبات المنتجات الرقمية تُسلَّم تلقائياً خلال ثوانٍ. وفّرت ساعات يومياً من العمل اليدوي.”
         </p>
         <div className="mt-4 flex items-center gap-3">
           <div

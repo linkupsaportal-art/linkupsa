@@ -175,7 +175,7 @@ export function Methodology() {
           </h2>
           <p className="leading-relaxed text-sm md:text-base text-fg-subtle max-w-md">
             التسليم الرقمي ليس مجرد إرسال ملف. إنه ثقة تُبنى مع كل طلب يصل سليماً، آمناً، ودون أخطاء.
-            بنينا LinkUp على هذا المبدأ — كل طبقة تتحقق من الطبقة الأخرى.
+            بنينا Portalio SA على هذا المبدأ — كل طبقة تتحقق من الطبقة الأخرى.
           </p>
         </div>
 

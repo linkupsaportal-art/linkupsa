@@ -61,7 +61,7 @@ export function OnboardingDashboard({
           </h1>
           <p className="mt-3 text-sm sm:text-base text-white/70 leading-relaxed">
             حسابك جاهز وكل الأقسام موجودة. لفتح اللوحة وعرض الطلبات والتسليم
-            التلقائي، يتبقى أن تربط متجرك بتطبيق LinkUp. تستغرق العملية أقل من
+            التلقائي، يتبقى أن تربط متجرك بتطبيق Portalio SA. تستغرق العملية أقل من
             دقيقة.
           </p>
 
@@ -99,7 +99,7 @@ export function OnboardingDashboard({
           <Step
             n={1}
             title="اربط متجرك"
-            body="اضغط «ربط المتجر الآن» وأضِف تطبيق LinkUp إلى متجرك ووافق على الصلاحيات."
+            body="اضغط «ربط المتجر الآن» وأضِف تطبيق Portalio SA إلى متجرك ووافق على الصلاحيات."
             active
           />
           <Step

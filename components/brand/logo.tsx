@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function Logo({
   className,
   glyphOnly = false,
-  label = "LinkUp",
+  label = "Portalio SA",
 }: {
   className?: string;
   glyphOnly?: boolean;
@@ -20,7 +20,7 @@ export function Logo({
         "inline-flex items-center gap-2.5 font-bold tracking-tight text-2xl text-fg",
         className,
       )}
-      aria-label="LinkUp — منصة التسليم الرقمي"
+      aria-label="Portalio SA — منصة التسليم الرقمي"
     >
       <LogoGlyph className="size-7" />
       {!glyphOnly && <span dir="ltr" className="leading-none [unicode-bidi:isolate]">{label}</span>}

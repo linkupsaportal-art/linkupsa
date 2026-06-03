@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  */
 
 const ANNOUNCEMENTS = [
-  { icon: Sparkles, text: "إطلاق LinkUp 1.0 · تسليم رقمي مؤتمت لمتاجر سلة", cta: "تعرف أكثر", href: "#exploration" },
+  { icon: Sparkles, text: "إطلاق Portalio SA 1.0 · تسليم رقمي مؤتمت لمتاجر سلة", cta: "تعرف أكثر", href: "#exploration" },
   { icon: ShieldCheck, text: "بياناتك مشفرة بالكامل · سجل عمليات قابل للتدقيق", cta: "ورقة الأمان", href: "#methodology" },
   { icon: Zap, text: "زمن استجابة لحظي · تسليم خلال ثوانٍ", cta: "كيف يعمل", href: "#process" },
   { icon: Globe, text: "ربط مباشر مع متجرك على سلة · بدون تدخل يدوي", cta: "تفاصيل الربط", href: "#recognition" },

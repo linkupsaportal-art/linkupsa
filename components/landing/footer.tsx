@@ -120,7 +120,7 @@ export function Footer() {
       {/* Letter-spread brand line — single row, no duplicate "تواصل" panel anymore */}
       <div className="md:px-12 px-6 mb-12 md:mb-16">
         <div dir="ltr" className="flex items-center justify-center gap-3 md:gap-5 opacity-80">
-          {"LINKUP".split("").map((c, i) => (
+          {"PORTALIOSA".split("").map((c, i) => (
             <span
               key={i}
               data-foot-letter
@@ -177,7 +177,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-fg-subtle">
               <li><a href="#process" className="transition-colors hover:text-accent">العملية</a></li>
               <li><a href="#methodology" className="transition-colors hover:text-accent">المنهجية</a></li>
-              <li><a href="#recognition" className="transition-colors hover:text-accent">لماذا LinkUp</a></li>
+              <li><a href="#recognition" className="transition-colors hover:text-accent">لماذا Portalio SA</a></li>
               <li><a href="#journal" className="transition-colors hover:text-accent">اليوميات</a></li>
               <li><Link href="/auth" className="transition-colors hover:text-accent">بوابة الإدارة</Link></li>
             </ul>
@@ -234,14 +234,14 @@ export function Footer() {
 
           {/* Legal */}
           <div className="flex items-center flex-wrap gap-6 text-xs text-fg-faint order-3 lg:order-2">
-            <a href="#" className="transition-colors hover:text-fg">سياسة الخصوصية</a>
-            <a href="#" className="transition-colors hover:text-fg">الشروط</a>
-            <a href="#" className="transition-colors hover:text-fg">خريطة الموقع</a>
+            <Link href="/privacy" className="transition-colors hover:text-fg">سياسة الخصوصية</Link>
+            <Link href="/faq" className="transition-colors hover:text-fg">الأسئلة الشائعة</Link>
+            <Link href="/support" className="transition-colors hover:text-fg">الدعم الفني</Link>
           </div>
 
           {/* Copyright */}
           <p className="text-xs text-fg-faint order-1 lg:order-3">
-            © {new Date().getFullYear()} LinkUp. جميع الحقوق محفوظة.
+            © {new Date().getFullYear()} Portalio SA. جميع الحقوق محفوظة.
           </p>
         </div>
       </div>

@@ -138,10 +138,9 @@ export function Hero() {
             ref={headlineRef}
             dir="ltr"
             className="mt-6 font-display font-bold leading-[0.88] tracking-tighter text-fg [unicode-bidi:isolate]"
-            style={{ fontSize: "clamp(3rem, 9vw, 8.5rem)" }}
+            style={{ fontSize: "clamp(3rem, 7.5vw, 7.5rem)" }}
           >
-            LinkUp
-            <span className="text-accent align-top text-[0.55em] ml-1">+</span>
+            Portalio SA
           </h1>
           <div
             data-h="underline"

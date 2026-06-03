@@ -47,7 +47,7 @@ export function PageReveal() {
           className="font-display font-bold tracking-tighter text-fg text-5xl md:text-7xl opacity-0 [unicode-bidi:isolate]"
           style={{ transform: "translateY(20px)" }}
         >
-          LinkUp<span className="text-accent">+</span>
+          Portalio SA
         </span>
       </div>
     </div>
