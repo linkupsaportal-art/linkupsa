@@ -101,7 +101,7 @@ export function Turnstile({
           sitekey: siteKey,
           theme,
           language: "ar",
-          appearance: "interaction-only",
+          appearance: "always",
           callback: (token) => {
             setFailed(false);
             onVerify(token);
