@@ -23,15 +23,21 @@ export function verifySallaWebhook(
   if (!secret) return { ok: false, reason: "SALLA_WEBHOOK_TOKEN is not set" };
 
   // ── Universal token check ──────────────────────────────────────────
-  // Salla's merchant-dashboard webhooks send custom header parameters
-  // verbatim, but may override reserved x-salla-* header names with its
-  // own values. We therefore check the authorization header FIRST,
-  // regardless of strategy — if it matches our token, the request is
-  // authentic. This covers both:
-  //   a) Merchant-dashboard webhooks with custom "authorization" header
-  //   b) App webhooks with Token strategy
+  // Salla's merchant-dashboard webhook config has TWO input fields per
+  // custom header. In practice, the FIRST field is the VALUE and the
+  // SECOND is the NAME — the opposite of what you'd expect. This means
+  // our token ends up as the header KEY with "authorization" as value.
+  //
+  // We handle BOTH orientations:
+  //   Normal:   authorization: <token>
+  //   Reversed: <token>: authorization  (Salla's actual behavior)
   const authHeader = headers.get("authorization") ?? headers.get("x-salla-token") ?? "";
   if (authHeader && safeEqual(authHeader.trim(), secret)) {
+    return { ok: true };
+  }
+  // Check if the token was sent as a header NAME (Salla reversal)
+  const reversedCheck = headers.get(secret);
+  if (reversedCheck !== null) {
     return { ok: true };
   }
 
