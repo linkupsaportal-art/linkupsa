@@ -94,7 +94,38 @@ export async function POST(req: Request): Promise<NextResponse> {
     }).catch(() => {/* best-effort */});
   }
 
+  // 6. Forward to the legacy سلة سينك endpoint (sallasync.com) so the old
+  //    system keeps working as a fallback. Fire-and-forget — we never wait
+  //    for sallasync.com's response and our 200 is independent of it.
+  forwardToLegacy(rawBody, req.headers).catch(() => {/* best-effort */});
+
   return NextResponse.json({ ok: true, event: envelope.event, id: stored.id });
+}
+
+/**
+ * Relay the verified payload to the legacy sallasync.com endpoint.
+ * This runs asynchronously after we've already acked to Salla.
+ * If sallasync.com is down or slow, our pipeline is unaffected.
+ */
+const LEGACY_WEBHOOK_URL =
+  "https://sallasync.com/endpoint/v2/digital_accounts/linkup.sa/index.php" +
+  "?sid=1075453390&did=linkup.sa&uid=linkupsaudi127" +
+  "&pid=8d04668669d7a3d75aae1be390d52d97&platform=salla&cid=digital_accounts";
+
+async function forwardToLegacy(body: string, headers: Headers): Promise<void> {
+  try {
+    await fetch(LEGACY_WEBHOOK_URL, {
+      method: "POST",
+      headers: {
+        "content-type": headers.get("content-type") ?? "application/json",
+        "user-agent": "PortalioSA-Relay/1.0",
+      },
+      body,
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (err) {
+    console.error("[salla.relay] forward to sallasync.com failed:", err);
+  }
 }
 
 /**
