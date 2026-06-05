@@ -25,9 +25,12 @@ export type Order = {
   archived_reason: string | null;
   created_at: string;
   updated_at: string;
+  raw_payload?: Record<string, unknown> | null;
   // Joined
   product_name?: string | null;
   account_label?: string | null;
+  /** Original item name(s) from the Salla webhook — always available. */
+  raw_product_name?: string | null;
 };
 
 export async function listOrders(opts?: {
@@ -44,6 +47,7 @@ export async function listOrders(opts?: {
     .from("orders")
     .select(
       `*, 
+       raw_payload,
        products(name),
        accounts(label)`,
       { count: "exact" },
@@ -58,11 +62,19 @@ export async function listOrders(opts?: {
   const { data, error, count } = await q;
   if (error) throw new Error(error.message);
 
-  const orders = (data ?? []).map((row: Record<string, unknown>) => ({
-    ...(row as Order),
-    product_name: (row.products as { name: string } | null)?.name ?? null,
-    account_label: (row.accounts as { label: string } | null)?.label ?? null,
-  }));
+  const orders = (data ?? []).map((row: Record<string, unknown>) => {
+    // Extract original item names from the Salla webhook payload
+    const payload = row.raw_payload as Record<string, unknown> | null;
+    const items = (payload?.items ?? []) as { name?: string }[];
+    const rawName = items.map((i) => i.name).filter(Boolean).join(" • ") || null;
+
+    return {
+      ...(row as Order),
+      product_name: (row.products as { name: string } | null)?.name ?? null,
+      account_label: (row.accounts as { label: string } | null)?.label ?? null,
+      raw_product_name: rawName,
+    };
+  });
 
   return { orders, total: count ?? 0 };
 }

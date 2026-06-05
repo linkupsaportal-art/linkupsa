@@ -66,6 +66,7 @@ export function OrdersClient({
         (o.customer_email ?? "").toLowerCase().includes(q) ||
         (o.customer_mobile ?? "").includes(q) ||
         (o.product_name ?? "").toLowerCase().includes(q) ||
+        (o.raw_product_name ?? "").toLowerCase().includes(q) ||
         (o.account_label ?? "").toLowerCase().includes(q)
       );
     });
@@ -155,10 +156,33 @@ export function OrdersClient({
                         {order.customer_mobile ?? ""}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-fg">
-                      {order.product_name ?? <span className="text-fg-faint">—</span>}
-                      {order.salla_option_value && (
-                        <div className="text-xs text-fg-muted">{order.salla_option_value}</div>
+                    <td className="px-4 py-3 text-sm text-fg max-w-[220px]">
+                      {/* Product name — always show raw Salla name, with mapped badge */}
+                      {order.product_name ? (
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span>{order.product_name}</span>
+                            <span className="shrink-0 inline-flex items-center h-4 px-1.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-500">
+                              مربوط
+                            </span>
+                          </div>
+                          {order.salla_option_value && (
+                            <div className="text-xs text-fg-muted">{order.salla_option_value}</div>
+                          )}
+                        </div>
+                      ) : order.raw_product_name ? (
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-fg-muted truncate" title={order.raw_product_name}>
+                              {order.raw_product_name}
+                            </span>
+                            <span className="shrink-0 inline-flex items-center h-4 px-1.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400">
+                              غير مربوط
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-fg-faint">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-fg">
