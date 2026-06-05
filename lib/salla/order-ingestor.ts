@@ -78,17 +78,24 @@ export async function processInbox(): Promise<{
     .eq("store_id", merchantId)
     .single();
 
-  if (!store?.access_token) {
-    // Mark all as failed — no token to call the API
+  // Separate invoice events (don't need API token) from order events (do need it)
+  const invoiceEvents = events.filter((e) => e.event === "invoice.created");
+  const orderEvents = events.filter((e) => e.event !== "invoice.created");
+
+  if (!store?.access_token && orderEvents.length > 0) {
+    // Mark only order.* events as failed — they need the API token
     await sb
       .from("webhook_events")
       .update({ status: "failed", error: "no access_token for store", processed_at: new Date().toISOString() })
-      .in("id", events.map((e) => e.id));
-    stats.errors = events.length;
-    return stats;
+      .in("id", orderEvents.map((e) => e.id));
+    stats.errors = orderEvents.length;
   }
 
-  for (const event of events) {
+  // Process all events that CAN be processed (invoices always, orders only with token)
+  const processable = store?.access_token ? events : invoiceEvents;
+  if (!processable.length) return stats;
+
+  for (const event of processable) {
     stats.processed++;
     try {
       // Mark as processing to prevent double-processing
@@ -119,7 +126,7 @@ export async function processInbox(): Promise<{
       if (isInvoice) {
         order = buildOrderFromInvoice(payload.data!, sallaOrderId);
       } else {
-        order = await fetchSallaOrder(sallaOrderId, store.access_token);
+        order = await fetchSallaOrder(sallaOrderId, store!.access_token);
       }
 
       if (!order) {
