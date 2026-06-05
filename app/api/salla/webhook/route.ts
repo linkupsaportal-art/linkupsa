@@ -85,6 +85,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     "order.updated",
     "order.status.updated",
     "order.payment.updated",
+    "invoice.created",
   ]);
   if (ORDER_EVENTS.has(envelope.event)) {
     const origin = new URL(req.url).origin;

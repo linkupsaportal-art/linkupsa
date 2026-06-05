@@ -37,6 +37,7 @@ export async function dispatch(envelope: SallaWebhookEnvelope, eventId: string):
     case "order.updated":
     case "order.status.updated":
     case "order.payment.updated":
+    case "invoice.created":
       return;
     // Everything else: archived / informational. Ack as succeeded so the
     // dashboard reflects "we received and acknowledged it" rather than

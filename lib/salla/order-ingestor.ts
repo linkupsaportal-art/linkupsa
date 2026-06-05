@@ -63,7 +63,7 @@ export async function processInbox(): Promise<{
   const { data: events, error: fetchErr } = await sb
     .from("webhook_events")
     .select("id, event, merchant, payload")
-    .in("event", ["order.created", "order.updated", "order.status.updated", "order.payment.updated"])
+    .in("event", ["order.created", "order.updated", "order.status.updated", "order.payment.updated", "invoice.created"])
     .eq("status", "pending")
     .order("received_at", { ascending: true })
     .limit(20);
@@ -97,18 +97,33 @@ export async function processInbox(): Promise<{
         .update({ status: "processing", attempts: 1 })
         .eq("id", event.id);
 
-      const payload = event.payload as { data?: { id?: number } };
-      const sallaOrderId = payload?.data?.id;
+      // invoice.created has a different payload shape than order.* events.
+      // invoice: { data: { order_id, order_reference_id, items, customer, ... } }
+      // order.*: { data: { id, ... } }
+      const isInvoice = event.event === "invoice.created";
+      const payload = event.payload as { data?: Record<string, unknown> };
+      const sallaOrderId = isInvoice
+        ? (payload?.data?.order_id as number | undefined)
+        : (payload?.data?.id as number | undefined);
+
       if (!sallaOrderId) {
         await markEvent(sb, event.id, "skipped", "no order id in payload");
         stats.skipped++;
         continue;
       }
 
-      // Fetch full order from Salla API
-      const order = await fetchSallaOrder(sallaOrderId, store.access_token);
+      // For invoice.created, we can build the order from the inline payload
+      // (it already contains customer, items, totals) instead of calling the
+      // Salla API — which may fail without a valid store access token.
+      let order: SallaOrder | null = null;
+      if (isInvoice) {
+        order = buildOrderFromInvoice(payload.data!, sallaOrderId);
+      } else {
+        order = await fetchSallaOrder(sallaOrderId, store.access_token);
+      }
+
       if (!order) {
-        await markEvent(sb, event.id, "failed", "salla api returned no order");
+        await markEvent(sb, event.id, "failed", isInvoice ? "could not parse invoice payload" : "salla api returned no order");
         stats.errors++;
         continue;
       }
@@ -254,6 +269,65 @@ export async function processInbox(): Promise<{
   }
 
   return stats;
+}
+
+/**
+ * Build a SallaOrder from an invoice.created webhook payload.
+ *
+ * The invoice payload already embeds customer, items, and totals inline,
+ * so we DON'T need the Salla API (which we may not have a token for).
+ *
+ * Invoice payload shape (verified from live webhook):
+ * {
+ *   id, invoice_number, order_id, order_reference_id,
+ *   payment_method, total: { amount, currency },
+ *   items: [{ product_id, name, quantity, ... }],
+ *   customer: { id, first_name, last_name, mobile, mobile_code, email }
+ * }
+ */
+function buildOrderFromInvoice(
+  invoiceData: Record<string, unknown>,
+  orderId: number,
+): SallaOrder | null {
+  try {
+    const customer = invoiceData.customer as Record<string, unknown> | undefined;
+    if (!customer) return null;
+
+    const items = (invoiceData.items as Array<Record<string, unknown>>) ?? [];
+    const total = invoiceData.total as { amount?: number; currency?: string } | undefined;
+    const paymentMethod = (invoiceData.payment_method as string) ?? "unknown";
+
+    // invoice.created fires AFTER payment, so treat as paid.
+    // "free" means 100% discount coupon was applied — still a valid, fulfilled order.
+    const statusSlug = paymentMethod === "free" ? "completed" : "paid";
+
+    return {
+      id: orderId,
+      reference_id: (invoiceData.order_reference_id as number) ?? orderId,
+      status: { slug: statusSlug, name: statusSlug },
+      payment_method: paymentMethod,
+      is_pending_payment: false,
+      customer: {
+        id: (customer.id as number) ?? 0,
+        full_name: `${customer.first_name ?? ""} ${customer.last_name ?? ""}`.trim(),
+        email: (customer.email as string) ?? "",
+        mobile: customer.mobile as number ?? 0,
+        mobile_code: (customer.mobile_code as string) ?? "",
+      },
+      items: items.map((item) => ({
+        name: (item.name as string) ?? "",
+        quantity: (item.quantity as number) ?? 1,
+        product: { id: item.product_id as number | undefined, name: item.name as string | undefined },
+        options: [],
+      })),
+      total: {
+        amount: total?.amount ?? 0,
+        currency: total?.currency ?? "SAR",
+      },
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function fetchSallaOrder(
