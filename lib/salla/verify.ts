@@ -22,18 +22,30 @@ export function verifySallaWebhook(
   const secret = env.SALLA_WEBHOOK_TOKEN;
   if (!secret) return { ok: false, reason: "SALLA_WEBHOOK_TOKEN is not set" };
 
+  // ── Universal token check ──────────────────────────────────────────
+  // Salla's merchant-dashboard webhooks send custom header parameters
+  // verbatim, but may override reserved x-salla-* header names with its
+  // own values. We therefore check the authorization header FIRST,
+  // regardless of strategy — if it matches our token, the request is
+  // authentic. This covers both:
+  //   a) Merchant-dashboard webhooks with custom "authorization" header
+  //   b) App webhooks with Token strategy
+  const authHeader = headers.get("authorization") ?? headers.get("x-salla-token") ?? "";
+  if (authHeader && safeEqual(authHeader.trim(), secret)) {
+    return { ok: true };
+  }
+
+  // ── Strategy-based fallbacks ───────────────────────────────────────
   const strategy = (headers.get("x-salla-security-strategy") ?? "").toLowerCase();
 
-  // Token strategy: header is the raw secret. Constant-time equality.
+  // Token strategy: explicit match (already tried above, but try with
+  // different header combinations just in case).
   if (strategy === "token") {
-    const provided = headers.get("authorization") ?? headers.get("x-salla-token") ?? "";
-    return safeEqual(provided.trim(), secret)
-      ? { ok: true }
-      : { ok: false, reason: "Token mismatch" };
+    return { ok: false, reason: "Token mismatch" };
   }
 
   // Signature strategy: HMAC-SHA256 of the raw body with the secret.
-  if (strategy === "signature" || strategy === "") {
+  if (strategy === "signature") {
     const provided = headers.get("x-salla-signature") ?? "";
     if (!provided) return { ok: false, reason: "Missing x-salla-signature" };
     const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
@@ -42,7 +54,8 @@ export function verifySallaWebhook(
       : { ok: false, reason: "Signature mismatch" };
   }
 
-  return { ok: false, reason: `Unknown strategy: ${strategy}` };
+  // No strategy and no token match — reject.
+  return { ok: false, reason: `No matching auth method (strategy: "${strategy}")` };
 }
 
 function safeEqual(a: string, b: string): boolean {

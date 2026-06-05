@@ -25,8 +25,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   const rawBody = await req.text();
 
   // 1. Verify authenticity.
+  // DEBUG: Log all incoming headers for troubleshooting
+  const debugHeaders: Record<string, string> = {};
+  req.headers.forEach((v, k) => { debugHeaders[k] = k === "authorization" ? v.substring(0, 12) + "..." : v; });
+  console.log("[salla.webhook] Incoming headers:", JSON.stringify(debugHeaders));
+
   const verification = verifySallaWebhook(rawBody, req.headers);
   if (!verification.ok) {
+    console.error("[salla.webhook] AUTH FAILED:", verification.reason, "| strategy:", req.headers.get("x-salla-security-strategy"), "| auth:", req.headers.get("authorization")?.substring(0, 20));
     // Salla retries on non-2xx. 401 is the right signal for a bad signature.
     return NextResponse.json(
       { error: "unauthorized", reason: verification.reason },
