@@ -47,7 +47,10 @@ export function useIdleTimeout(args: {
       // Don't reset once we hit the idle state — caller decides re-entry.
       if (idle) return;
       lastActivityRef.current = Date.now();
-      setSecondsLeft(timeoutSeconds);
+      // NOTE: Don't call setSecondsLeft here — the interval tick (line 64)
+      // is the single source of truth. Calling it here caused a visible
+      // jitter: timer shows 4:58 → onActivity resets to 5:00 → next tick
+      // computes 4:59 from the ref. Let the interval handle all display updates.
     };
 
     const events: (keyof WindowEventMap)[] = [
