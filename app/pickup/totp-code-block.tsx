@@ -57,6 +57,12 @@ export function TotpCodeBlock({
     };
   }, [code]);
 
+  // Auto-fetch code on mount
+  useEffect(() => {
+    handleGetCode();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Auto-refresh when countdown hits zero — but stop once we cross the cap.
   useEffect(() => {
     if (expired) return;

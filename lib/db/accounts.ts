@@ -122,6 +122,42 @@ export async function updateAccountEmailConfig(
   if (error) throw new Error(error.message);
 }
 
+export async function updateAccount(
+  id: string,
+  input: AccountCreateInput & { status?: Account["status"] }
+): Promise<Account> {
+  const sb = createServiceClient();
+  const enc = (val?: string) => val === undefined ? undefined : encryptSecretForBytea(val);
+
+  const updateData: Record<string, any> = {
+    product_id: input.product_id,
+    label: input.label,
+    email: input.email ?? null,
+    instructions: input.instructions ?? null,
+    max_usage: input.max_usage ?? 1,
+    max_otp_requests: input.max_otp_requests ?? 10,
+    otp_cooldown_seconds: input.otp_cooldown_seconds ?? 30,
+    allowed_option_ids: input.allowed_option_ids ?? [],
+  };
+
+  if (input.status) updateData.status = input.status;
+  if (input.password !== undefined) updateData.password_encrypted = enc(input.password);
+  if (input.totp_secret !== undefined) updateData.totp_secret_encrypted = enc(input.totp_secret);
+  if (input.steam_shared_secret !== undefined) updateData.steam_shared_secret_encrypted = enc(input.steam_shared_secret);
+  if (input.card_code !== undefined) updateData.card_code_encrypted = enc(input.card_code);
+  if (input.email_auth_config !== undefined) updateData.email_auth_config_encrypted = enc(input.email_auth_config);
+
+  const { data, error } = await sb
+    .from("accounts")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as Account;
+}
+
 /**
  * Decrypt a stored secret for display in the admin panel (or for code
  * generation). Uses the app-layer AES-256-GCM module, which also transparently

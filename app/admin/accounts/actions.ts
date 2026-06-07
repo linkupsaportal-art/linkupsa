@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createAccount, deleteAccount, updateAccountStatus, getAccountSecret, updateAccountEmailConfig, type Account } from "@/lib/db/accounts";
+import { createAccount, deleteAccount, updateAccountStatus, getAccountSecret, updateAccountEmailConfig, updateAccount, type Account } from "@/lib/db/accounts";
+import { generateTotpCode } from "@/lib/handlers/totp";
+import { generateSteamGuardCode } from "@/lib/handlers/steam-guard";
 import type { HandlerType } from "@/lib/db/products-types";
 
 export async function createAccountAction(formData: FormData) {
@@ -92,12 +94,108 @@ export async function revealAccountSecretsAction(id: string) {
     const totpSecret = await getAccountSecret(id, "totp_secret_encrypted");
     const steamSharedSecret = await getAccountSecret(id, "steam_shared_secret_encrypted");
     const cardCode = await getAccountSecret(id, "card_code_encrypted");
+
+    let active2faCode: string | null = null;
+    let active2faExpiresIn: number | null = null;
+    if (totpSecret) {
+      try {
+        const gen = generateTotpCode(totpSecret);
+        active2faCode = gen.code;
+        active2faExpiresIn = gen.expiresInSeconds;
+      } catch (err) { /* ignore */ }
+    } else if (steamSharedSecret) {
+      try {
+        const gen = generateSteamGuardCode(steamSharedSecret);
+        active2faCode = gen.code;
+        active2faExpiresIn = gen.expiresInSeconds;
+      } catch (err) { /* ignore */ }
+    }
+
     return {
       password,
       totpSecret,
       steamSharedSecret,
       cardCode,
+      active2faCode,
+      active2faExpiresIn,
     };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function updateAccountAction(formData: FormData) {
+  const id = formData.get("id") as string;
+  const product_id = formData.get("product_id") as string;
+  const label = formData.get("label") as string;
+  const email = (formData.get("email") as string) || undefined;
+  const password = formData.get("password") as string; // Blank means do not change
+  const instructions = (formData.get("instructions") as string) || undefined;
+  const handler_type = formData.get("handler_type") as HandlerType;
+  const totp_secret = formData.get("totp_secret") as string;
+  const steam_shared_secret = formData.get("steam_shared_secret") as string;
+  const card_code = formData.get("card_code") as string;
+  
+  // Email-code accounts IMAP config build
+  const imap_host = (formData.get("imap_host") as string) || "";
+  const imap_user = (formData.get("imap_user") as string) || "";
+  const imap_password = (formData.get("imap_password") as string) || "";
+  const imap_port = Number(formData.get("imap_port") || 993);
+  const imap_from = (formData.get("imap_from") as string) || "";
+  
+  let email_auth_config: string | undefined;
+  if (handler_type === "email_code_account" && imap_host && imap_user) {
+    let finalPassword = imap_password;
+    if (!finalPassword) {
+      const existing = await getAccountSecret(id, "email_auth_config_encrypted");
+      if (existing) {
+        try {
+          const prev = JSON.parse(existing) as { password?: string };
+          finalPassword = prev.password ?? "";
+        } catch { /* ignore */ }
+      }
+    }
+    email_auth_config = JSON.stringify({
+      host: imap_host.trim(),
+      port: imap_port,
+      user: imap_user.trim(),
+      password: finalPassword,
+      ...(imap_from.trim() ? { fromFilter: imap_from.trim() } : {}),
+    });
+  }
+
+  const max_usage = Number(formData.get("max_usage") || 1);
+  const max_otp_requests = Number(formData.get("max_otp_requests") || 10);
+  const otp_cooldown_seconds = Number(formData.get("otp_cooldown_seconds") || 30);
+  const allowed_option_ids_raw = formData.get("allowed_option_ids") as string;
+  const allowed_option_ids = allowed_option_ids_raw
+    ? allowed_option_ids_raw.split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  if (!id) return { error: "معرّف الحساب مطلوب" };
+  if (!product_id) return { error: "المنتج مطلوب" };
+  if (!label?.trim()) return { error: "اسم القاعدة مطلوب" };
+  if (!handler_type) return { error: "نوع التحقق مطلوب" };
+
+  try {
+    await updateAccount(id, {
+      product_id,
+      label: label.trim(),
+      email,
+      password: password || undefined,
+      instructions,
+      handler_type,
+      totp_secret: totp_secret || undefined,
+      steam_shared_secret: steam_shared_secret || undefined,
+      card_code: card_code || undefined,
+      email_auth_config,
+      max_usage,
+      max_otp_requests,
+      otp_cooldown_seconds,
+      allowed_option_ids,
+    });
+    revalidatePath("/admin/accounts");
+    return { success: true };
   } catch (e) {
     return { error: (e as Error).message };
   }

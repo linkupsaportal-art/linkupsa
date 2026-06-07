@@ -5,6 +5,14 @@
 
 ---
 
+# 2026-06-07 20:53
+
+- ⚙️ **Account Editing & Immediate 2FA Visibility — Razex Xelite**
+  - **Modularized accounts components**: Refactored the monolithic `accounts-client.tsx` (over 700 lines) into neat, focused subcomponents under `components/admin/accounts/` to comply with the 500-line strict limit.
+  - **Account Editing support**: Added `updateAccount` database helper and `updateAccountAction` server action to allow admins to edit existing accounts (including optional secure credentials update without overwriting blank secrets). Wired a Lucide `Pencil` edit button to each account card.
+  - **Active 2FA display in Admin**: Updated `revealAccountSecretsAction` and `ViewDetailsDialog` to calculate and render the active 6-digit TOTP or Steam Guard code directly in the admin modal with a live countdown and manual refresh trigger.
+  - **Automatic 2FA loading for Customers**: Added mount-based auto-fetch (`useEffect`) inside `app/pickup/totp-code-block.tsx` so customer-facing verification codes load instantly upon page entry without requiring a manual click.
+
 # 2026-06-07 20:39
 
 - 🔑 **Per-User Webhook Key & Auto Store Linking — Razex Xelite**
