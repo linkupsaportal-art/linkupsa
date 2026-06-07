@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { processInbox } from "@/lib/salla/order-ingestor";
 import { dispatch } from "@/lib/salla/handlers";
-import { refreshStoreInfo } from "@/lib/salla/store-info";
 import type { SallaWebhookEnvelope } from "@/lib/salla/types";
 
 export type ActionResult<T = void> =
@@ -74,28 +73,4 @@ export async function retryWebhookEventAction(eventId: string): Promise<ActionRe
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
-}
-
-
-/**
- * Refreshes a store's storefront URL / domain / logo from Salla's
- * `/store/info` endpoint. Used by the "Refresh" button next to each
- * connected store on the integrations page.
- */
-export async function refreshStoreInfoAction(
-  storeId: number,
-): Promise<ActionResult<{ storeUrl: string | null }>> {
-  const sb = createServiceClient();
-  const { data: store, error } = await sb
-    .from("salla_stores")
-    .select("access_token")
-    .eq("store_id", storeId)
-    .maybeSingle();
-  if (error || !store?.access_token) {
-    return { ok: false, error: "لا يوجد رمز وصول لهذا المتجر" };
-  }
-  const r = await refreshStoreInfo({ storeId, accessToken: store.access_token });
-  if (!r.ok) return { ok: false, error: r.error };
-  revalidatePath("/admin/integrations");
-  return { ok: true, data: { storeUrl: r.storeUrl } };
 }

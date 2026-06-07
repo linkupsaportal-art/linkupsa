@@ -14,10 +14,17 @@ export type ConnectedStore = {
   store_logo_url: string | null;
   installed_at: string;
   uninstalled_at: string | null;
+  /** Whether any webhook events have been received from this store. */
+  webhook_active: boolean;
+  /** Count of events received in the last 7 days. */
+  events_7d: number;
+  /** Last event received timestamp. */
+  last_event_at: string | null;
 };
 
 async function loadIntegrationData() {
   const sb = createServiceClient();
+
   const [stores, recentEvents, eventStats] = await Promise.all([
     sb
       .from("salla_stores")
@@ -32,7 +39,7 @@ async function loadIntegrationData() {
       .limit(20),
     sb
       .from("webhook_events")
-      .select("status")
+      .select("status, store_id, received_at")
       .gte("received_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
   ]);
 
@@ -41,8 +48,35 @@ async function loadIntegrationData() {
     return acc;
   }, {});
 
+  // Per-store webhook stats (7-day window)
+  const storeEventCounts = new Map<number, { count: number; lastAt: string | null }>();
+  for (const evt of eventStats.data ?? []) {
+    const sid = evt.store_id as number | null;
+    if (!sid) continue;
+    const existing = storeEventCounts.get(sid);
+    if (existing) {
+      existing.count++;
+      if (!existing.lastAt || evt.received_at > existing.lastAt) {
+        existing.lastAt = evt.received_at as string;
+      }
+    } else {
+      storeEventCounts.set(sid, { count: 1, lastAt: evt.received_at as string });
+    }
+  }
+
+  // Enrich stores with webhook activity info
+  const enrichedStores: ConnectedStore[] = (stores.data ?? []).map((s) => {
+    const stats = storeEventCounts.get(s.store_id);
+    return {
+      ...s,
+      webhook_active: (stats?.count ?? 0) > 0,
+      events_7d: stats?.count ?? 0,
+      last_event_at: stats?.lastAt ?? null,
+    };
+  });
+
   return {
-    stores: (stores.data ?? []) as ConnectedStore[],
+    stores: enrichedStores,
     events: recentEvents.data ?? [],
     counts,
     total: eventStats.data?.length ?? 0,
@@ -56,15 +90,15 @@ export default async function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        title="ربط المتجر و Webhooks"
+        title="Webhooks والربط"
         eyebrow="التواصل والربط"
-        description="حالة الربط مع المتجر، الأحداث الواردة، ومعالجة الطلبات."
+        description="حالة استقبال الأحداث من سلة عبر الويب هوك ومعالجة الطلبات."
       />
 
       <div className="space-y-5">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <Stat icon={Store} label="متاجر مربوطة" value={active.length} tone="ok" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Stat icon={Store} label="متاجر نشطة" value={active.length} tone="ok" />
           <Stat icon={Activity} label="أحداث 7 أيام" value={total} tone="neutral" />
           <Stat
             icon={CheckCircle2}
@@ -73,21 +107,15 @@ export default async function IntegrationsPage() {
             tone="ok"
           />
           <Stat
-            icon={Clock}
-            label="قيد الانتظار"
-            value={counts.pending ?? 0}
-            tone={(counts.pending ?? 0) > 0 ? "warn" : "neutral"}
-          />
-          <Stat
             icon={AlertCircle}
             label="فشلت"
-            value={counts.failed ?? 0}
-            tone={(counts.failed ?? 0) > 0 ? "bad" : "neutral"}
+            value={(counts.failed ?? 0) + (counts.pending ?? 0)}
+            tone={(counts.failed ?? 0) + (counts.pending ?? 0) > 0 ? "bad" : "neutral"}
           />
         </div>
 
-        {/* Connected stores */}
-        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة.">
+        {/* Connected stores with webhook info */}
+        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة وحالة الويب هوك.">
           <StoresList stores={active} />
         </Section>
 
@@ -95,30 +123,13 @@ export default async function IntegrationsPage() {
         <Section
           icon={Webhook}
           title="آخر الأحداث الواردة"
-          description="آخر 20 حدث استقبلته المنصة. الأحداث تُعالج تلقائياً، ويمكنك تشغيل المعالج الآن إذا احتجت."
+          description="آخر 20 حدث استقبلته المنصة. الأحداث تُعالج تلقائياً."
         >
           <IntegrationsClient
             events={events as IntegrationEvent[]}
             pending={counts.pending ?? 0}
             failed={counts.failed ?? 0}
           />
-        </Section>
-
-        {/* Webhook URL */}
-        <Section
-          icon={Webhook}
-          title="عنوان Webhook"
-          description="الرابط المستخدم لاستقبال الأحداث من المتجر."
-        >
-          <div
-            className="rounded-xl bg-surface-2 border border-[hsl(var(--hairline))] p-3 font-num text-xs text-fg"
-            dir="ltr"
-          >
-            https://salla-webhook-proxy.linkup.workers.dev/
-          </div>
-          <p className="text-[11px] text-fg-faint mt-2 leading-relaxed">
-            الأحداث تمر عبر طبقة حماية على Cloudflare لتسريع الاستجابة، ثم تُحفظ وتُعالج تلقائياً.
-          </p>
         </Section>
       </div>
     </>
@@ -152,14 +163,14 @@ function Stat({
     neutral: "bg-surface-2 text-fg-muted",
   } as const;
   return (
-    <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-4">
+    <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-3 sm:p-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] uppercase font-bold tracking-[0.15em] text-fg-faint">{label}</span>
-        <div className={`size-7 rounded-lg flex items-center justify-center ${colors[tone]}`}>
-          <Icon className="size-3.5" />
+        <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.15em] text-fg-faint">{label}</span>
+        <div className={`size-6 sm:size-7 rounded-lg flex items-center justify-center ${colors[tone]}`}>
+          <Icon className="size-3 sm:size-3.5" />
         </div>
       </div>
-      <div className="font-num font-extrabold text-2xl text-fg">{value}</div>
+      <div className="font-num font-extrabold text-xl sm:text-2xl text-fg">{value}</div>
     </div>
   );
 }
@@ -176,14 +187,14 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-5">
+    <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-4 sm:p-5">
       <div className="flex items-start gap-3 mb-4 pb-4 border-b border-[hsl(var(--hairline))]">
-        <div className="size-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0">
-          <Icon className="size-5 text-fg-muted" />
+        <div className="size-9 sm:size-10 rounded-xl bg-surface-2 flex items-center justify-center shrink-0">
+          <Icon className="size-4 sm:size-5 text-fg-muted" />
         </div>
-        <div>
-          <h3 className="font-bold text-fg">{title}</h3>
-          {description && <p className="text-xs text-fg-muted mt-0.5">{description}</p>}
+        <div className="min-w-0">
+          <h3 className="font-bold text-sm sm:text-base text-fg">{title}</h3>
+          {description && <p className="text-[11px] sm:text-xs text-fg-muted mt-0.5">{description}</p>}
         </div>
       </div>
       {children}
