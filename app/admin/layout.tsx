@@ -73,7 +73,7 @@ export default async function AdminLayout({
           >
             <div className="flex h-full w-full">
               <div
-                className="relative shrink-0 h-full"
+                className="relative shrink-0 h-full hidden lg:block"
                 style={{
                   background: "linear-gradient(to bottom, #fff 64px, transparent 64px)",
                 }}
