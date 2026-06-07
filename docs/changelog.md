@@ -5,6 +5,13 @@
 
 ---
 
+# 2026-06-07 20:15
+
+- ⚡ **Simplified Salla Webhook Setup Guide — Razex Xelite**
+  - **Minimal Webhook Setup UI**: Simplified the `WebhookSetupGuide` in [stores-list.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/integrations/stores-list.tsx) to show only the essential webhook parameters (URL, `authorization` token, and `x-salla-security-strategy`) with direct copy buttons.
+  - **Streamlined Presentation**: Removed extra optional fields (name, event types, versions, advanced conditions) and the step-by-step instructions text list to make configuration input fast and clean.
+  - **Clean Build Integrity**: Verified the Next.js production build compiles successfully with all TypeScript diagnostics passing.
+
 # 2026-06-03 17:15
 
 - 💎 **Brand Rebrand & Salla Review Compliance - Razex Xelite**
