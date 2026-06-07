@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Store, ArrowLeft, Lock } from "lucide-react";
+import { Webhook, ArrowLeft, Lock } from "lucide-react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +18,8 @@ import {
  * topbar CTA, search box) can call to surface a single shared dialog telling
  * the user they must connect their store before that section unlocks.
  *
- * Why a context instead of prop-drilling callbacks: the locked shell renders
- * the sidebar, the topbar, AND the mobile drawer's sidebar. Threading an
- * `onLocked` callback through all three (plus their nested item components)
- * is noisy. A no-op-safe context keeps the call site a one-liner:
- *
- *     const { requestLink } = useLinkStoreGate();
- *     <button onClick={requestLink}>…</button>
- *
- * The hook is safe to call even when no provider is mounted (the normal
- * member shell) — it returns a no-op so shared components don't need to know
- * whether they're locked.
+ * Now points to the webhook setup (integrations page) instead of the old
+ * Salla OAuth flow.
  */
 type LinkStoreGateCtx = {
   /** Open the "connect your store first" dialog. */
@@ -59,20 +51,21 @@ export function LinkStoreGateProvider({ children }: { children: React.ReactNode 
             </div>
             <DialogTitle>اربط متجرك أولاً</DialogTitle>
             <DialogDescription>
-              هذا القسم يُفتح بعد ربط متجرك بتطبيق Portalio SA. تستغرق العملية أقل من
-              دقيقة، وبعدها تظهر طلباتك ومنتجاتك وكل الأقسام تلقائياً.
+              هذا القسم يُفتح بعد ربط متجرك عبر الويب هوك.
+              اذهب لصفحة الربط لإعداد الويب هوك — العملية تأخذ أقل من دقيقة.
             </DialogDescription>
           </DialogHeader>
 
           <DialogFooter className="mt-1">
-            <a
-              href="/api/salla/oauth/start"
+            <Link
+              href="/admin/integrations"
+              onClick={() => setOpen(false)}
               className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-accent text-accent-fg text-sm font-extrabold hover:brightness-105 active:scale-[0.98] transition-all"
             >
-              <Store className="size-4" strokeWidth={2.2} />
-              ربط المتجر الآن
+              <Webhook className="size-4" strokeWidth={2.2} />
+              إعداد الويب هوك
               <ArrowLeft className="size-4" strokeWidth={2.5} />
-            </a>
+            </Link>
             <DialogClose asChild>
               <button
                 type="button"

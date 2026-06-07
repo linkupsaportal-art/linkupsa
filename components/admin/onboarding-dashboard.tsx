@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   PackageCheck,
   ShieldCheck,
@@ -5,6 +6,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   Sparkles,
+  Webhook,
 } from "lucide-react";
 
 /**
@@ -61,18 +63,19 @@ export function OnboardingDashboard({
           </h1>
           <p className="mt-3 text-sm sm:text-base text-white/70 leading-relaxed">
             حسابك جاهز وكل الأقسام موجودة. لفتح اللوحة وعرض الطلبات والتسليم
-            التلقائي، يتبقى أن تربط متجرك بتطبيق Portalio SA. تستغرق العملية أقل من
+            التلقائي، يتبقى إعداد الويب هوك في سلة. العملية تأخذ أقل من
             دقيقة.
           </p>
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <a
-              href="/api/salla/oauth/start"
+            <Link
+              href="/admin/integrations"
               className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-accent text-accent-fg text-sm font-extrabold hover:brightness-105 active:scale-[0.98] transition-all shadow-[0_12px_30px_-12px_hsl(var(--accent)/0.7)]"
             >
-              ربط المتجر الآن
+              <Webhook className="size-4" strokeWidth={2.2} />
+              إعداد الويب هوك
               <ArrowLeft className="size-4" strokeWidth={2.5} />
-            </a>
+            </Link>
             <a
               href="/admin"
               className="inline-flex items-center justify-center h-12 px-6 rounded-full bg-white/10 text-white text-sm font-bold hover:bg-white/15 transition-colors"
@@ -98,8 +101,8 @@ export function OnboardingDashboard({
         <ol className="space-y-4">
           <Step
             n={1}
-            title="اربط متجرك"
-            body="اضغط «ربط المتجر الآن» وأضِف تطبيق Portalio SA إلى متجرك ووافق على الصلاحيات."
+            title="إعداد الويب هوك"
+            body="اذهب لصفحة الربط وانسخ رابط الويب هوك وألصقه في إعدادات سلة."
             active
           />
           <Step
