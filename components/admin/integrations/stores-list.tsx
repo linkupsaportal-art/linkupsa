@@ -25,18 +25,6 @@ import type { ConnectedStore } from "@/app/admin/integrations/page";
 /** Webhook endpoint URL shown to the user. */
 const WEBHOOK_URL = "https://www.portaliosa.com/api/salla/webhook";
 
-/** Event types the webhook expects from Salla. */
-const REQUIRED_EVENTS = [
-  { name: "invoice.created", desc: "فاتورة جديدة — المعالجة الأساسية" },
-  { name: "order.created", desc: "طلب جديد — تسليم تلقائي" },
-];
-
-const OPTIONAL_EVENTS = [
-  { name: "order.updated", desc: "تحديث حالة طلب" },
-  { name: "order.cancelled", desc: "إلغاء طلب" },
-  { name: "order.refunded", desc: "استرجاع طلب" },
-];
-
 /* ------------------------------------------------------------------ */
 /*  Main List                                                          */
 /* ------------------------------------------------------------------ */
@@ -185,69 +173,67 @@ function WebhookSetupGuide() {
         <div>
           <h4 className="text-xs sm:text-sm font-bold text-fg">إعداد الويب هوك في سلة</h4>
           <p className="text-[10px] sm:text-[11px] text-fg-muted">
-            المعلومات اللازمة لربط متجرك
+            أدخل هذه القيم في صفحة تعديل الويب هوك بلوحة سلة
           </p>
         </div>
       </div>
 
-      {/* Webhook URL */}
+      {/* ── Salla Fields ── */}
+
+      {/* 1. اسم الحدث */}
+      <ConfigField
+        icon={<FileCode2 className="size-3.5 text-fg-faint" />}
+        label="اسم الحدث (اختياري)"
+        value="Portalio SA"
+        hint="عنوان توضيحي — اختر أي اسم تريد"
+      />
+
+      {/* 2. نوع الحدث */}
+      <ConfigField
+        icon={<CheckCircle2 className="size-3.5 text-accent" />}
+        label="نوع الحدث"
+        value="انشاء فاتورة طلب (invoice.created)"
+        hint="الحدث الأساسي — يُرسل عند كل فاتورة جديدة مدفوعة"
+      />
+
+      {/* 3. نسخة الإصدار */}
+      <ConfigField
+        icon={<ShieldCheck className="size-3.5 text-fg-faint" />}
+        label="نسخة إصدار الإشعار"
+        value="الإصدار V2"
+        hint="اختر الإصدار V2 المتقدم — مطلوب"
+      />
+
+      {/* 4. شرط متقدم */}
+      <ConfigField
+        icon={<FileCode2 className="size-3.5 text-fg-faint" />}
+        label="شرط متقدم (اختياري)"
+        value="(payment_method = 'mada' AND total > 100) or payment_method = 'applepay'"
+        hint="يمكنك فلترة الأحداث بشروط — هذا مثال، اتركه فارغاً لاستقبال كل الأحداث"
+      />
+
+      {/* 5. رابط الحدث */}
       <ConfigField
         icon={<Globe className="size-3.5 text-accent" />}
-        label="رابط الويب هوك (URL)"
+        label="رابط الحدث (URL)"
         value={WEBHOOK_URL}
         copyable
+        hint="رابط الخدمة الذي سيتم إرسال بيانات الحدث إليه — يبدأ بـ https"
       />
 
-      {/* Security header */}
-      <ConfigField
-        icon={<ShieldCheck className="size-3.5 text-accent" />}
-        label="طريقة التحقق (Security)"
-        value="Token — يُضاف في إعدادات Headers بسلة"
-        hint="في سلة: أضف Custom Header باسم authorization وقيمته التوكن المتفق عليه"
-      />
-
-      {/* Required Events */}
+      {/* ── Request Header Parameters ── */}
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.12em] text-fg-faint">
-          <FileCode2 className="size-3" />
-          الأحداث المطلوبة (Events)
+          <ShieldCheck className="size-3" />
+          Request Header Parameters
         </div>
         <div className="grid gap-1.5">
-          {REQUIRED_EVENTS.map((ev) => (
-            <div
-              key={ev.name}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface border border-[hsl(var(--hairline))]"
-            >
-              <CheckCircle2 className="size-3 text-accent shrink-0" />
-              <code className="text-[10px] sm:text-[11px] font-num font-bold text-fg" dir="ltr">
-                {ev.name}
-              </code>
-              <span className="text-[9px] sm:text-[10px] text-fg-muted">— {ev.desc}</span>
-            </div>
-          ))}
+          <HeaderRow name="authorization" value="التوكن السري (SALLA_WEBHOOK_TOKEN)" />
+          <HeaderRow name="x-salla-security-strategy" value="Token" />
         </div>
-      </div>
-
-      {/* Optional Events */}
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] uppercase font-bold tracking-[0.12em] text-fg-faint">
-          <FileCode2 className="size-3" />
-          أحداث اختيارية
-        </div>
-        <div className="grid gap-1.5">
-          {OPTIONAL_EVENTS.map((ev) => (
-            <div
-              key={ev.name}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface border border-[hsl(var(--hairline))] opacity-70"
-            >
-              <span className="size-3 rounded-full border border-[hsl(var(--hairline-strong))] shrink-0" />
-              <code className="text-[10px] sm:text-[11px] font-num font-bold text-fg" dir="ltr">
-                {ev.name}
-              </code>
-              <span className="text-[9px] sm:text-[10px] text-fg-muted">— {ev.desc}</span>
-            </div>
-          ))}
-        </div>
+        <p className="text-[9px] sm:text-[10px] text-fg-faint leading-relaxed">
+          في سلة: اضغط <span className="font-bold text-fg">Add Request Header Parameters</span> وأضف الهيدرين أعلاه
+        </p>
       </div>
 
       {/* Step-by-step */}
@@ -256,14 +242,29 @@ function WebhookSetupGuide() {
           خطوات الإعداد
         </p>
         <ol className="text-[10px] sm:text-[11px] text-fg-muted space-y-1.5 ps-4 list-decimal leading-relaxed">
-          <li>افتح لوحة تحكم سلة → <span className="font-bold text-fg">الإعدادات → Webhooks</span></li>
+          <li>افتح لوحة تحكم سلة → <span className="font-bold text-fg">الإعدادات → التطبيقات → Webhooks</span></li>
           <li>اضغط <span className="font-bold text-fg">إضافة ويب هوك جديد</span></li>
-          <li>ألصق الرابط أعلاه في حقل <span className="font-bold text-fg">URL</span></li>
-          <li>اختر طريقة التحقق <span className="font-bold text-fg">Token</span> وأدخل التوكن</li>
-          <li>فعّل الأحداث: <code className="font-num font-bold text-fg" dir="ltr">invoice.created</code> + <code className="font-num font-bold text-fg" dir="ltr">order.created</code></li>
-          <li>احفظ — الطلبات ستصل تلقائياً للمنصة ✅</li>
+          <li>اختر نوع الحدث: <span className="font-bold text-fg">انشاء فاتورة طلب</span></li>
+          <li>اختر الإصدار: <span className="font-bold text-fg">V2</span></li>
+          <li>ألصق الرابط: <code className="font-num font-bold text-fg text-[10px]" dir="ltr">{WEBHOOK_URL}</code></li>
+          <li>أضف الهيدرز: <span className="font-bold text-fg">authorization</span> + <span className="font-bold text-fg">x-salla-security-strategy: Token</span></li>
+          <li>اضغط <span className="font-bold text-fg">حفظ</span> — الأحداث ستصل تلقائياً ✅</li>
         </ol>
       </div>
+    </div>
+  );
+}
+
+function HeaderRow({ name, value }: { name: string; value: string }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 px-2.5 py-2 rounded-lg bg-surface border border-[hsl(var(--hairline))]">
+      <code className="text-[10px] sm:text-[11px] font-num font-bold text-accent shrink-0" dir="ltr">
+        {name}
+      </code>
+      <span className="hidden sm:inline text-fg-faint">→</span>
+      <span className="text-[10px] sm:text-[11px] font-num text-fg truncate" dir="ltr">
+        {value}
+      </span>
     </div>
   );
 }
