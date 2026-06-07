@@ -14,18 +14,28 @@ export type ConnectedStore = {
   store_logo_url: string | null;
   installed_at: string;
   uninstalled_at: string | null;
-  /** Whether any webhook events have been received from this store. */
+  /** Whether real invoice/order events arrived in the last 48 h. */
   webhook_active: boolean;
   /** Count of events received in the last 7 days. */
   events_7d: number;
-  /** Last event received timestamp. */
+  /** Last event received timestamp (all-time). */
   last_event_at: string | null;
 };
+
+/**
+ * Only these event types count toward "webhook is wired":
+ * app.* and test.* are handshake/install events, not real traffic.
+ */
+const REAL_EVENT_PREFIXES = ["order.", "invoice."];
 
 async function loadIntegrationData() {
   const sb = createServiceClient();
 
-  const [stores, recentEvents, eventStats] = await Promise.all([
+  const now = Date.now();
+  const cutoff7d = new Date(now - 7 * 24 * 60 * 60_000).toISOString();
+  const cutoff48h = new Date(now - 48 * 60 * 60_000).toISOString();
+
+  const [stores, recentEvents, events7d, events48h] = await Promise.all([
     sb
       .from("salla_stores")
       .select(
@@ -34,42 +44,60 @@ async function loadIntegrationData() {
       .order("installed_at", { ascending: false }),
     sb
       .from("webhook_events")
-      .select("id, event, status, error, received_at, processed_at")
+      .select("id, event, status, error, received_at, processed_at, store_id")
       .order("received_at", { ascending: false })
       .limit(20),
+    // 7-day stats for counts
     sb
       .from("webhook_events")
-      .select("status, store_id, received_at")
-      .gte("received_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+      .select("status, store_id, received_at, event")
+      .gte("received_at", cutoff7d),
+    // 48-hour check for "active" detection — only real events
+    sb
+      .from("webhook_events")
+      .select("store_id, event, received_at")
+      .gte("received_at", cutoff48h),
   ]);
 
-  const counts = (eventStats.data ?? []).reduce<Record<string, number>>((acc, r) => {
+  // Global status counts
+  const counts = (events7d.data ?? []).reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
     return acc;
   }, {});
 
-  // Per-store webhook stats (7-day window)
-  const storeEventCounts = new Map<number, { count: number; lastAt: string | null }>();
-  for (const evt of eventStats.data ?? []) {
+  // Per-store 7-day stats
+  const store7d = new Map<number, { count: number; lastAt: string | null }>();
+  for (const evt of events7d.data ?? []) {
     const sid = evt.store_id as number | null;
     if (!sid) continue;
-    const existing = storeEventCounts.get(sid);
+    const existing = store7d.get(sid);
     if (existing) {
       existing.count++;
-      if (!existing.lastAt || evt.received_at > existing.lastAt) {
+      if (!existing.lastAt || (evt.received_at as string) > existing.lastAt) {
         existing.lastAt = evt.received_at as string;
       }
     } else {
-      storeEventCounts.set(sid, { count: 1, lastAt: evt.received_at as string });
+      store7d.set(sid, { count: 1, lastAt: evt.received_at as string });
     }
   }
 
-  // Enrich stores with webhook activity info
+  // Per-store 48h "active" — only real events (order.*, invoice.*)
+  const storeActive48h = new Set<number>();
+  for (const evt of events48h.data ?? []) {
+    const sid = evt.store_id as number | null;
+    const eventName = evt.event as string;
+    if (!sid) continue;
+    if (REAL_EVENT_PREFIXES.some((p) => eventName.startsWith(p))) {
+      storeActive48h.add(sid);
+    }
+  }
+
+  // Enrich stores
   const enrichedStores: ConnectedStore[] = (stores.data ?? []).map((s) => {
-    const stats = storeEventCounts.get(s.store_id);
+    const stats = store7d.get(s.store_id);
     return {
       ...s,
-      webhook_active: (stats?.count ?? 0) > 0,
+      webhook_active: storeActive48h.has(s.store_id),
       events_7d: stats?.count ?? 0,
       last_event_at: stats?.lastAt ?? null,
     };
@@ -79,7 +107,7 @@ async function loadIntegrationData() {
     stores: enrichedStores,
     events: recentEvents.data ?? [],
     counts,
-    total: eventStats.data?.length ?? 0,
+    total: events7d.data?.length ?? 0,
   };
 }
 
@@ -108,14 +136,14 @@ export default async function IntegrationsPage() {
           />
           <Stat
             icon={AlertCircle}
-            label="فشلت"
+            label="فشلت / ينتظر"
             value={(counts.failed ?? 0) + (counts.pending ?? 0)}
             tone={(counts.failed ?? 0) + (counts.pending ?? 0) > 0 ? "bad" : "neutral"}
           />
         </div>
 
         {/* Connected stores with webhook info */}
-        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة وحالة الويب هوك.">
+        <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة وحالة الويب هوك الفعلية.">
           <StoresList stores={active} />
         </Section>
 
@@ -143,6 +171,7 @@ export type IntegrationEvent = {
   error: string | null;
   received_at: string;
   processed_at: string | null;
+  store_id?: number | null;
 };
 
 function Stat({
