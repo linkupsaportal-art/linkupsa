@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { randomBytes } from "node:crypto";
+import { refreshStoreInfo } from "./store-info";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -59,19 +60,27 @@ export function generateWebhookKey(): string {
 /*  Auto-Link Store → User                                             */
 /* ------------------------------------------------------------------ */
 
+/** Optional store metadata extracted from the webhook payload. */
+export type WebhookStoreMeta = {
+  name?: string;
+  url?: string;
+};
+
 /**
  * When a webhook arrives with a valid portaliosa key AND a merchant ID in the
  * body, this function:
  *   1. Looks up the user by webhook_key in profiles
- *   2. Upserts a salla_stores row (if it doesn't exist yet)
+ *   2. Upserts a salla_stores row (enriching with storeMeta if available)
  *   3. Upserts a store_members row making the user the owner (only if no
  *      owner exists yet — never hijacks an existing store)
+ *   4. Best-effort: enriches store info via Salla API if an access token exists
  *
  * Returns the user ID if linking succeeded, null otherwise.
  */
 export async function autoLinkStore(
   webhookKey: string,
   merchantId: number,
+  storeMeta?: WebhookStoreMeta,
 ): Promise<{ userId: string } | null> {
   const sb = createServiceClient();
 
@@ -89,14 +98,22 @@ export async function autoLinkStore(
 
   const userId = profile.id as string;
 
-  // 2. Ensure salla_stores row exists
+  // 2. Ensure salla_stores row exists — enrich with storeMeta if available
+  const storeUpsertData: Record<string, unknown> = {
+    store_id: merchantId,
+    installed_at: new Date().toISOString(),
+    uninstalled_at: null,
+  };
+  // Only set name/URL if provided (avoid overwriting existing data with nulls)
+  if (storeMeta?.name) storeUpsertData.store_name = storeMeta.name;
+  if (storeMeta?.url) {
+    storeUpsertData.store_url = storeMeta.url;
+    storeUpsertData.store_domain = extractDomainFromUrl(storeMeta.url);
+  }
+
   const { error: storeErr } = await sb.from("salla_stores").upsert(
-    {
-      store_id: merchantId,
-      installed_at: new Date().toISOString(),
-      uninstalled_at: null,
-    },
-    { onConflict: "store_id", ignoreDuplicates: true },
+    storeUpsertData,
+    { onConflict: "store_id", ignoreDuplicates: false },
   );
   if (storeErr) {
     console.error("[auto-link] Failed to upsert salla_stores:", storeErr.message);
@@ -148,6 +165,26 @@ export async function autoLinkStore(
     }
   }
 
+  // 4. Best-effort: enrich store info via Salla API if a token is already stored
+  //    This happens when the store was previously OAuth-linked.
+  try {
+    const { data: storeRow } = await sb
+      .from("salla_stores")
+      .select("access_token, store_name")
+      .eq("store_id", merchantId)
+      .maybeSingle();
+
+    if (storeRow?.access_token && !storeRow?.store_name) {
+      console.log(`[auto-link] Enriching store ${merchantId} with API data...`);
+      await refreshStoreInfo({
+        storeId: merchantId,
+        accessToken: storeRow.access_token as string,
+      });
+    }
+  } catch (err) {
+    console.error("[auto-link] store enrichment failed (non-fatal):", err);
+  }
+
   return { userId };
 }
 
@@ -174,4 +211,17 @@ export async function getOrCreateWebhookKey(userId: string): Promise<string> {
   const key = generateWebhookKey();
   await sb.from("profiles").update({ webhook_key: key }).eq("id", userId);
   return key;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Extracts the hostname from a URL string, gracefully handling malformed input. */
+function extractDomainFromUrl(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  }
 }

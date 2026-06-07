@@ -59,7 +59,15 @@ export async function POST(req: Request): Promise<NextResponse> {
   const webhookKey = resolveWebhookKey(req.headers);
   if (webhookKey && envelope.merchant) {
     try {
-      const linkResult = await autoLinkStore(webhookKey, envelope.merchant);
+      // Extract store metadata from data.store if present (order events include it)
+      const dataStore = (envelope.data as Record<string, unknown> | undefined)?.store as
+        | { id?: number; name?: string; url?: string }
+        | undefined;
+      const storeMeta = dataStore
+        ? { name: dataStore.name, url: dataStore.url }
+        : undefined;
+
+      const linkResult = await autoLinkStore(webhookKey, envelope.merchant, storeMeta);
       console.log("[salla.auto-link] result:", linkResult ? `linked → ${linkResult.userId.substring(0, 8)}...` : "no match");
     } catch (err) {
       console.error("[salla.auto-link] failed:", err);
