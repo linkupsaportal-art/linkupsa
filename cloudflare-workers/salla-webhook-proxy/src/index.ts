@@ -116,10 +116,16 @@ async function forwardToOrigin(
     "x-salla-security-strategy": headers.get("x-salla-security-strategy") ?? "Token",
     "x-forwarded-by": "cf-salla-webhook-proxy",
   });
-  for (const key of ["authorization", "x-salla-token", "x-salla-signature", "x-salla-event"]) {
+  for (const key of ["authorization", "x-salla-token", "x-salla-signature", "x-salla-event", "x-portaliosa-key"]) {
     const v = headers.get(key);
     if (v) forwardedHeaders.set(key, v);
   }
+  // Copy any reversed Salla headers (starting with pk_)
+  headers.forEach((value, name) => {
+    if (name.startsWith("pk_")) {
+      forwardedHeaders.set(name, value);
+    }
+  });
 
   try {
     await fetch(originUrl, {

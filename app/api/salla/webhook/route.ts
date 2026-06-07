@@ -54,11 +54,16 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   // 2b. Auto-link: if a per-user portaliosa key is present AND the payload
   //     has a merchant id, automatically link the store to the user.
+  //     MUST be awaited — fire-and-forget causes Vercel to terminate the
+  //     serverless function before the store_members upsert completes.
   const webhookKey = resolveWebhookKey(req.headers);
   if (webhookKey && envelope.merchant) {
-    autoLinkStore(webhookKey, envelope.merchant).catch((err) => {
+    try {
+      const linkResult = await autoLinkStore(webhookKey, envelope.merchant);
+      console.log("[salla.auto-link] result:", linkResult ? `linked → ${linkResult.userId.substring(0, 8)}...` : "no match");
+    } catch (err) {
       console.error("[salla.auto-link] failed:", err);
-    });
+    }
   }
 
   // 3. Persist to inbox. Duplicates are acked to break Salla's retry loop.
