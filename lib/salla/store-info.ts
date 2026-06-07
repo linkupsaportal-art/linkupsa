@@ -18,6 +18,19 @@ export async function refreshStoreInfo(opts: {
   accessToken: string;
 }): Promise<{ ok: true; storeUrl: string | null } | { ok: false; error: string }> {
   try {
+    // Guard against placeholder / empty tokens — the store was wired via
+    // webhook-only and never completed the full OAuth flow.
+    if (
+      !opts.accessToken ||
+      opts.accessToken.startsWith("placeholder") ||
+      opts.accessToken.length < 30
+    ) {
+      return {
+        ok: false,
+        error: "لا يوجد رمز وصول صالح. الربط تم عبر الويب هوك فقط.",
+      };
+    }
+
     const r = await fetch(`${SALLA_API}/store/info`, {
       headers: {
         authorization: `Bearer ${opts.accessToken}`,
@@ -26,6 +39,12 @@ export async function refreshStoreInfo(opts: {
       signal: AbortSignal.timeout(8_000),
     });
     if (!r.ok) {
+      if (r.status === 401) {
+        return {
+          ok: false,
+          error: "رمز الوصول منتهي الصلاحية. أعد ربط المتجر عبر سلة.",
+        };
+      }
       return { ok: false, error: `HTTP ${r.status}` };
     }
     const json = (await r.json()) as {

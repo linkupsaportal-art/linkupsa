@@ -35,6 +35,7 @@ export const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      aria-describedby={props["aria-describedby"] ?? undefined}
       // The `theme-admin` class re-applies cream/lime tokens on the portaled
       // content. Radix portals to <body>, which sits OUTSIDE the admin
       // layout's themed wrapper, so without this the dialog would inherit
