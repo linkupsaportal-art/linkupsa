@@ -5,6 +5,12 @@
 
 ---
 
+# 2026-06-07 21:26
+
+- 🔒 **Fixed Cross-Store Data Leak on Integrations Page — Razex Xelite**
+  - **Scoped Queries to Logged-in User**: Updated `loadIntegrationData` in [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/integrations/page.tsx) to query the user's linked store IDs from the `store_members` table first, and then filtered all queries to `salla_stores` and `webhook_events` using `.in("store_id", storeIds)`.
+  - **Secured Onboarding State**: Users with zero connected stores will now see empty lists and only their own personal setup guide, preventing access to other merchants' stores and webhook statistics.
+
 # 2026-06-07 21:23
 
 - 🔓 **Unlocked Webhook & Integrations Route for Onboarding — Razex Xelite**

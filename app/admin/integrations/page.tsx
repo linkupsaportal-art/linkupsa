@@ -29,8 +29,34 @@ export type ConnectedStore = {
  */
 const REAL_EVENT_PREFIXES = ["order.", "invoice."];
 
-async function loadIntegrationData() {
+async function loadIntegrationData(userId?: string) {
   const sb = createServiceClient();
+
+  if (!userId) {
+    return {
+      stores: [],
+      events: [],
+      counts: {},
+      total: 0,
+    };
+  }
+
+  // Fetch the stores where the user has active membership
+  const { data: memberships } = await sb
+    .from("store_members")
+    .select("store_id")
+    .eq("user_id", userId);
+
+  const storeIds = (memberships ?? []).map((m) => m.store_id as number);
+
+  if (storeIds.length === 0) {
+    return {
+      stores: [],
+      events: [],
+      counts: {},
+      total: 0,
+    };
+  }
 
   const now = Date.now();
   const cutoff7d = new Date(now - 7 * 24 * 60 * 60_000).toISOString();
@@ -42,21 +68,25 @@ async function loadIntegrationData() {
       .select(
         "store_id, store_name, store_url, store_domain, store_logo_url, installed_at, uninstalled_at",
       )
+      .in("store_id", storeIds)
       .order("installed_at", { ascending: false }),
     sb
       .from("webhook_events")
       .select("id, event, status, error, received_at, processed_at, store_id")
+      .in("store_id", storeIds)
       .order("received_at", { ascending: false })
       .limit(20),
     // 7-day stats for counts
     sb
       .from("webhook_events")
       .select("status, store_id, received_at, event")
+      .in("store_id", storeIds)
       .gte("received_at", cutoff7d),
     // 48-hour check for "active" detection — only real events
     sb
       .from("webhook_events")
       .select("store_id, event, received_at")
+      .in("store_id", storeIds)
       .gte("received_at", cutoff48h),
   ]);
 
@@ -113,11 +143,11 @@ async function loadIntegrationData() {
 }
 
 export default async function IntegrationsPage() {
-  const { stores, events, counts, total } = await loadIntegrationData();
+  const user = await getCurrentUser();
+  const { stores, events, counts, total } = await loadIntegrationData(user?.id);
   const active = stores.filter((s) => !s.uninstalled_at);
 
   // Fetch the current user's personal webhook key for display
-  const user = await getCurrentUser();
   const webhookKey = user ? await getOrCreateWebhookKey(user.id) : null;
 
   return (
