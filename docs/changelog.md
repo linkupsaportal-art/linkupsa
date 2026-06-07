@@ -5,6 +5,18 @@
 
 ---
 
+# 2026-06-07 21:23
+
+- 🔓 **Unlocked Webhook & Integrations Route for Onboarding — Razex Xelite**
+  - **Middleware Gate Bypass**: Added `/admin/integrations` to the `alwaysAllowed` route list in [session.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/supabase/session.ts). This allows onboarding users (without an active store membership yet) to load this page without being redirected back to `/admin`.
+  - **Sidebar Navigation Unlock**: Added `/admin/integrations` to the `unlockedHrefs` array in [layout.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/layout.tsx), ensuring it is clickable (lock icon removed) and navigable during onboarding.
+
+# 2026-06-07 21:20
+
+- 🛠️ **Signup Database Trigger Fix — Razex Xelite**
+  - **Resolved Registration Blocker**: Fixed the database trigger function `handle_new_user()` which was failing on signup with a `Database error creating new user` (causing transaction rollback).
+  - **Qualified Schema & Secured Search Path**: Fully qualified the `gen_random_bytes` call as `extensions.gen_random_bytes` and added `SET search_path = public, extensions` to the trigger function to ensure it runs correctly regardless of the caller's search path (such as the internal `supabase_auth_admin` daemon user).
+
 # 2026-06-07 20:53
 
 - ⚙️ **Account Editing & Immediate 2FA Visibility — Razex Xelite**

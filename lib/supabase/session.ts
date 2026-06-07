@@ -118,7 +118,9 @@ export async function updateSession(request: NextRequest) {
       // No membership yet. Onboarding dashboard + own profile are always
       // reachable; the store sections render locked in the UI.
       const alwaysAllowed =
-        pathname === "/admin" || pathname.startsWith("/admin/profile");
+        pathname === "/admin" ||
+        pathname.startsWith("/admin/profile") ||
+        pathname.startsWith("/admin/integrations");
 
       let staffAllowed = false;
       if (!alwaysAllowed && pathname.startsWith("/admin/staff")) {

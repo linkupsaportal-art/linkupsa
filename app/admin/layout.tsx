@@ -53,7 +53,11 @@ export default async function AdminLayout({
   const locked = !role;
   const hasPending = locked ? await hasPendingInvitation(user.id) : false;
 
-  const unlockedHrefs = ["/admin/profile", ...(hasPending ? ["/admin/staff"] : [])];
+  const unlockedHrefs = [
+    "/admin/profile",
+    "/admin/integrations",
+    ...(hasPending ? ["/admin/staff"] : []),
+  ];
 
   const effectiveRole = role ?? "support";
   // Both queries are scoped to THIS user, so they're safe even when locked.
