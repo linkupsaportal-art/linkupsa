@@ -5,6 +5,14 @@
 
 ---
 
+# 2026-06-07 22:45
+
+- 🔗 **Webhook Auto-Link Fix + Store Name Enrichment — Razex Xelite**
+  - **Fixed premature serverless termination**: Changed `autoLinkStore` from fire-and-forget (`.catch()`) to `await` in the webhook route, preventing Vercel from killing the function before `store_members` upsert completes.
+  - **Store metadata extraction**: The webhook route now extracts `data.store.name` and `data.store.url` from Salla order payloads and passes them to `autoLinkStore` for enrichment.
+  - **API-based fallback enrichment**: After auto-linking, if the `salla_stores` row has an access token (from prior OAuth) but no store name, `refreshStoreInfo` is called to fetch name/URL/logo from Salla's API.
+  - **Updated `autoLinkStore` signature**: Now accepts optional `WebhookStoreMeta` to enrich the store upsert.
+
 # 2026-06-07 21:26
 
 - 🔒 **Fixed Cross-Store Data Leak on Integrations Page — Razex Xelite**
