@@ -3,6 +3,7 @@ import { recordWebhook } from "@/lib/salla/inbox";
 import { dispatch } from "@/lib/salla/handlers";
 import type { SallaWebhookEnvelope } from "@/lib/salla/types";
 import { deliveryHash, verifySallaWebhook } from "@/lib/salla/verify";
+import { resolveWebhookKey, autoLinkStore } from "@/lib/salla/auto-link";
 
 export const runtime = "nodejs";
 // Webhook payloads must NOT be cached or reused — every POST is a new event.
@@ -49,6 +50,15 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   if (!envelope?.event) {
     return NextResponse.json({ error: "missing_event" }, { status: 400 });
+  }
+
+  // 2b. Auto-link: if a per-user portaliosa key is present AND the payload
+  //     has a merchant id, automatically link the store to the user.
+  const webhookKey = resolveWebhookKey(req.headers);
+  if (webhookKey && envelope.merchant) {
+    autoLinkStore(webhookKey, envelope.merchant).catch((err) => {
+      console.error("[salla.auto-link] failed:", err);
+    });
   }
 
   // 3. Persist to inbox. Duplicates are acked to break Salla's retry loop.
@@ -150,6 +160,7 @@ function collectInterestingHeaders(h: Headers): Record<string, string> {
     "x-salla-signature",
     "x-salla-token",
     "x-salla-event",
+    "x-portaliosa-key",
     "user-agent",
     "content-type",
   ]) {

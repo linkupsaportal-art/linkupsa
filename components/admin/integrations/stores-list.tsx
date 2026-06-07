@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import {
   CheckCircle2,
   Copy,
@@ -13,10 +13,16 @@ import {
   ExternalLink,
   Activity,
   ShieldCheck,
-  FileCode2,
   Clock,
+  Fingerprint,
+  Loader2,
+  Signal,
+  SignalZero,
+  XCircle,
 } from "lucide-react";
 import type { ConnectedStore } from "@/app/admin/integrations/page";
+import { checkWebhookConnectionAction } from "@/app/admin/integrations/actions";
+import type { ConnectionStatus } from "@/app/admin/integrations/actions";
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -30,20 +36,31 @@ const WEBHOOK_TOKEN = "9ab2fd0f47c89fc3ed7f57b7142065b8d33b206d55faf2cfa75b4e413
 /*  Main List                                                          */
 /* ------------------------------------------------------------------ */
 
-export function StoresList({ stores }: { stores: ConnectedStore[] }) {
-  if (stores.length === 0) {
-    return (
-      <p className="text-sm text-fg-muted text-center py-6">لا توجد متاجر مربوطة.</p>
-    );
-  }
+export function StoresList({
+  stores,
+  webhookKey,
+  userId,
+}: {
+  stores: ConnectedStore[];
+  webhookKey: string | null;
+  userId: string | null;
+}) {
   return (
     <div className="space-y-3">
-      {stores.map((s) => (
-        <StoreRow key={s.store_id} store={s} />
-      ))}
+      {stores.length > 0 &&
+        stores.map((s) => <StoreRow key={s.store_id} store={s} />)}
+
+      {stores.length === 0 && (
+        <p className="text-sm text-fg-muted text-center py-4">
+          لا توجد متاجر مربوطة بعد. أعد الويب هوك في سلة وسيتم ربط متجرك تلقائياً.
+        </p>
+      )}
 
       {/* Global webhook setup guide */}
-      <WebhookSetupGuide />
+      <WebhookSetupGuide webhookKey={webhookKey} />
+
+      {/* Connection check */}
+      {userId && <ConnectionChecker userId={userId} />}
     </div>
   );
 }
@@ -163,7 +180,7 @@ function StoreRow({ store }: { store: ConnectedStore }) {
 /*  Webhook Setup Guide — full config reference                        */
 /* ------------------------------------------------------------------ */
 
-function WebhookSetupGuide() {
+function WebhookSetupGuide({ webhookKey }: { webhookKey: string | null }) {
   return (
     <div className="mt-4 p-3 sm:p-4 rounded-xl border border-dashed border-[hsl(var(--hairline-strong))] bg-surface/50 space-y-4">
       {/* Header */}
@@ -205,6 +222,17 @@ function WebhookSetupGuide() {
         value="Token"
         copyable
       />
+
+      {/* 4. x-portaliosa-key (per-user identification key) */}
+      {webhookKey && (
+        <ConfigField
+          icon={<Fingerprint className="size-3.5 text-accent" />}
+          label="x-portaliosa-key"
+          value={webhookKey}
+          copyable
+          hint="مفتاح خاص بحسابك — أضفه كـ Request Header Parameter في سلة لربط متجرك تلقائياً بحسابك"
+        />
+      )}
     </div>
   );
 }
@@ -270,6 +298,151 @@ function ConfigField({
       </div>
       {hint && (
         <p className="text-[9px] sm:text-[10px] text-fg-faint leading-relaxed">{hint}</p>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Connection Checker — verify webhook is wired                       */
+/* ------------------------------------------------------------------ */
+
+function ConnectionChecker({ userId }: { userId: string }) {
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<ConnectionStatus | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function check() {
+    setError(null);
+    startTransition(async () => {
+      const res = await checkWebhookConnectionAction(userId);
+      if (res.ok && res.data) {
+        setResult(res.data);
+      } else if (!res.ok) {
+        setError(res.error);
+      }
+    });
+  }
+
+  return (
+    <div className="mt-3 p-3 sm:p-4 rounded-xl border border-[hsl(var(--hairline))] bg-surface/50">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="size-8 rounded-lg bg-surface-2 flex items-center justify-center">
+            <Signal className="size-4 text-fg-muted" />
+          </div>
+          <div>
+            <h4 className="text-xs sm:text-sm font-bold text-fg">فحص الاتصال</h4>
+            <p className="text-[10px] text-fg-muted">
+              تحقق من وصول أحداث الويب هوك بنجاح
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={check}
+          disabled={isPending}
+          className="shrink-0 h-8 sm:h-9 px-4 inline-flex items-center gap-1.5 rounded-lg bg-fg text-bg text-[10px] sm:text-xs font-bold hover:opacity-90 disabled:opacity-50 transition-opacity cursor-pointer"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin" />
+              جاري الفحص...
+            </>
+          ) : (
+            <>
+              <Signal className="size-3.5" />
+              فحص الاتصال
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Result */}
+      {result && (
+        <div
+          className={`mt-3 p-3 rounded-lg border ${
+            result.connected
+              ? "border-emerald-500/25 bg-emerald-500/5"
+              : "border-amber-500/25 bg-amber-500/5"
+          }`}
+        >
+          <div className="flex items-center gap-2 mb-1.5">
+            {result.connected ? (
+              <>
+                <CheckCircle2 className="size-4 text-emerald-500" />
+                <span className="text-xs sm:text-sm font-bold text-emerald-600">
+                  متصل ✅
+                </span>
+              </>
+            ) : (
+              <>
+                <SignalZero className="size-4 text-amber-500" />
+                <span className="text-xs sm:text-sm font-bold text-amber-600">
+                  لم يُستقبل أي حدث بعد
+                </span>
+              </>
+            )}
+          </div>
+
+          {result.connected && (
+            <div className="space-y-1 text-[10px] sm:text-[11px] text-fg-muted">
+              <p>
+                <span className="font-bold">إجمالي الأحداث:</span>{" "}
+                <span className="font-num">{result.totalEvents}</span>
+              </p>
+              {result.lastEventAt && (
+                <p>
+                  <span className="font-bold">آخر حدث:</span>{" "}
+                  <span className="font-num" dir="ltr">
+                    {new Date(result.lastEventAt).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </span>
+                </p>
+              )}
+              {result.lastEventType && (
+                <p>
+                  <span className="font-bold">نوع آخر حدث:</span>{" "}
+                  <code className="font-num bg-surface px-1 rounded text-[9px]">
+                    {result.lastEventType}
+                  </code>
+                </p>
+              )}
+              {result.activeStoreIds.length > 0 && (
+                <p>
+                  <span className="font-bold">متاجر نشطة (7 أيام):</span>{" "}
+                  <span className="font-num">
+                    {result.activeStoreIds.join(", ")}
+                  </span>
+                </p>
+              )}
+            </div>
+          )}
+
+          {!result.connected && (
+            <p className="text-[10px] sm:text-[11px] text-fg-muted leading-relaxed">
+              تأكد من إعداد الويب هوك في سلة بالقيم أعلاه. بعد الإعداد، اضغط
+              &quot;اختبار الويب هوك&quot; من لوحة سلة ثم أعد الفحص هنا.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="mt-3 p-3 rounded-lg border border-red-500/25 bg-red-500/5">
+          <div className="flex items-center gap-2">
+            <XCircle className="size-4 text-red-400" />
+            <span className="text-xs font-bold text-red-500">
+              حدث خطأ: {error}
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );

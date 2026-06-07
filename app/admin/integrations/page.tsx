@@ -1,8 +1,9 @@
 import { PageHeader } from "@/components/admin/page-header";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createServiceClient, getCurrentUser } from "@/lib/supabase/server";
 import { Activity, AlertCircle, CheckCircle2, Clock, Store, Webhook } from "lucide-react";
 import { IntegrationsClient } from "@/components/admin/integrations/integrations-client";
 import { StoresList } from "@/components/admin/integrations/stores-list";
+import { getOrCreateWebhookKey } from "@/lib/salla/auto-link";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +116,10 @@ export default async function IntegrationsPage() {
   const { stores, events, counts, total } = await loadIntegrationData();
   const active = stores.filter((s) => !s.uninstalled_at);
 
+  // Fetch the current user's personal webhook key for display
+  const user = await getCurrentUser();
+  const webhookKey = user ? await getOrCreateWebhookKey(user.id) : null;
+
   return (
     <>
       <PageHeader
@@ -144,7 +149,7 @@ export default async function IntegrationsPage() {
 
         {/* Connected stores with webhook info */}
         <Section icon={Store} title="المتاجر المربوطة" description="كل متجر مرتبط بالمنصة وحالة الويب هوك الفعلية.">
-          <StoresList stores={active} />
+          <StoresList stores={active} webhookKey={webhookKey} userId={user?.id ?? null} />
         </Section>
 
         {/* Webhook events with drain controls */}

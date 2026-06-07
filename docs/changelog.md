@@ -5,6 +5,16 @@
 
 ---
 
+# 2026-06-07 20:39
+
+- 🔑 **Per-User Webhook Key & Auto Store Linking — Razex Xelite**
+  - **Auto-generated `webhook_key`**: Every user now gets a unique `pk_` + 32-hex key stored in `profiles.webhook_key`. Generated on signup via DB trigger and lazy-provisioned for existing users.
+  - **New [auto-link.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/auto-link.ts)**: `resolveWebhookKey()` reads the `x-portaliosa-key` header (handles Salla's reversed key/value bug). `autoLinkStore()` auto-creates `salla_stores` + `store_members` rows when a webhook arrives with a valid key.
+  - **Webhook route integration**: [route.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/api/salla/webhook/route.ts) now calls `resolveWebhookKey` + `autoLinkStore` after auth verification — fully self-service store onboarding.
+  - **Connection Check button**: New `checkWebhookConnectionAction` in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/integrations/actions.ts) + `ConnectionChecker` UI in [stores-list.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/integrations/stores-list.tsx) — "فحص الاتصال" button queries `webhook_events` and displays connected/not-connected status with event details.
+  - **Integrations UI**: 4th `ConfigField` showing the user's personal `x-portaliosa-key` with copy button and hint text.
+  - **DB trigger updated**: `handle_new_user()` now auto-generates `webhook_key` on user creation.
+
 # 2026-06-07 20:15
 
 - ⚡ **Simplified Salla Webhook Setup Guide — Razex Xelite**
