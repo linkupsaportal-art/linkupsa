@@ -9,6 +9,8 @@ import {
   updateProduct,
 } from "@/lib/db/products";
 import type { HandlerType, Product } from "@/lib/db/products-types";
+import { getNotificationChannel, getActiveStoreId } from "@/lib/db/notifications";
+import { verifyKarzoun } from "@/lib/notifications/whatsapp-karzoun";
 
 /**
  * Builds the `notification_channels` JSONB from the form's checkbox toggles.
@@ -118,6 +120,42 @@ export async function deleteProductOptionAction(id: string) {
     await deleteProductOption(id);
     revalidatePath("/admin/products");
     return { success: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function getKarzounTemplatesAction() {
+  try {
+    const storeId = await getActiveStoreId();
+    if (!storeId) return { error: "No active store found" };
+
+    const channel = await getNotificationChannel({ storeId, channel: "whatsapp" });
+    if (!channel || !channel.enabled || !channel.config) {
+      return { error: "WhatsApp channel not configured or disabled" };
+    }
+
+    const cfg = channel.config as any;
+    if (!cfg.app_token || !cfg.integration_id) {
+      return { error: "Karzoun credentials missing in configuration" };
+    }
+
+    const res = await verifyKarzoun({
+      host: cfg.host,
+      appToken: cfg.app_token,
+      integrationId: cfg.integration_id,
+    });
+
+    if (!res.ok) {
+      return { error: res.error };
+    }
+
+    // Return only approved templates
+    const approvedTemplates = res.templates
+      .filter((t) => t.status === "APPROVED")
+      .map((t) => ({ value: t.name, label: `${t.name} (معتمد)` }));
+
+    return { templates: approvedTemplates };
   } catch (e) {
     return { error: (e as Error).message };
   }

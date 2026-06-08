@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle, Search, X, MessageCircle, Send } from "lucide-react";
 import { type Product, type HandlerType, HANDLER_LABELS, WHATSAPP_TEMPLATE_OPTIONS, EMAIL_TEMPLATE_OPTIONS } from "@/lib/db/products-types";
 import { CustomSelect } from "@/components/ui/select";
@@ -11,6 +11,7 @@ import {
   toggleProductStatusAction,
   addProductOptionAction,
   deleteProductOptionAction,
+  getKarzounTemplatesAction,
 } from "@/app/admin/products/actions";
 import {
   Dialog,
@@ -459,6 +460,24 @@ function ProductForm({
     product?.notification_channels?.email_template ?? "none",
   );
 
+  const [whatsappTemplates, setWhatsappTemplates] = useState<any[]>(
+    Array.from(WHATSAPP_TEMPLATE_OPTIONS)
+  );
+
+  useEffect(() => {
+    async function loadTemplates() {
+      const res = await getKarzounTemplatesAction();
+      if (res && res.templates) {
+        const merged = [
+          { value: "none", label: "بدون إرسال" },
+          ...res.templates,
+        ];
+        setWhatsappTemplates(merged);
+      }
+    }
+    loadTemplates();
+  }, []);
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -572,7 +591,7 @@ function ProductForm({
                   name="whatsapp_template"
                   value={whatsappTemplate}
                   onChange={setWhatsappTemplate}
-                  options={WHATSAPP_TEMPLATE_OPTIONS as any}
+                  options={whatsappTemplates}
                   enableSearch={true}
                   disabled={isPending}
                 />
