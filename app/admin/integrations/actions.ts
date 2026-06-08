@@ -92,8 +92,12 @@ export type ConnectionStatus = {
 };
 
 /**
- * Checks whether the current user's linked stores have received webhook
- * events — the definitive proof that the Salla webhook is correctly wired.
+ * Checks whether the current user's webhook setup is working.
+ *
+ * Two-pronged approach to solve the chicken-and-egg problem:
+ *   1. Check via store_members → webhook_events (the "linked" path)
+ *   2. Check webhook_events where headers contain the user's portaliosa key
+ *      (handles the FIRST webhook before any store is linked)
  *
  * Called from the "فحص الاتصال" button on the integrations page.
  */
@@ -103,7 +107,7 @@ export async function checkWebhookConnectionAction(
   try {
     const sb = createServiceClient();
 
-    // Get user's stores via store_members
+    // ── Path 1: via linked stores ──────────────────────────────────────
     const { data: memberships } = await sb
       .from("store_members")
       .select("store_id")
@@ -111,49 +115,78 @@ export async function checkWebhookConnectionAction(
 
     const storeIds = (memberships ?? []).map((m) => m.store_id as number);
 
-    if (storeIds.length === 0) {
-      // No stores linked yet — check if ANY events arrived
-      // (could be pre-linking events)
-      return {
-        ok: true,
-        data: {
-          connected: false,
-          totalEvents: 0,
-          lastEventAt: null,
-          lastEventType: null,
-          activeStoreIds: [],
-        },
-      };
+    let totalEvents = 0;
+    let lastEventAt: string | null = null;
+    let lastEventType: string | null = null;
+    const activeIds = new Set<number>();
+
+    if (storeIds.length > 0) {
+      const { data: events, count } = await sb
+        .from("webhook_events")
+        .select("store_id, event, received_at", { count: "exact" })
+        .in("store_id", storeIds)
+        .order("received_at", { ascending: false })
+        .limit(1);
+
+      totalEvents = count ?? 0;
+      const lastEvent = events?.[0];
+      if (lastEvent) {
+        lastEventAt = (lastEvent.received_at as string) ?? null;
+        lastEventType = (lastEvent.event as string) ?? null;
+      }
+
+      const { data: recent } = await sb
+        .from("webhook_events")
+        .select("store_id")
+        .in("store_id", storeIds)
+        .gte("received_at", new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString())
+        .limit(100);
+      for (const r of recent ?? []) {
+        if (r.store_id) activeIds.add(r.store_id as number);
+      }
     }
 
-    // Query webhook_events for these store IDs
-    const { data: events, count } = await sb
-      .from("webhook_events")
-      .select("store_id, event, received_at", { count: "exact" })
-      .in("store_id", storeIds)
-      .order("received_at", { ascending: false })
-      .limit(1);
+    // ── Path 2: check by portaliosa key in headers ─────────────────────
+    // If no events were found via store_members, the webhook might have
+    // arrived but the auto-link didn't create store_members yet.
+    // Look for events where the stored headers contain the user's key.
+    if (totalEvents === 0) {
+      const { data: profile } = await sb
+        .from("profiles")
+        .select("webhook_key")
+        .eq("id", userId)
+        .maybeSingle();
 
-    const lastEvent = events?.[0];
-    const activeIds = new Set<number>();
-    // Get distinct active store IDs from recent events
-    const { data: recent } = await sb
-      .from("webhook_events")
-      .select("store_id")
-      .in("store_id", storeIds)
-      .gte("received_at", new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString())
-      .limit(100);
-    for (const r of recent ?? []) {
-      if (r.store_id) activeIds.add(r.store_id as number);
+      const webhookKey = profile?.webhook_key as string | undefined;
+      if (webhookKey) {
+        // Search webhook_events where the headers JSONB contains the key
+        // headers column stores: {"x-portaliosa-key": "pk_...", ...}
+        const { data: keyEvents, count: keyCount } = await sb
+          .from("webhook_events")
+          .select("store_id, event, received_at", { count: "exact" })
+          .or(`headers->>x-portaliosa-key.eq.${webhookKey},headers->>x-portaliosa-key.ilike.%${webhookKey}%`)
+          .order("received_at", { ascending: false })
+          .limit(1);
+
+        if ((keyCount ?? 0) > 0) {
+          totalEvents = keyCount ?? 0;
+          const last = keyEvents?.[0];
+          if (last) {
+            lastEventAt = (last.received_at as string) ?? null;
+            lastEventType = (last.event as string) ?? null;
+            if (last.store_id) activeIds.add(last.store_id as number);
+          }
+        }
+      }
     }
 
     return {
       ok: true,
       data: {
-        connected: (count ?? 0) > 0,
-        totalEvents: count ?? 0,
-        lastEventAt: (lastEvent?.received_at as string) ?? null,
-        lastEventType: (lastEvent?.event as string) ?? null,
+        connected: totalEvents > 0,
+        totalEvents,
+        lastEventAt,
+        lastEventType,
         activeStoreIds: [...activeIds],
       },
     };

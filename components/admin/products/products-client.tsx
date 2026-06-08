@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle, Search, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle, Search, X, MessageCircle, Send } from "lucide-react";
 import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products-types";
 import { CustomSelect } from "@/components/ui/select";
 import {
@@ -443,6 +443,16 @@ function ProductForm({
     { value: "inactive", label: "موقوف", icon: <ToggleLeft className="size-4 text-fg-faint" /> },
   ];
 
+  const [notifyWhatsapp, setNotifyWhatsapp] = useState(
+    product?.notification_channels?.whatsapp ?? false,
+  );
+  const [notifyEmail, setNotifyEmail] = useState(
+    product?.notification_channels?.email ?? false,
+  );
+  const [notifyTelegram, setNotifyTelegram] = useState(
+    product?.notification_channels?.telegram ?? false,
+  );
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -492,17 +502,79 @@ function ProductForm({
             />
           </Field>
         )}
-        <div className="sm:col-span-2">
-          <Field label="الوصف">
-            <textarea
-              name="description"
-              defaultValue={product?.description ?? ""}
-              rows={2}
-              placeholder="وصف اختياري"
-              className="form-input resize-none"
-            />
-          </Field>
+      </div>
+
+      {/* ─── Delivery Notification Toggles ─────────────────── */}
+      <div className="rounded-xl border border-[hsl(var(--hairline))] bg-surface-2/50 p-4 space-y-3">
+        <p className="text-xs font-semibold text-fg-muted uppercase tracking-wider">إشعارات التسليم</p>
+        <div className="flex flex-wrap gap-3">
+          {/* WhatsApp */}
+          <input type="hidden" name="notify_whatsapp" value={notifyWhatsapp ? "1" : "0"} />
+          <button
+            type="button"
+            onClick={() => setNotifyWhatsapp(!notifyWhatsapp)}
+            className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-sm font-semibold transition-all cursor-pointer select-none ${
+              notifyWhatsapp
+                ? "border-green-500/40 bg-green-500/10 text-green-600"
+                : "border-[hsl(var(--hairline-strong))] bg-surface text-fg-muted hover:bg-surface-2"
+            }`}
+          >
+            <MessageCircle className="size-4" />
+            واتساب
+            {notifyWhatsapp && <span className="size-4 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px]">✓</span>}
+          </button>
+
+          {/* Email */}
+          <input type="hidden" name="notify_email" value={notifyEmail ? "1" : "0"} />
+          <button
+            type="button"
+            onClick={() => setNotifyEmail(!notifyEmail)}
+            className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-sm font-semibold transition-all cursor-pointer select-none ${
+              notifyEmail
+                ? "border-blue-500/40 bg-blue-500/10 text-blue-600"
+                : "border-[hsl(var(--hairline-strong))] bg-surface text-fg-muted hover:bg-surface-2"
+            }`}
+          >
+            <Mail className="size-4" />
+            البريد الإلكتروني
+            {notifyEmail && <span className="size-4 rounded-full bg-blue-500 flex items-center justify-center text-white text-[10px]">✓</span>}
+          </button>
+
+          {/* Telegram */}
+          <input type="hidden" name="notify_telegram" value={notifyTelegram ? "1" : "0"} />
+          <button
+            type="button"
+            onClick={() => setNotifyTelegram(!notifyTelegram)}
+            className={`inline-flex items-center gap-2 h-10 px-4 rounded-xl border text-sm font-semibold transition-all cursor-pointer select-none ${
+              notifyTelegram
+                ? "border-sky-500/40 bg-sky-500/10 text-sky-600"
+                : "border-[hsl(var(--hairline-strong))] bg-surface text-fg-muted hover:bg-surface-2"
+            }`}
+          >
+            <Send className="size-4" />
+            تليجرام
+            {notifyTelegram && <span className="size-4 rounded-full bg-sky-500 flex items-center justify-center text-white text-[10px]">✓</span>}
+          </button>
         </div>
+        <p className="text-[11px] text-fg-faint leading-relaxed">
+          حدد قنوات الإشعار التي تريد تفعيلها عند تسليم هذا المنتج. تليجرام يعرض رسالة توجيه للعميل في صفحة الاستلام.
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <Field label="الوصف">
+          <textarea
+            name="description"
+            defaultValue={product?.description ?? ""}
+            rows={5}
+            placeholder="أدخل وصفاً تفصيلياً للمنتج…"
+            className="form-input resize-y"
+          />
+        </Field>
+
+        <Field label="رابط فيديو يوتيوب">
+          <YoutubeField defaultValue={product?.youtube_url ?? ""} />
+        </Field>
       </div>
       <DialogFooter>
         <button
@@ -530,6 +602,48 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div className="space-y-1.5">
       <label className="text-xs font-semibold text-[hsl(220_8%_30%)]">{label}</label>
       {children}
+    </div>
+  );
+}
+
+/** Extracts a YouTube video ID from common URL formats. */
+function extractYoutubeId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m?.[1]) return m[1];
+  }
+  return null;
+}
+
+function YoutubeField({ defaultValue }: { defaultValue: string }) {
+  const [url, setUrl] = useState(defaultValue);
+  const videoId = extractYoutubeId(url);
+
+  return (
+    <div className="space-y-2">
+      <input
+        name="youtube_url"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+        placeholder="https://www.youtube.com/watch?v=..."
+        className="form-input"
+      />
+      {videoId && (
+        <div className="relative w-full rounded-xl overflow-hidden border border-[hsl(var(--hairline))] bg-black" style={{ aspectRatio: "16/9" }}>
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+            title="YouTube preview"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      )}
     </div>
   );
 }

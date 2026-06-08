@@ -16,6 +16,7 @@ export type Product = {
   name: string;
   name_ar: string | null;
   description: string | null;
+  youtube_url: string | null;
   image_url: string | null;
   handler_type: HandlerType;
   status: "active" | "inactive";
@@ -24,6 +25,8 @@ export type Product = {
     email: boolean;
     whatsapp: boolean;
     telegram: boolean;
+    whatsapp_template?: string;
+    email_template?: string;
   };
   sort_order: number;
   created_at: string;
@@ -50,3 +53,15 @@ export const HANDLER_LABELS: Record<HandlerType, string> = {
   recharge_card: "بطاقة شحن",
   digital_file: "ملف رقمي",
 };
+
+/** "none" means "do not send on this channel for this product". */
+export const WHATSAPP_TEMPLATE_OPTIONS = [
+  { value: "none", label: "بدون إرسال" },
+  { value: "order_ready_v1", label: "طلب جاهز (order_ready_v1)" },
+  { value: "order_cancel", label: "إلغاء طلب (order_cancel)" },
+] as const;
+
+export const EMAIL_TEMPLATE_OPTIONS = [
+  { value: "none", label: "بدون إرسال" },
+  { value: "order_ready", label: "رسالة الطلب جاهز" },
+] as const;

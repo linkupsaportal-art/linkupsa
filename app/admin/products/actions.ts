@@ -8,7 +8,18 @@ import {
   deleteProductOption,
   updateProduct,
 } from "@/lib/db/products";
-import type { HandlerType } from "@/lib/db/products-types";
+import type { HandlerType, Product } from "@/lib/db/products-types";
+
+/**
+ * Builds the `notification_channels` JSONB from the form's checkbox toggles.
+ * Hidden inputs send "1" (checked) or "0" (unchecked).
+ */
+function buildNotificationChannels(formData: FormData): Product["notification_channels"] {
+  const whatsapp = formData.get("notify_whatsapp") === "1";
+  const email = formData.get("notify_email") === "1";
+  const telegram = formData.get("notify_telegram") === "1";
+  return { whatsapp, email, telegram };
+}
 
 export async function createProductAction(formData: FormData) {
   const name = formData.get("name") as string;
@@ -21,8 +32,12 @@ export async function createProductAction(formData: FormData) {
   if (!name?.trim()) return { error: "اسم المنتج مطلوب" };
   if (!handler_type) return { error: "نوع المنتج مطلوب" };
 
+  const youtube_url = (formData.get("youtube_url") as string)?.trim() || null;
+
+  const notification_channels = buildNotificationChannels(formData);
+
   try {
-    await createProduct({ name: name.trim(), name_ar, description, handler_type, salla_product_id });
+    await createProduct({ name: name.trim(), name_ar, description, youtube_url, handler_type, salla_product_id, notification_channels });
     revalidatePath("/admin/products");
     return { success: true };
   } catch (e) {
@@ -41,8 +56,12 @@ export async function updateProductAction(id: string, formData: FormData) {
 
   if (!name?.trim()) return { error: "اسم المنتج مطلوب" };
 
+  const youtube_url = (formData.get("youtube_url") as string)?.trim() || null;
+
+  const notification_channels = buildNotificationChannels(formData);
+
   try {
-    await updateProduct(id, { name: name.trim(), name_ar, description, handler_type, salla_product_id, status });
+    await updateProduct(id, { name: name.trim(), name_ar, description, youtube_url, handler_type, salla_product_id, status, notification_channels });
     revalidatePath("/admin/products");
     return { success: true };
   } catch (e) {

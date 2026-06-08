@@ -35,6 +35,10 @@ export type NotifyArgs = {
     whatsapp?: boolean;
   };
   pickupUrl: string;
+  /** Per-product WhatsApp template override (takes priority over store default). */
+  whatsappTemplate?: string;
+  /** Per-product email template name (reserved for future multi-template support). */
+  emailTemplate?: string;
 };
 
 export type NotifyResult = {
@@ -101,7 +105,9 @@ export async function notifyOrderReady(args: NotifyArgs): Promise<NotifyResult> 
     const appToken = cfg?.app_token as string | undefined;
     const integrationId = cfg?.integration_id as string | undefined;
     const host = cfg?.host as string | undefined;
-    const defaultTemplate = (cfg?.default_template as string | undefined) ?? "order_cancel";
+    const defaultTemplate = args.whatsappTemplate
+      || (cfg?.default_template as string | undefined)
+      || "order_cancel";
     const language = (cfg?.language as string | undefined) ?? "ar";
     const paramMap = (cfg?.param_map as Record<string, string[]> | undefined) ?? {
       order_cancel: [

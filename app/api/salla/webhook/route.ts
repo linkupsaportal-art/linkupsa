@@ -180,5 +180,17 @@ function collectInterestingHeaders(h: Headers): Record<string, string> {
     const v = h.get(key);
     if (v) out[key] = v;
   }
+
+  // Handle Salla's reversed header bug: the portaliosa key might be sent as
+  // a header NAME (pk_...) with value "x-portaliosa-key". Normalize it so
+  // the connection checker always finds it under "x-portaliosa-key".
+  if (!out["x-portaliosa-key"]) {
+    h.forEach((value, name) => {
+      if (name.startsWith("pk_") && value.toLowerCase().includes("portaliosa")) {
+        out["x-portaliosa-key"] = name.trim();
+      }
+    });
+  }
+
   return out;
 }

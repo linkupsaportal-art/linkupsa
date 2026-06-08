@@ -5,6 +5,26 @@
 
 ---
 
+# 2026-06-08 21:28
+
+- 🔗 **Local Testing & Webhook Connection Verification for Linkup.saudi@gmail.com — Razex Xelite**
+  - **Profile Synchronization**: Associated `Linkup.saudi@gmail.com` with the existing user profile ID `ff409995-f4bb-46e5-85f2-39758b03c6db` (named `razex xelite`), generated the webhook key `pk_1dbe36b65072c1dbf56ca4bf0329f176` and registered it using [create-linkup-saudi-user.mjs](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/scripts/create-linkup-saudi-user.mjs).
+  - **Simulated Webhook E2E Test**: Developed [test-linkup-webhook.mjs](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/scripts/test-linkup-webhook.mjs) to send a simulated `app.store.authorize` event for merchant `1075453390` (LinkUp SA Live) to the local dev server. This successfully returned `200` and updated store records.
+  - **Takeover Verification**: Confirmed that the webhook auto-link logic successfully reassigned ownership of store `1075453390` by removing `juilui1562@gmail.com` and registering `Linkup.saudi@gmail.com` as the sole owner.
+  - **Server Action Validation**: Created [test-check-connection.mjs](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/scripts/test-check-connection.mjs) to test the `checkWebhookConnectionAction` logic locally, which confirmed `connected: true` with 146 total events.
+
+# 2026-06-08 20:57
+
+- 🔔 **Per-Product Notification Template Selectors — Razex Xelite**
+  - **New UI Dropdowns**: Added "رسالة الواتساب" and "رسالة البريد الإلكتروني" dropdown selectors to the Product Add/Edit dialog in [products-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/products/products-client.tsx). Each dropdown lets the admin choose which template to send (or "بدون إرسال" to disable that channel for the product).
+  - **Type Evolution**: Extended `Product.notification_channels` JSONB type with `whatsapp_template` and `email_template` optional fields in [products-types.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/products-types.ts). Added `WHATSAPP_TEMPLATE_OPTIONS` and `EMAIL_TEMPLATE_OPTIONS` constants.
+  - **DB Layer**: Updated `createProduct()` in [products.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/products.ts) to accept `notification_channels` at creation time.
+  - **Server Actions**: Added `buildNotificationChannels()` helper in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/products/actions.ts) — both `createProductAction` and `updateProductAction` now parse template selections from FormData and persist them.
+  - **Dispatch Override**: Extended `NotifyArgs` in [dispatch.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/notifications/dispatch.ts) with `whatsappTemplate` override that takes priority over the store's `default_template`.
+  - **Ingestor Plumbing**: Updated `sendNotification()` in [order-ingestor.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/order-ingestor.ts) to read template names from `notification_channels` JSONB and pass them through to dispatch.
+
+---
+
 # 2026-06-08 19:50
 
 - 🔗 **Webhook Store Takeover & Ownership Reassignment — Razex Xelite**

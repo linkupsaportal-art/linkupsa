@@ -419,9 +419,13 @@ async function sendNotification(args: {
   productId: string | null;
   origin: string;
 }): Promise<void> {
-  // Resolve the product's per-channel toggles. Default to email-only when
-  // we couldn't map the order to one of our products (best-effort fallback).
+  // Resolve the product's per-channel toggles and template overrides.
+  // Default to email-only when we couldn't map the order to one of our
+  // products (best-effort fallback).
   let channels = { email: true, whatsapp: false };
+  let whatsappTemplate: string | undefined;
+  let emailTemplate: string | undefined;
+
   if (args.productId) {
     const sb = createServiceClient();
     const { data: product } = await sb
@@ -430,7 +434,19 @@ async function sendNotification(args: {
       .eq("id", args.productId)
       .single();
     if (product?.notification_channels) {
-      channels = { ...channels, ...product.notification_channels };
+      const nc = product.notification_channels as {
+        email?: boolean;
+        whatsapp?: boolean;
+        whatsapp_template?: string;
+        email_template?: string;
+      };
+      channels = { ...channels, email: nc.email ?? true, whatsapp: nc.whatsapp ?? false };
+      if (nc.whatsapp_template && nc.whatsapp_template !== "none") {
+        whatsappTemplate = nc.whatsapp_template;
+      }
+      if (nc.email_template && nc.email_template !== "none") {
+        emailTemplate = nc.email_template;
+      }
     }
   }
 
@@ -444,5 +460,7 @@ async function sendNotification(args: {
     productName: args.productName,
     productNotificationChannels: channels,
     pickupUrl: `${args.origin}/pickup`,
+    whatsappTemplate,
+    emailTemplate,
   });
 }

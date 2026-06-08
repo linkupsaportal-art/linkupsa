@@ -36,9 +36,11 @@ export async function createProduct(input: {
   name: string;
   name_ar?: string;
   description?: string;
+  youtube_url?: string | null;
   handler_type: HandlerType;
   salla_product_id?: number | null;
   status?: "active" | "inactive";
+  notification_channels?: Product["notification_channels"];
 }): Promise<Product> {
   const sb = createServiceClient();
   const { data, error } = await sb
@@ -47,9 +49,11 @@ export async function createProduct(input: {
       name: input.name,
       name_ar: input.name_ar ?? null,
       description: input.description ?? null,
+      youtube_url: input.youtube_url ?? null,
       handler_type: input.handler_type,
       salla_product_id: input.salla_product_id ?? null,
       status: input.status ?? "active",
+      ...(input.notification_channels ? { notification_channels: input.notification_channels } : {}),
     })
     .select()
     .single();
@@ -64,6 +68,7 @@ export async function updateProduct(
     name: string;
     name_ar: string | null;
     description: string | null;
+    youtube_url: string | null;
     handler_type: HandlerType;
     salla_product_id: number | null;
     status: "active" | "inactive";

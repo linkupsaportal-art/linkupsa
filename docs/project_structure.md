@@ -132,7 +132,10 @@ digital-delivery-platform/
 │       └── 📄 journal-1.webp ...    ( 3 صور مصغرة للمدونة بمقاس 1600x1067 )
 │
 └── 📁 scripts/                      ( نصوص الفحص البرمجي واختبارات التشغيل والتحقق التلقائي للعمليات )
-    └── 📄 test-takeover.mjs         ( نص برمجي لمحاكاة ويبهوك سلة والتحقق من عملية نقل ملكية المتجر )
+    ├── 📄 test-takeover.mjs         ( نص برمجي لمحاكاة ويبهوك سلة والتحقق من عملية نقل ملكية المتجر )
+    ├── 📄 create-linkup-saudi-user.mjs ( نص برمجي لربط وتحديث مستخدم Linkup.saudi@gmail.com )
+    ├── 📄 test-linkup-webhook.mjs   ( نص برمجي لمحاكاة ويبهوك سلة محلياً لمتجر LinkUp SA )
+    └── 📄 test-check-connection.mjs ( نص برمجي للتحقق من الاتصال وعرض إحصائيات الويبهوك )
 ```
 
 > **Build status:** ✅ `next build` يجتاز نظيف (compiled in 3.0s, TypeScript clean, prerendered as static).
