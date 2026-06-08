@@ -119,50 +119,50 @@ export async function autoLinkStore(
     console.error("[auto-link] Failed to upsert salla_stores:", storeErr.message);
   }
 
-  // 3. Ensure store_members row exists — only if no existing owner
-  const { data: existingOwner } = await sb
+  // 3. Takeover logic: Check if there are other members connected to this store.
+  //    If other members exist (not current userId), remove them from store_members,
+  //    then grant/upsert ownership to the current connecting user (userId).
+  const { data: otherMembers } = await sb
     .from("store_members")
     .select("user_id")
     .eq("store_id", merchantId)
-    .eq("is_owner", true)
-    .maybeSingle();
+    .neq("user_id", userId);
 
-  if (!existingOwner) {
-    // No owner yet — grant ownership to this user
-    const { error: memberErr } = await sb.from("store_members").upsert(
-      {
-        user_id: userId,
-        store_id: merchantId,
-        role: "manager",
-        is_owner: true,
-      },
-      { onConflict: "user_id,store_id" },
+  if (otherMembers && otherMembers.length > 0) {
+    console.log(
+      `[auto-link] Takeover: removing ${otherMembers.length} previous member(s) from store ${merchantId}`,
     );
-    if (memberErr) {
-      console.error("[auto-link] Failed to upsert store_members:", memberErr.message);
-    } else {
-      console.log(
-        `[auto-link] ✅ Linked store ${merchantId} → user ${userId.substring(0, 8)}... (owner)`,
+    const { error: delErr } = await sb
+      .from("store_members")
+      .delete()
+      .eq("store_id", merchantId)
+      .neq("user_id", userId);
+
+    if (delErr) {
+      console.error(
+        `[auto-link] Failed to remove previous store members for store ${merchantId}:`,
+        delErr.message,
       );
     }
+  }
+
+  // Grant ownership to the current connecting user
+  const { error: memberErr } = await sb.from("store_members").upsert(
+    {
+      user_id: userId,
+      store_id: merchantId,
+      role: "manager",
+      is_owner: true,
+    },
+    { onConflict: "user_id,store_id" },
+  );
+
+  if (memberErr) {
+    console.error("[auto-link] Failed to upsert store_members:", memberErr.message);
   } else {
-    // Store already has an owner — add as manager (not owner)
-    const { error: memberErr } = await sb.from("store_members").upsert(
-      {
-        user_id: userId,
-        store_id: merchantId,
-        role: "support",
-        is_owner: false,
-      },
-      { onConflict: "user_id,store_id", ignoreDuplicates: true },
+    console.log(
+      `[auto-link] ✅ Linked store ${merchantId} → user ${userId.substring(0, 8)}... (owner)`,
     );
-    if (memberErr) {
-      console.error("[auto-link] Failed to upsert store_members (non-owner):", memberErr.message);
-    } else {
-      console.log(
-        `[auto-link] ✅ Added user ${userId.substring(0, 8)}... to store ${merchantId} (support)`,
-      );
-    }
   }
 
   // 4. Best-effort: enrich store info via Salla API if a token is already stored

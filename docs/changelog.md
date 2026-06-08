@@ -5,6 +5,14 @@
 
 ---
 
+# 2026-06-08 19:50
+
+- 🔗 **Webhook Store Takeover & Ownership Reassignment — Razex Xelite**
+  - **Implemented Takeover Logic**: Updated `autoLinkStore` in [auto-link.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/auto-link.ts) to detect if a webhook auto-link matches a store already owned or managed by other user(s).
+  - **Automated Membership Cleanup**: Deletes all previous memberships for the matching `store_id` in the `store_members` table that do not belong to the connecting user.
+  - **Reassigned Sole Ownership**: Upserts the currently connecting user as the sole manager and owner (`is_owner: true`, `role: "manager"`) of the storefront.
+  - **Verification Suite**: Created [test-takeover.mjs](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/scripts/test-takeover.mjs) to run end-to-end webhook simulation of storefront takeover, confirming automatic database cleanup, ownership re-allocation, and self-cleaning state.
+
 # 2026-06-08 19:44
 
 - 📨 **Exclusive WhatsApp API Mode & Test Store Purge — Razex Xelite**
@@ -431,50 +439,6 @@
 - ⚙️ **Lenis smooth-scroll provider** wired to GSAP ticker so all ScrollTrigger pins/scrubs stay perfectly in sync; respects `prefers-reduced-motion`
 - 🧱 **shadcn-pattern primitives** built locally (no shadcn CLI to keep tokens fully custom): `button.tsx` (CVA variants × 5, sizes × 5, asChild), `input.tsx` (with start/end adornments + invalid state), `accordion.tsx` (Radix-themed)
 - 🧭 **Navbar** — sticky glass capsule, GSAP scrub compresses height/blur on scroll, 3-bar → X morph via GSAP timeline, mobile sheet via Radix Dialog sliding in from the right (RTL-aware), desktop CTA "استلم طلبك"
-- 🎬 **Hero section** — kicker chip → word-by-word headline reveal → subhead → lookup form (order number + last 4 phone digits) directly inline (no scroll-to-find friction) → trust strip; aurora gradient + grid mask + film grain + 2 floating brand blobs animated infinite
-- 🎬 **HowItWorks** — 3 steps scroll-pinned horizontally on ≥900px screens via GSAP+ScrollTrigger, graceful vertical-stack fallback on mobile / reduced-motion, giant outline numbers with parallax driven by `containerAnimation` of the master horizontal tween
-- 🎬 **Products** — bento grid of 6 product types (2FA / Steam Guard / Email Code / Normal / Recharge Card / Digital File), each card has a cursor-following spotlight (CSS vars updated on mousemove), accent gradient blob, hover lift, reveal stagger
-- 🎬 **Security** — 4 pillars (encryption / no-secret-leak / audit logs / defense-in-depth), sticky-header layout on desktop, reveal stagger on enter
-- 🎬 **FAQ** — 6 questions via Radix Accordion, chevron rotation, item-by-item reveal stagger
-- 🚪 **GarageFooter** — the showpiece. 14 metallic slats stacked top-to-bottom, ScrollTrigger pins the section, slats peel up with a stagger, an amber lamp glow ignites, drifting tools (Wrench/Cog/Zap) animate in from the sides, and the workshop content (logo + 4 link columns + neon "وصلنا. تشرفنا." sign) rises up from below. Mobile / reduced-motion fallback keeps the same effect via simple intersection trigger
-- 🚧 **Build verified** — `next build` passes clean: `Compiled successfully in 3.0s`, TypeScript clean, route `/` prerendered as static. Two issues found and fixed during verification:
-  - `lucide-react` no longer exports `Github` in current version → replaced with inline SVG `GitHubMark` in the footer
-  - `ScrollTrigger.getAll().slice(-1)[0]` returned `ScrollTrigger` instead of `gsap.core.Tween` for `containerAnimation` → refactored to keep the master tween in scope and pass it directly
-- 🧹 **Removed scaffold noise:** deleted `web/AGENTS.md`, `web/CLAUDE.md`, `web/README.md` and the default `next.svg / vercel.svg / globe.svg / file.svg / window.svg` from `public/`
-- 📝 Updated `docs/project_structure.md` with the full new tree + animation stack + brand identity sections
-- ⚠️ **Note:** nano-banana-pro image generation MCP returned "Insufficient credits" → pivoted entirely to CSS gradients + inline SVG art, which is faster, themable, infinitely scalable, and lighter on the bundle. No raster assets needed
-- 🎯 Next: dev-server smoke test on the user's machine; then move to scaffolding `/admin` and `/code-limit` zones, plus the Supabase project + initial schema migrations
-
-
-# 2026-05-27 19:40
-
-- 🔄 **Full landing-page redesign** — pivoted from "premium dark tech" to **editorial light/B&W minimalism inspired by `template.md` (LUMEN photography portfolio)**, adapted for Wasel's Arabic/RTL digital-delivery context.
-- 🗑 **Removed all 7 old landing components** (`navbar`, `hero`, `how-it-works`, `products`, `security`, `faq`, `garage-footer`) and the old `accordion` primitive.
-- 🎨 **New design tokens** in `globals.css` — light editorial palette: zinc-50 background, deep ink ladder for text, sky-600 accent (LUMEN blue), zero border-radius (sharp editorial corners), hairline border vars (`--hairline` / `--hairline-strong`).
-- 🧱 **Editorial Button** — square corners, hairline border, ink-on-paper hover (`bg-fg text-bg`). Variants: primary / outline / ghost / accent / link. All sizes uppercase tracking-wider for editorial cap-style.
-- 🧱 **Editorial Input** — hairline border + sharp corners, accent-blue focus state.
-- 🪪 **New logo** — black-square monogram with the Arabic letter "و" (waw) inside, matching LUMEN's `L` square + wordmark pattern.
-- 🌐 **`<BackgroundGrid>`** — fixed-position fullscreen layer with 4-column hairline guides + two animated SVG neon-blue traveling lines (horizontal at 25%, vertical at 75%, slow infinite crawl with Gaussian-blur glow).
-- 🧠 **Free SplitText replacement** in `lib/split-text.ts` — uses `Intl.Segmenter` (Arabic-grapheme-aware) to wrap each char in `<span class="char">` for GSAP staggers; falls back to `Array.from` on older runtimes.
-- 🖼 **Image registry** in `lib/images.ts` — single source of truth mapping every named asset to its `/public/images/*.webp` path. Components import via `IMG.heroSlide1` etc., never hard-code.
-- 🖼 **`<ImageOrPlaceholder>`** — renders `next/image` when the file resolves, otherwise shows a shimmer placeholder with the asset label, so the layout is never broken before the AI-generated webps land.
-- 🧱 **`/public/images/README.md`** — full spec sheet for the image-generation agent: file → section mapping, format (WebP @ q80), color (B&W neutral, page applies grayscale on top), aspect (3:4 or 4:3), long edge 1600px, no overlays.
-- 🖌 **7 new sections built (LUMEN structure adapted to Wasel):**
-  1. **`Navbar`** — hairline-bottom blur, brand right (RTL), single editorial dropdown trigger ("القائمة" / "إغلاق") with stagger-revealed menu items, scroll-trigger soft shadow drop.
-  2. **`Hero`** — 3-column grid: right (kicker + huge "وَصَل +" headline with char-split reveal + 2 mini cards + CTAs), center (image carousel with caption + arrows + auto-advance every 5.5s), left (giant counter `0 → 12,408` tweened on scroll-in via GSAP).
-  3. **`Exploration`** — left dual-image gallery with vertical-offset (RTL preserved), right huge type ("حسابات", "Steam", "أكواد", "ملفات") + subtitle + description + slide indicator + chevron nav. Crossfade animation between projects.
-  4. **`Process`** — tabbed case study ("الورشة" / "الاستوديو"). Left huge heading mask-reveal, body, 3 stats with **counter tweens on scroll**. Right full-bleed parallax image. Tabs swap content + retrigger animations.
-  5. **`Methodology`** — left visual + floating data card with stack info, right philosophy headline ("آلي، آمن، و موثوق") + 4-step interactive list with on-hover detail expansion (LUMEN's `Pre-Visualization / Capture / Post-Production` pattern adapted to webhook → payment-check → round-robin → notify).
-  6. **`Recognition`** — 4-card grid replacing LUMEN's "Awards" with Wasel's trust signals (12k orders / Salla Partner / pgsodium encryption / zero-VPS edge). Icons scale-in with `back.out`, headline mask-reveals.
-  7. **`Journal`** — left featured large article with parallax-scrub image and headline reveal ("كيف يصل الطلب في ٣ ثوانٍ"), right 3-item editorial list with right-edge accent bar that slides in on hover.
-  - **`OrderForm`** — pre-footer CTA section ("رقم الطلب، و آخر ٤ من جوالك") with the actual lookup form. Identifier `#hero-form` preserved so navbar deep-link still works.
-  - **`Footer`** — letter-spread "WASEL" monogram with `from: "edges"` stagger reveal, 4-column block (newsletter signup / products / platform / contact), bottom legal bar.
-- 🎬 **GSAP scroll-driven everywhere:** char/word splits, scroll-trigger reveals, parallax scrubs (image scale on scroll), counter tweens, scroll-pinned tabs, hover-h-grow detail expansions, edge-stagger on letter spread.
-- 🌍 **Layout updated:** removed forced `dark` class, kept RTL + Arabic + Plex Sans Arabic, switched theme-color to `#FAFAFA` (light), color-scheme to `light`. Replaced JetBrains Mono with Geist Mono for editorial mono-feel.
-- 🐛 **Build issues fixed during verification:**
-  - `lucide-react` doesn't export `Instagram`/`Twitter` brand icons → replaced with inline SVG `InstagramIcon` / `TwitterIcon` in footer.
-- ✅ **`next build` passes clean** — `Compiled successfully in 3.1s`, TypeScript 3.7s, prerendered as static.
-- 🎯 Next: AI agent generates the 16 referenced WebP files into `web/public/images/` per the registry + README; placeholders auto-disappear once files land.
 
 
 
