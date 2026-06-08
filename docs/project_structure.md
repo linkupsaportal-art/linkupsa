@@ -24,7 +24,8 @@ digital-delivery-platform/
 ├── 📁 docs/                         ( مصدر الحقيقة الموثق — يجب أن يطابق الواقع دائماً )
 │   ├── 📄 project_structure.md      ( هذا الملف — شجرة الملفات + وصف لكل عنصر + metadata المشروع )
 │   ├── 📄 changelog.md              ( سجل التغييرات الزمني — حد أقصى 500 سطر، يُقلَّم تلقائياً )
-│   └── 📄 architecture.md           ( قرارات المعمارية، اختيار الستاك، DB schema، تدفقات النظام، ADRs )
+│   ├── 📄 architecture.md           ( قرارات المعمارية، اختيار الستاك، DB schema، تدفقات النظام، ADRs )
+│   └── 📁 plans/                    ( خطط التنفيذ البرمجية التفصيلية المعتمدة من العميل )
 │
 ├── 📁 app/                          ( Next.js App Router — RSC افتراضي، Server Actions جاهزة )
 │   ├── 📄 icon.png                  ( أيقونة المتصفح الرسمية — تم إنشاؤها بدقة 32x32 من الشعار الأصلي )
@@ -119,16 +120,19 @@ digital-delivery-platform/
 │   ├── 📄 split-text.ts             ( بديل SplitText مجاني يدعم الحروف العربية بدقة عالية ورشاقة )
 │   └── 📄 utils.ts                  ( cn() — clsx + tailwind-merge للـ class composition بدون duplication )
 │
-└── 📁 public/                       ( static assets المتاحة للجمهور )
-    ├── 📄 linkup-logo.png           ( الشعار الأصلي بدقة عالية بصيغة PNG )
-    ├── 📄 linkup-logo.webp          ( الشعار الرسمي معالج ومحول لصيغة WebP خفيفة )
-    └── 📁 images/                   ( الصور المصدرية المُولّدة بالذكاء الاصطناعي — بدقة عالية وتنسيق WebP )
-        ├── 📄 hero-slide-1.webp ... ( 3 صور للـ Hero Carousel بمقاس 1600x1200 )
-        ├── 📄 prod-2fa-a.webp ...   ( 8 صور لتصفح المنتجات بمقاس 1600x1200 )
-        ├── 📄 process.webp          ( صورة قسم ورشة العمل بمقاس 1600x1200 )
-        ├── 📄 methodology.webp      ( صورة قسم المنهجية بمقاس 1600x1200 )
-        ├── 📄 journal-hero.webp     ( صورة المدونة البارزة بمقاس 1600x1200 )
-        └── 📄 journal-1.webp ...    ( 3 صور مصغرة للمدونة بمقاس 1600x1067 )
+├── 📁 public/                       ( static assets المتاحة للجمهور )
+│   ├── 📄 linkup-logo.png           ( الشعار الأصلي بدقة عالية بصيغة PNG )
+│   ├── 📄 linkup-logo.webp          ( الشعار الرسمي معالج ومحول لصيغة WebP خفيفة )
+│   └── 📁 images/                   ( الصور المصدرية المُولّدة بالذكاء الاصطناعي — بدقة عالية وتنسيق WebP )
+│       ├── 📄 hero-slide-1.webp ... ( 3 صور للـ Hero Carousel بمقاس 1600x1200 )
+│       ├── 📄 prod-2fa-a.webp ...   ( 8 صور لتصفح المنتجات بمقاس 1600x1200 )
+│       ├── 📄 process.webp          ( صورة قسم ورشة العمل بمقاس 1600x1200 )
+│       ├── 📄 methodology.webp      ( صورة قسم المنهجية بمقاس 1600x1200 )
+│       ├── 📄 journal-hero.webp     ( صورة المدونة البارزة بمقاس 1600x1200 )
+│       └── 📄 journal-1.webp ...    ( 3 صور مصغرة للمدونة بمقاس 1600x1067 )
+│
+└── 📁 scripts/                      ( نصوص الفحص البرمجي واختبارات التشغيل والتحقق التلقائي للعمليات )
+    └── 📄 test-takeover.mjs         ( نص برمجي لمحاكاة ويبهوك سلة والتحقق من عملية نقل ملكية المتجر )
 ```
 
 > **Build status:** ✅ `next build` يجتاز نظيف (compiled in 3.0s, TypeScript clean, prerendered as static).
