@@ -5,6 +5,25 @@
 
 ---
 
+# 2026-06-08 19:42
+
+- 🎨 **Global Yellow/Lime Badge Text Contrast Polish — Razex Xelite**
+  - **Improved Contrast on Yellow Badges**: Changed text color from `text-amber-500` / `text-accent` / `text-yellow-400` / `text-warn` to `text-black` globally inside status badges with yellow/lime backgrounds.
+  - **Affected components**:
+    - [email-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/email-messages-client.tsx) — configured/enabled/succeeded badges
+    - [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) — standard mode incoming/status/succeeded badges
+    - [notifications-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/notifications/notifications-client.tsx) — succeeded/enabled status badges
+    - [bans-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/bans-tab.tsx) — auto-banned/expires badges
+    - [telegram-admin-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/telegram/telegram-admin-client.tsx) — enabled status badges
+    - [logs-tab.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/otp-logs/logs-tab.tsx) — ok/warn result mapping tone classes
+    - [products-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/products/products-client.tsx) — active product status badges
+    - [staff-manager.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/staff/staff-manager.tsx) — supervisor/code-limit/2fa status badges
+    - [orders-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/orders/orders-client.tsx) — payment/fulfillment status badges
+    - [settings/page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/settings/page.tsx) — security item status badges
+    - [section-card.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/profile/section-card.tsx) — warn status badge variant mapping
+    - [recent-orders-table.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/recent-orders-table.tsx) — pending status badge CSS class
+    - [workspace-switcher.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/workspace-switcher.tsx) — role switcher supervisor/code-limit pill colors
+
 # 2026-06-08 19:36
 
 - 📨 **New "الرسائل" Sidebar Section — WhatsApp & Email Dedicated Pages — Razex Xelite**

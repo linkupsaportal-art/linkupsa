@@ -176,7 +176,7 @@ function SecurityItem({
         <span
           className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold border ${
             ok
-              ? "bg-accent/15 text-accent border-accent/25"
+              ? "bg-accent/15 text-black border-accent/25"
               : "bg-red-500/15 text-red-400 border-red-500/25"
           }`}
         >

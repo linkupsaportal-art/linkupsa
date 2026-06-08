@@ -22,8 +22,8 @@ const RESULT_LABELS: Record<string, { label: string; tone: "ok" | "warn" | "bad"
 };
 
 const TONE_CLASS = {
-  ok: "bg-accent/15 text-accent border-accent/25",
-  warn: "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
+  ok: "bg-accent/15 text-black border-accent/25",
+  warn: "bg-yellow-500/15 text-black border-yellow-500/25",
   bad: "bg-red-500/15 text-red-400 border-red-500/25",
 } as const;
 

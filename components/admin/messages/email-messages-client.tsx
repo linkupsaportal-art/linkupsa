@@ -262,13 +262,13 @@ function StatusBadge({
   }
   if (!enabled) {
     return (
-      <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/25">
+      <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500/15 text-black border border-amber-500/25">
         موقوف
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
+    <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-black border border-accent/25">
       مفعّل
     </span>
   );
@@ -338,7 +338,7 @@ function DispatchTable({
                   </td>
                   <td className="px-4 py-3">
                     {succeeded ? (
-                      <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
+                      <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-black border border-accent/25">
                         <CheckCircle2 className="size-2.5" />
                         نجح
                       </span>

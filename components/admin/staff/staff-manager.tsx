@@ -44,9 +44,9 @@ export type SentInvite = {
 
 const ROLE_PILL: Record<Role, string> = {
   manager: "bg-fg text-bg",
-  supervisor: "bg-accent/15 text-accent border border-accent/25",
+  supervisor: "bg-accent/15 text-black border border-accent/25",
   support: "bg-fg/10 text-fg border border-fg/20",
-  code_limit: "bg-warn/15 text-warn border border-warn/25",
+  code_limit: "bg-warn/15 text-black border border-warn/25",
 };
 
 export function StaffManager({
@@ -307,7 +307,7 @@ function StaffRow({ member, canManage }: { member: StaffMember; canManage: boole
         <div className="flex items-center gap-2 shrink-0">
           {member.has2fa && (
             <span
-              className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25"
+              className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-black border border-accent/25"
               title="2FA مفعّل"
             >
               <Shield className="size-2.5" />

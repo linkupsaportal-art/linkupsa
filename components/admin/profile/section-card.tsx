@@ -73,7 +73,7 @@ export function StatusBadge({
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tabular-nums shrink-0",
         variant === "ok" && "bg-success/10 text-success",
-        variant === "warn" && "bg-warn/10 text-warn",
+        variant === "warn" && "bg-warn/10 text-black",
         variant === "danger" && "bg-danger/10 text-danger",
         variant === "muted" && "bg-surface-2 text-fg-muted",
       )}

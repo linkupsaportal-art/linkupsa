@@ -96,7 +96,7 @@ export function NotificationsClient({
                           {d.succeeded.map((c) => (
                             <span
                               key={`s-${c}`}
-                              className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25"
+                              className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-black border border-accent/25"
                               title="نجح"
                             >
                               <CheckCircle2 className="size-2.5" />
@@ -203,13 +203,13 @@ function StatusBadge({ configured, enabled }: { configured: boolean; enabled: bo
   }
   if (!enabled) {
     return (
-      <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/25">
+      <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500/15 text-black border border-amber-500/25">
         موقوف
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
+    <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-accent/15 text-black border border-accent/25">
       مفعّل
     </span>
   );

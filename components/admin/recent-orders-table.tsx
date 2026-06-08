@@ -30,7 +30,7 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 
 const STATUS_CLS: Record<OrderStatus, string> = {
   completed: "bg-success/10 text-success",
-  pending: "bg-warn/10 text-warn",
+  pending: "bg-warn/10 text-black",
   failed: "bg-danger/10 text-danger",
 };
 

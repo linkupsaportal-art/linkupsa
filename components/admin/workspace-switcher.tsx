@@ -24,9 +24,9 @@ export type WorkspaceOption = {
 
 const ROLE_PILL: Record<Role, string> = {
   manager: "bg-fg text-bg",
-  supervisor: "bg-accent/20 text-accent",
+  supervisor: "bg-accent/20 text-black",
   support: "bg-fg/10 text-fg",
-  code_limit: "bg-warn/15 text-warn",
+  code_limit: "bg-warn/15 text-black",
 };
 
 /**

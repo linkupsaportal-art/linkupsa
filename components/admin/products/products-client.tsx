@@ -554,7 +554,7 @@ function StatusBadge({ status }: { status: "active" | "inactive" }) {
   return (
     <span className={`inline-flex items-center h-5 px-2 rounded-full text-[10px] font-semibold ${
       status === "active"
-        ? "bg-accent/15 text-accent"
+        ? "bg-accent/15 text-black"
         : "bg-fg-faint/15 text-fg-faint"
     }`}>
       {status === "active" ? "نشط" : "موقوف"}

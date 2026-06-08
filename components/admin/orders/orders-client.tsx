@@ -14,8 +14,8 @@ const PAYMENT_LABELS: Record<Order["payment_status"], string> = {
 };
 
 const PAYMENT_COLORS: Record<Order["payment_status"], string> = {
-  pending: "bg-yellow-500/15 text-yellow-400",
-  paid: "bg-accent/15 text-accent",
+  pending: "bg-yellow-500/15 text-black",
+  paid: "bg-accent/15 text-black",
   refunded: "bg-orange-500/15 text-orange-400",
   cancelled: "bg-fg-faint/15 text-fg-faint",
   failed: "bg-red-500/15 text-red-400",
@@ -29,8 +29,8 @@ const FULFILL_LABELS: Record<Order["fulfillment_status"], string> = {
 };
 
 const FULFILL_COLORS: Record<Order["fulfillment_status"], string> = {
-  pending: "bg-yellow-500/15 text-yellow-400",
-  fulfilled: "bg-accent/15 text-accent",
+  pending: "bg-yellow-500/15 text-black",
+  fulfilled: "bg-accent/15 text-black",
   failed: "bg-red-500/15 text-red-400",
   cancelled: "bg-fg-faint/15 text-fg-faint",
 };

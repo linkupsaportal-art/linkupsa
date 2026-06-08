@@ -242,7 +242,7 @@ function BanRow({ ban }: { ban: PhoneBan }) {
       </td>
       <td className="px-4 py-3">
         {ban.auto_banned ? (
-          <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-500 border border-amber-500/25">
+          <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold bg-amber-500/15 text-black border border-amber-500/25">
             <Sparkles className="size-2.5" />
             تلقائي
           </span>
@@ -357,7 +357,7 @@ function ExpiryChip({
     <span
       className={`inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold border ${
         active
-          ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
+          ? "bg-amber-500/10 text-black border-amber-500/25"
           : "bg-fg-faint/10 text-fg-faint border-fg-faint/20"
       }`}
     >
