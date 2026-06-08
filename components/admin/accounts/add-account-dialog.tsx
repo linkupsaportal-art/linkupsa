@@ -37,6 +37,11 @@ export function AccountForm({
               icon: <Package className="size-4" />,
             }))}
             disabled={isPending}
+            enableSearch={true}
+            addButton={{
+              label: "إضافة منتج جديد",
+              href: "/admin/products"
+            }}
           />
         </Field>
 

@@ -9,6 +9,9 @@
 
 - 🗑 **Removed Instructions Field from Accounts — Razex Xelite**
   - **Removed the `التعليمات` field**: Deleted the instructions textarea field from both [add-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/add-account-dialog.tsx) and [edit-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/edit-account-dialog.tsx) modals per user request.
+- 🔍 **Search & "Add Product" Redirection in CustomSelect Dropdown — Razex Xelite**
+  - **CustomSelect upgrade**: Added optional search filtering (`enableSearch`) and a bottom redirection button (`addButton`) inside the custom dropdown primitive at [select.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/select.tsx). Set a scroll height limit of `max-h-48` to handle large product catalogs cleanly.
+  - **Wired to Account creation/edits**: Configured the product select inputs in [add-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/add-account-dialog.tsx) and [edit-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/edit-account-dialog.tsx) to enable product search and render a redirection link to `/admin/products` ("إضافة منتج جديد").
 
 # 2026-06-08 17:12
 
@@ -438,63 +441,4 @@
 - 🎯 Next: AI agent generates the 16 referenced WebP files into `web/public/images/` per the registry + README; placeholders auto-disappear once files land.
 
 
-# 2026-05-27 21:10
 
-- 🖼 **AI Image Generation & Optimization Completed — Razex Xelite generated and optimized all 17 WebP images**
-- 🎨 **Editorial Visuals Created:** Designed custom high-fidelity prompts following the Leica medium-format B&W chiaroscuro baseline.
-- ⚡ **Optimized Web Assets:**
-  - Generated all 3 Hero Carousel slides (`hero-slide-1.webp`, `hero-slide-2.webp`, `hero-slide-3.webp`) at `1600x1200` (4:3)
-  - Generated all 8 Exploration slides (`prod-2fa-a.webp`, `prod-2fa-b.webp`, `prod-steam-a.webp`, `prod-steam-b.webp`, `prod-email-a.webp`, `prod-email-b.webp`, `prod-files-a.webp`, `prod-files-b.webp`) at `1600x1200` (4:3)
-  - Generated full-bleed Case Study/Process view (`process.webp`) at `1600x1200` (4:3)
-  - Generated data-flow architecture landscape (`methodology.webp`) at `1600x1200` (4:3)
-  - Generated cover article visual (`journal-hero.webp`) at `1600x1200` (4:3)
-  - Generated all 3 Blog item thumbnails (`journal-1.webp`, `journal-2.webp`, `journal-3.webp`) at `1600x1067` (3:2)
-- ⚙️ **Process Automation:** Developed and executed an automated Node.js processing script utilizing the high-performance `sharp` library to:
-  - Resize the long edge of all assets to exactly `1600px`.
-  - Convert generated PNGs to high-efficiency WebP format at exactly quality 80.
-  - Save all images directly inside `web/public/images/` with exact matching names.
-- 📝 **Updated System Documentation:** Synced `docs/project_structure.md` to reflect the newly populated public assets directory and its structure.
-
-
-# 2026-05-27 21:35
-
-- 🎨 **3D Icon Redesign — Razex Xelite implemented beautiful 3D Blender-style SVG icons**
-- 🧱 **High-Fidelity Visual Components:** Replaced the simple Lucide outline icons (`Trophy`, `BadgeCheck`, `Award`, `Sparkles`) inside the trust indicators section (`recognition.tsx`) with highly customized inline SVG illustrations:
-  - **Trophy3D:** Abstract geometric cup in a dark titanium gradient, supported by dynamic side handles and a polished glass core illuminated by an active cyan pulsing light.
-  - **Badge3D:** 12-pointed verification seal crafted from heavy brushed titanium and layered frosted glass, housing a brilliant glowing cyan checkmark.
-  - **Security3D:** Premium geometric padlock with a sleek, polished steel shackle, frosted glass body, dark inner core, and an glowing active-cyan indicator.
-  - **Serverless3D:** Three floating translucent glass prisms with fine glowing borders, cascading vertically with independent floating animations (`animate-bounce`).
-- ⚡ **Zero Overhead Performance:** Leveraging pure SVG gradients, shadows, masks, and CSS keyframe animations, ensuring stunning 3D depth and premium aesthetics without loading heavy image assets or adding bundle weight.
-- 📐 **Visual Scaling:** Scaled the rendering dimensions inside the cards from `size-16` (64px) to `size-28` (112px) to maximize the visual presence of the 3D details inside the `h-40` layout blocks.
-
-
-# 2026-05-27 21:45
-
-- 🎨 **Journal 3D Icon Redesign — Razex Xelite implemented beautiful 3D Blender-style SVG icons for list items**
-- 🧱 **High-Fidelity Visual Components:** Replaced the simple Lucide outline icons (`Code2`, `Lock`, `Tag`) inside the editorial articles list (`journal.tsx`) with highly customized inline SVG illustrations matching the Wasel design system:
-  - **Code3D:** Glowing 3D serverless code brackets `</>` crafted in a dark metal gradient with glowing cyan neon borders and a heavy slash divider.
-  - **Lock3D:** Premium 3D cylindrical database lock with a polished chrome shackle, a frosted glass core, and an active pulsing blue indicator.
-  - **Tag3D:** Futuristic 3D store/price tag in isometric perspective featuring a frosted glass body, brushed titanium border, sleek silver loop thread, and an active neon connection bolt.
-- 📐 **Visual Scaling:** Scaled the rendering dimensions inside the editorial rows from `size-6` (24px) to a prominent **`size-16` (64px)** to fill the list item containers and maximize the high-fidelity 3D visual presence.
-
-
-# 2026-05-27 21:50
-
-- 🐛 **Arabic Typography Connection Bug Fixed — Razex Xelite resolved the broken Arabic ligatures layout bug**
-- 🧠 **Smart Ligature Protection:** Updated `splitChars` inside the text splitting library (`split-text.ts`) to automatically detect Arabic characters (`/[\u0600-\u06FF]/`) using a robust regex scan.
-- 📐 **Cursive-Safe Animation Fallback:**
-  - When Arabic cursive text (like `"حسابات"` in `exploration.tsx` or `"العملية"` in `process.tsx`) is detected, `splitChars` automatically falls back to `splitWords` (word-by-word wrapping).
-  - This ensures that characters inside words stay together as continuous, properly ligatured cursive Arabic letters instead of breaking into isolated glyphs like `"ح س ا ب ا ت"` and `"ال ع م ل ي ة"`.
-  - Stagger animations still work perfectly at the word level, keeping a premium motion aesthetic while maintaining strict typographic correctness.
-- ⚡ **Cohesive Typography Check:** Verified all other page headings ("اليوميات", "موثوق") and verified that the Latin/English headline ("LinkUp") retains its character-level staggered entry because it contains no Arabic letters.
-
-
-# 2026-05-27 22:25
-
-- 🧭 **Navbar Redesigned — Razex Xelite updated navigation layout to match minimal snapped template style**
-- 📐 **Full-Width Edge Snap:** Switched position from a floating capsule (`sticky top-9` spacing) to a full-width header (`sticky top-0 z-50 w-full`) snapped directly to the top viewport edge to match `template.md` (LUMEN).
-- 🎨 **Editorial Styling:**
-  - Standardized background styling using HSL tokens to a refined, translucent `bg-bg/80` with a sharp `backdrop-blur-md` for maximum legibility.
-  - Set a clean bottom hairline border (`border-b border-[hsl(var(--hairline))]`).
-  - Standardized scroll-bound shadow activation using a self-referential class trigger `[&.nav-scrolled]:shadow-[0_1px_0_hsl(0_0%_0%/0.05),0_8px_24px_-16px_hsl(0_0%_0%/0.1)]`.
-- 🗑 **Layout Simplification:** Removed the dismissible top announcement strip (`TopNav`) from `app/page.tsx` to ensure absolute visual cleanliness and snap the main navigation directly to the top edge.
