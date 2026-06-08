@@ -18,7 +18,15 @@ function buildNotificationChannels(formData: FormData): Product["notification_ch
   const whatsapp = formData.get("notify_whatsapp") === "1";
   const email = formData.get("notify_email") === "1";
   const telegram = formData.get("notify_telegram") === "1";
-  return { whatsapp, email, telegram };
+  const whatsapp_template = (formData.get("whatsapp_template") as string) || undefined;
+  const email_template = (formData.get("email_template") as string) || undefined;
+  return {
+    whatsapp,
+    email,
+    telegram,
+    ...(whatsapp_template && whatsapp_template !== "none" ? { whatsapp_template } : {}),
+    ...(email_template && email_template !== "none" ? { email_template } : {}),
+  };
 }
 
 export async function createProductAction(formData: FormData) {

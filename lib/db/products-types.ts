@@ -57,8 +57,15 @@ export const HANDLER_LABELS: Record<HandlerType, string> = {
 /** "none" means "do not send on this channel for this product". */
 export const WHATSAPP_TEMPLATE_OPTIONS = [
   { value: "none", label: "بدون إرسال" },
-  { value: "order_ready_v1", label: "طلب جاهز (order_ready_v1)" },
-  { value: "order_cancel", label: "إلغاء طلب (order_cancel)" },
+  { value: "linkedforlinked", label: "linkedforlinked (معتمد)" },
+  { value: "cancel", label: "cancel (معتمد)" },
+  { value: "ordercupcut", label: "ordercupcut (معتمد)" },
+  { value: "phone_ban_alert_v1", label: "phone_ban_alert_v1 (معتمد)" },
+  { value: "order_ready_v1", label: "order_ready_v1 (معتمد)" },
+  { value: "contact_us", label: "contact_us (معتمد)" },
+  { value: "new_order_2", label: "new_order_2 (معتمد)" },
+  { value: "order_new_1", label: "order_new_1 (معتمد)" },
+  { value: "new_order_for_c", label: "new_order_for_c (معتمد)" },
 ] as const;
 
 export const EMAIL_TEMPLATE_OPTIONS = [

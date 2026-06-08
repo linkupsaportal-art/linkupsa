@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Package, Key, Gamepad2, Mail, User, CreditCard, FileDown, AlertTriangle, Search, X, MessageCircle, Send } from "lucide-react";
-import { type Product, type HandlerType, HANDLER_LABELS } from "@/lib/db/products-types";
+import { type Product, type HandlerType, HANDLER_LABELS, WHATSAPP_TEMPLATE_OPTIONS, EMAIL_TEMPLATE_OPTIONS } from "@/lib/db/products-types";
 import { CustomSelect } from "@/components/ui/select";
 import {
   createProductAction,
@@ -452,6 +452,12 @@ function ProductForm({
   const [notifyTelegram, setNotifyTelegram] = useState(
     product?.notification_channels?.telegram ?? false,
   );
+  const [whatsappTemplate, setWhatsappTemplate] = useState<string>(
+    product?.notification_channels?.whatsapp_template ?? "none",
+  );
+  const [emailTemplate, setEmailTemplate] = useState<string>(
+    product?.notification_channels?.email_template ?? "none",
+  );
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -556,6 +562,37 @@ function ProductForm({
             {notifyTelegram && <span className="size-4 rounded-full bg-sky-500 flex items-center justify-center text-white text-[10px]">✓</span>}
           </button>
         </div>
+
+        {/* Dropdowns for selecting templates */}
+        {(notifyWhatsapp || notifyEmail) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 p-3.5 rounded-xl border border-[hsl(var(--hairline))] bg-surface/50">
+            {notifyWhatsapp && (
+              <Field label="رسالة الواتساب">
+                <CustomSelect
+                  name="whatsapp_template"
+                  value={whatsappTemplate}
+                  onChange={setWhatsappTemplate}
+                  options={WHATSAPP_TEMPLATE_OPTIONS as any}
+                  enableSearch={true}
+                  disabled={isPending}
+                />
+              </Field>
+            )}
+
+            {notifyEmail && (
+              <Field label="رسالة البريد الإلكتروني">
+                <CustomSelect
+                  name="email_template"
+                  value={emailTemplate}
+                  onChange={setEmailTemplate}
+                  options={EMAIL_TEMPLATE_OPTIONS as any}
+                  disabled={isPending}
+                />
+              </Field>
+            )}
+          </div>
+        )}
+
         <p className="text-[11px] text-fg-faint leading-relaxed">
           حدد قنوات الإشعار التي تريد تفعيلها عند تسليم هذا المنتج. تليجرام يعرض رسالة توجيه للعميل في صفحة الاستلام.
         </p>

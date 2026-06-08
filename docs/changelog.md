@@ -5,6 +5,13 @@
 
 ---
 
+# 2026-06-08 22:23
+
+- 📋 **Meta/Karzoun Approved Templates Dropdown Support — Razex Xelite**
+  - **Dropdown Populate**: Updated the list of options in `WHATSAPP_TEMPLATE_OPTIONS` inside [products-types.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/products-types.ts) with all approved Meta templates from the screenshot (`linkedforlinked`, `cancel`, `ordercupcut`, `phone_ban_alert_v1`, `order_ready_v1`, `contact_us`, `new_order_2`, `order_new_1`, `new_order_for_c`).
+  - **Dialog Integration**: Added template selection dropdowns directly into the Product Add/Edit Dialog inside [products-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/products/products-client.tsx) using the styled `CustomSelect` component with `enableSearch={true}`.
+  - **Form Data Logic**: Linked the dropdown options to state variables (`whatsappTemplate` / `emailTemplate`) and form inputs, ensuring they are sent to the server actions inside `createProductAction` and `updateProductAction` in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/products/actions.ts).
+
 # 2026-06-08 21:28
 
 - 🔗 **Local Testing & Webhook Connection Verification for Linkup.saudi@gmail.com — Razex Xelite**
