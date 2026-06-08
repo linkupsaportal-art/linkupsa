@@ -146,7 +146,7 @@ export function AdminTopbar({
               if (target.closest("a[href]")) setDrawer(false);
             }}
             className={cn(
-              "fixed inset-y-0 start-0 z-50 w-[260px] flex flex-col outline-none",
+              "theme-admin fixed inset-y-0 start-0 z-50 w-[260px] flex flex-col outline-none",
               "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
             )}
           >

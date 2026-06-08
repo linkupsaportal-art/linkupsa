@@ -5,6 +5,18 @@
 
 ---
 
+# 2026-06-08 17:18
+
+- 🗑 **Removed Instructions Field from Accounts — Razex Xelite**
+  - **Removed the `التعليمات` field**: Deleted the instructions textarea field from both [add-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/add-account-dialog.tsx) and [edit-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/edit-account-dialog.tsx) modals per user request.
+
+# 2026-06-08 17:12
+
+- 📱 **Mobile Sidebar Theme Inheritance Fix — Razex Xelite**
+  - **Fixed Transparent/Invisible Drawer on Mobile**: Added the `.theme-admin` class to `Dialog.Content` in [topbar.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/topbar.tsx). This ensures that the Radix Portal-rendered mobile sidebar inherits the administrative CSS variables, allowing `.surface-dark` to render its background and text colors correctly instead of appearing transparent.
+- 📝 **Taller & Resizable Instructions Textarea — Razex Xelite**
+  - **Fixed Textarea Squashing**: Replaced `.form-input` height limits on the instructions field in [add-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/add-account-dialog.tsx) and [edit-account-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/accounts/edit-account-dialog.tsx) with a dynamic `h-auto min-h-[120px]` layout. Added vertical resize support (`resize-y`) and relaxed text rendering (`leading-relaxed font-sans`) for a premium input experience.
+
 # 2026-06-07 22:45
 
 - 🔗 **Webhook Auto-Link Fix + Store Name Enrichment — Razex Xelite**

@@ -156,17 +156,6 @@ export function AccountForm({
             className="form-input"
           />
         </Field>
-
-        <div className="sm:col-span-2">
-          <Field label="التعليمات">
-            <textarea
-              name="instructions"
-              rows={2}
-              placeholder="تعليمات تظهر للعميل عند الاستلام"
-              className="form-input resize-none"
-            />
-          </Field>
-        </div>
       </div>
 
       <DialogFooter className="gap-2 pt-3">
