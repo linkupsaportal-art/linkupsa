@@ -50,6 +50,8 @@ export type Capability =
   | "manage_bans"
   | "view_notifications"
   | "manage_notifications"
+  | "view_messages"
+  | "manage_messages"
   | "view_telegram"
   | "manage_telegram"
   | "view_integrations"
@@ -63,6 +65,7 @@ const ALL_CAPS: Capability[] = [
   "view_dashboard", "view_orders", "manage_orders", "view_products",
   "manage_products", "view_accounts", "manage_accounts", "view_otp_logs",
   "raise_code_limit", "manage_bans", "view_notifications", "manage_notifications",
+  "view_messages", "manage_messages",
   "view_telegram", "manage_telegram", "view_integrations", "manage_integrations",
   "view_archives", "manage_archives", "manage_staff", "manage_settings",
 ];
@@ -73,6 +76,7 @@ const ROLE_CAPS: Record<Role, Capability[]> = {
     "view_dashboard", "view_orders", "manage_orders", "view_products",
     "manage_products", "view_accounts", "manage_accounts", "view_otp_logs",
     "raise_code_limit", "manage_bans", "view_notifications", "manage_notifications",
+    "view_messages", "manage_messages",
     "view_telegram", "manage_telegram", "view_integrations", "manage_integrations",
     "view_archives", "manage_archives",
     // NOT: manage_staff, manage_settings
@@ -103,6 +107,7 @@ const ROUTE_RULES: RouteRule[] = [
   // Most specific first — matched by longest prefix.
   { prefix: "/admin/staff", roles: ["manager"] },
   { prefix: "/admin/settings", roles: ["manager"] },
+  { prefix: "/admin/messages", roles: ["manager", "supervisor"] },
   { prefix: "/admin/integrations", roles: ["manager", "supervisor"] },
   { prefix: "/admin/telegram", roles: ["manager", "supervisor"] },
   { prefix: "/admin/notifications", roles: ["manager", "supervisor"] },

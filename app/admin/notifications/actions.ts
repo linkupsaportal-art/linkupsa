@@ -47,6 +47,7 @@ export async function saveWhatsAppConfigAction(input: {
     },
   });
   revalidatePath("/admin/notifications");
+  revalidatePath("/admin/messages/whatsapp");
   return { ok: true };
 }
 
@@ -108,6 +109,7 @@ export async function saveEmailConfigAction(input: {
     },
   });
   revalidatePath("/admin/notifications");
+  revalidatePath("/admin/messages/email");
   return { ok: true };
 }
 
@@ -154,6 +156,8 @@ export async function toggleChannelAction(input: {
   if (!storeId) return { ok: false, error: "لا يوجد متجر مرتبط حالياً" };
   await setChannelEnabled({ storeId, channel: input.channel, enabled: input.enabled });
   revalidatePath("/admin/notifications");
+  revalidatePath("/admin/messages/whatsapp");
+  revalidatePath("/admin/messages/email");
   return { ok: true };
 }
 

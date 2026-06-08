@@ -164,6 +164,26 @@ export async function listRecentDispatches(limit = 30): Promise<NotificationDisp
 }
 
 /**
+ * Like `listRecentDispatches`, but filters to only dispatches where the
+ * specified channel was attempted (succeeded OR failed). Used by the
+ * dedicated `/admin/messages/whatsapp` and `/admin/messages/email` pages.
+ */
+export async function listDispatchesByChannel(
+  channel: ChannelKind,
+  limit = 30,
+): Promise<NotificationDispatchSummary[]> {
+  const all = await listRecentDispatches(Math.min(limit * 3, 150));
+  return all
+    .filter(
+      (d) =>
+        d.attempted.includes(channel) ||
+        d.succeeded.includes(channel) ||
+        d.failed.some((f) => f.channel === channel),
+    )
+    .slice(0, limit);
+}
+
+/**
  * Returns the currently active store id. We are single-tenant for now,
  * so picking the most recently installed Salla store is correct. If
  * multi-tenant comes online later, this gets resolved via session.

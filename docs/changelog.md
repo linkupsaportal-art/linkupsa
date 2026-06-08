@@ -5,6 +5,17 @@
 
 ---
 
+# 2026-06-08 19:36
+
+- 📨 **New "الرسائل" Sidebar Section — WhatsApp & Email Dedicated Pages — Razex Xelite**
+  - **Nav config**: Added new "الرسائل" group in [nav-config.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/nav-config.ts) with `رسائل واتساب` (`/admin/messages/whatsapp`) and `رسائل الإيميل` (`/admin/messages/email`) sub-items.
+  - **RBAC**: Added `view_messages` / `manage_messages` capabilities and `/admin/messages` route rule for manager+supervisor in [rbac.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/auth/rbac.ts).
+  - **WhatsApp Messages Page**: Dual-mode card selector — **واتساب بزنس العادي (Standard)** with feature cards + coming-soon banner, and **واتساب API المؤسسي (Enterprise)** with inline config overview, Karzoun Chat integration, and WhatsApp dispatch history.
+  - **Email Messages Page**: Resend config overview with icon cards (API key, domain, from, reply-to), email template previews (order ready, ban alert, staff invite), and email dispatch history.
+  - **DB**: Added `listDispatchesByChannel()` in [notifications.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/notifications.ts) to filter dispatches per channel.
+  - **Actions**: Updated existing notification actions to revalidate new `/admin/messages/*` paths.
+  - **Responsive**: All pages mobile-first, responsive tables hide columns on small screens.
+
 # 2026-06-08 17:18
 
 - 🗑 **Removed Instructions Field from Accounts — Razex Xelite**

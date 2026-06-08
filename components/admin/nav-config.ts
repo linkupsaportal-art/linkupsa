@@ -11,6 +11,8 @@ import {
   UserCog,
   UserCircle2,
   Send,
+  MessageCircle,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 import { canAccessRoute, type Role } from "@/lib/auth/rbac";
@@ -59,6 +61,13 @@ export const STORE_NAV: NavGroup[] = [
     label: "التحقق والأمان",
     items: [
       { href: "/admin/otp-logs", label: "سجل التحقق وحظر الأرقام", icon: FileClock },
+    ],
+  },
+  {
+    label: "الرسائل",
+    items: [
+      { href: "/admin/messages/whatsapp", label: "رسائل واتساب", icon: MessageCircle },
+      { href: "/admin/messages/email", label: "رسائل الإيميل", icon: Mail },
     ],
   },
   {
