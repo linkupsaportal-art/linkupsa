@@ -5,6 +5,12 @@
 
 ---
 
+# 2026-06-08 19:44
+
+- 📨 **Exclusive WhatsApp API Mode & Test Store Purge — Razex Xelite**
+  - **Removed Standard Mode Selector**: Completely removed standard mode tabs, coming soon banners, and features selection from [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) to exclusively use Enterprise WhatsApp API (Karzoun Chat) mode. Cleaned up unused Lucide icon imports.
+  - **Database Store Purge**: Executed a direct database cleanup to delete the test store entry `Julia's Test Store 🛍️` (Store ID `99999`) and all associated store memberships from Supabase.
+
 # 2026-06-08 19:42
 
 - 🎨 **Global Yellow/Lime Badge Text Contrast Polish — Razex Xelite**
