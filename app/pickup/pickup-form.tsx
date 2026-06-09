@@ -12,12 +12,15 @@ export function PickupForm({
   sessionConfig,
   telegram,
   turnstileSiteKey,
+  supportUrl,
 }: {
   sessionConfig: PickupSessionSettings;
   /** Set only when the merchant's Telegram pickup bot is live + enabled. */
   telegram: { username: string } | null;
   /** Cloudflare Turnstile public site key. Empty → captcha disabled. */
   turnstileSiteKey: string;
+  /** Support link configured in settings */
+  supportUrl: string;
 }) {
   const [orderNumber, setOrderNumber] = useState("");
   const [lastFour, setLastFour] = useState("");
@@ -228,7 +231,7 @@ export function PickupForm({
         <p className="text-[11px] text-fg-faint leading-relaxed">
           عند مواجهة أي مشكلة في استلام حسابك أو التفعيل، لا تتردد في{" "}
           <a
-            href="https://wa.me/966555000000"
+            href={supportUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-emerald-600 hover:text-emerald-700 font-bold underline transition-colors"

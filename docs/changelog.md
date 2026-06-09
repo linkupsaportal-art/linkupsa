@@ -3,6 +3,13 @@
 > Reverse-chronological history of meaningful project changes.
 > Hard cap: 500 lines. Trim to 400–450 when exceeded.
 
+# 2026-06-09 16:05
+
+- ⚙️ **Configurable Support Link & Telegram Override in settings — Razex Xelite**
+  - **Pickup Customization Settings**: Added `getPickupCustomizationSettings` and `updatePickupCustomizationSettings` in [platform-settings.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/db/platform-settings.ts) using a new `pickup_customization` row.
+  - **Admin Settings Form**: Built [pickup-customization-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/settings/pickup-customization-form.tsx) client form allowing managers to edit the Customer Support link and the alternative Telegram bot username. Added the form section to the main settings page in [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/settings/page.tsx) and registered the update action in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/settings/actions.ts).
+  - **Dynamic Customer Pickup Page**: Refactored [pickup-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/pickup-form.tsx) and [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/page.tsx) to read support link and Telegram username from the customization settings dynamically, removing hardcoded WhatsApp links and enabling easy overrides.
+
 # 2026-06-09 15:30
 
 - ⚙️ **Cleaned Up Dashboard UI Tabs & Removed Upgrade Card — Razex Xelite**

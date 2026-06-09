@@ -1,5 +1,7 @@
 import { PageHeader } from "@/components/admin/page-header";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getPickupCustomizationSettings } from "@/lib/db/platform-settings";
+import { PickupCustomizationForm } from "@/components/admin/settings/pickup-customization-form";
 import {
   Settings as SettingsIcon,
   Globe,
@@ -23,6 +25,7 @@ async function loadStores() {
 export default async function SettingsPage() {
   const stores = await loadStores();
   const active = stores.filter((s) => !s.uninstalled_at);
+  const pickupCustomization = await getPickupCustomizationSettings();
 
   return (
     <>
@@ -114,6 +117,15 @@ export default async function SettingsPage() {
               للاستعادة: تواصل مع المطوّر أو استخدم لوحة Supabase مباشرة.
             </p>
           </div>
+        </Section>
+
+        {/* Pickup Page Customization */}
+        <Section
+          icon={Globe}
+          title="تخصيص روابط الاستلام"
+          description="تعديل روابط خدمة العملاء وتيليجرام التي تظهر للعملاء في صفحة استلام الطلب."
+        >
+          <PickupCustomizationForm initialSettings={pickupCustomization} />
         </Section>
 
         {/* External links */}

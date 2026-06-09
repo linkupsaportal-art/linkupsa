@@ -1,5 +1,5 @@
 import { PickupForm } from "./pickup-form";
-import { getPickupSessionSettings } from "@/lib/db/platform-settings";
+import { getPickupSessionSettings, getPickupCustomizationSettings } from "@/lib/db/platform-settings";
 import { getTelegramBotSettings } from "@/lib/db/telegram-bot";
 import { env } from "@/lib/env";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -25,6 +25,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PickupPage() {
   const session = await getPickupSessionSettings();
+  const customization = await getPickupCustomizationSettings();
 
   const sb = createServiceClient();
   const { data: profile } = await sb
@@ -40,15 +41,18 @@ export default async function PickupPage() {
   // Show the "Receive via Telegram" CTA only when the bot is fully
   // operational: enabled, has a token, has a username, has a webhook
   // registered, and customer pickup flow is on.
+  // OR if a custom telegram username override is set.
   const tg = await getTelegramBotSettings().catch(() => null);
-  const telegram =
-    tg?.enabled &&
-    tg.bot_token &&
-    tg.bot_username &&
-    tg.webhook_url &&
-    tg.pickup_flow_enabled
-      ? { username: tg.bot_username }
-      : null;
+  const customTg = customization.telegram_username;
+  const telegram = customTg
+    ? { username: customTg }
+    : (tg?.enabled &&
+       tg.bot_token &&
+       tg.bot_username &&
+       tg.webhook_url &&
+       tg.pickup_flow_enabled
+         ? { username: tg.bot_username }
+         : null);
 
   return (
     <div
@@ -98,6 +102,7 @@ export default async function PickupPage() {
           sessionConfig={session}
           telegram={telegram}
           turnstileSiteKey={env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+          supportUrl={customization.support_url}
         />
       </div>
     </div>

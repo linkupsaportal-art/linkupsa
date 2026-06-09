@@ -56,6 +56,16 @@ export type RetentionSettings = {
   delete_otp_logs_after_days: number;
 };
 
+/**
+ * Customer pickup custom branding and links.
+ *   - `support_url` — link for support (e.g. WhatsApp, Helpdesk).
+ *   - `telegram_username` — custom bot username to override/provide alternative Telegram path.
+ */
+export type PickupCustomizationSettings = {
+  support_url: string;
+  telegram_username: string;
+};
+
 const DEFAULT_AUTO_BAN: AutoBanSettings = {
   enabled: false,
   failures_threshold: 5,
@@ -74,6 +84,11 @@ const DEFAULT_RETENTION: RetentionSettings = {
   enabled: true,
   archive_orders_after_days: 90,
   delete_otp_logs_after_days: 90,
+};
+
+const DEFAULT_PICKUP_CUSTOMIZATION: PickupCustomizationSettings = {
+  support_url: "https://wa.me/966555000000",
+  telegram_username: "",
 };
 
 export async function getAutoBanSettings(): Promise<AutoBanSettings> {
@@ -155,4 +170,28 @@ export async function updateRetentionSettings(next: RetentionSettings): Promise<
   await sb
     .from("platform_settings")
     .upsert({ key: "retention", value: sanitized, updated_at: new Date().toISOString() });
+}
+
+export async function getPickupCustomizationSettings(): Promise<PickupCustomizationSettings> {
+  const sb = createServiceClient();
+  const { data } = await sb
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "pickup_customization")
+    .maybeSingle();
+  if (!data?.value) return DEFAULT_PICKUP_CUSTOMIZATION;
+  return { ...DEFAULT_PICKUP_CUSTOMIZATION, ...(data.value as Partial<PickupCustomizationSettings>) };
+}
+
+export async function updatePickupCustomizationSettings(
+  next: PickupCustomizationSettings,
+): Promise<void> {
+  const sb = createServiceClient();
+  const sanitized: PickupCustomizationSettings = {
+    support_url: (next.support_url ?? "").trim(),
+    telegram_username: (next.telegram_username ?? "").trim().replace(/^@/, ""),
+  };
+  await sb
+    .from("platform_settings")
+    .upsert({ key: "pickup_customization", value: sanitized, updated_at: new Date().toISOString() });
 }
