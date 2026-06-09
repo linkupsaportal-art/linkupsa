@@ -3,7 +3,7 @@
 > Reverse-chronological history of meaningful project changes.
 > Hard cap: 500 lines. Trim to 400–450 when exceeded.
 
-# 2026-06-09 15:25
+# 2026-06-09 15:30
 
 - ⚙️ **Cleaned Up Dashboard UI Tabs & Removed Upgrade Card — Razex Xelite**
   - **Removed Non-Functional Tabs**: Simplified the admin dashboard's tab navigation in [dashboard-tabs.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/dashboard-tabs.tsx) to only display "النظرة العامة" (Overview) and "الإعدادات" (Settings).
@@ -11,6 +11,7 @@
   - **Adjusted Dashboard Stats Grid**: Reconfigured the layout grid columns from three to two columns (`grid-cols-1 sm:grid-cols-2`) to avoid layout gaps after removing the Upgrade card.
   - **Remote Repo Switch**: Updated remote repository origin to point to the correct live deployment repo at `linkupsaportal-art/linkupsa`.
   - **Vercel Build Peer Dependency Fix**: Added `.npmrc` with `legacy-peer-deps=true` to resolve the React 19 / @emoji-mart/react peer dependency installation conflict during Vercel deployment.
+  - **Vercel Build Environment Fix**: Modified the env validation function in [env.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/env.ts) to log warnings and return empty strings for required variables during the Next.js production build phase, preventing build failures when Vercel compiles the project without runtime secrets.
 
 # 2026-06-09 14:35
 
