@@ -5,6 +5,13 @@
 
 ---
 
+# 2026-06-09 12:45
+
+- 📨 **WhatsApp Standard Mode Custom Template Builder & Management — Razex Xelite**
+  - **Dynamic Client-Side Template Builder**: Implemented `TemplateBuilderDialog` in [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) supporting template naming, text area message drafting, dynamic variables injection at cursor location, and emoji list insertion.
+  - **Templates CRUD Operations**: Created interactive UI inside the "واتساب بزنس العادي" (Standard Mode) tab for searching, sorting, editing, duplicating, and deleting custom templates. Pre-populated 4 default templates to ensure a beautiful initial layout.
+  - **Database Persistence**: Added `saveWhatsAppTemplatesAction` in [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/notifications/actions.ts) to store custom templates inside the `config.custom_templates` JSONB column of the whatsapp notification channel row, providing clean store-scoped persistence without schema changes.
+
 # 2026-06-09 11:45
 
 - 📨 **Restored WhatsApp Standard Mode & Enterprise Warning Banner — Razex Xelite**
