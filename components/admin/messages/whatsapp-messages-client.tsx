@@ -9,6 +9,10 @@ import {
   Shield,
   Zap,
   Info,
+  Smartphone,
+  FileText,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import type {
   NotificationChannel,
@@ -25,20 +29,91 @@ export function WhatsAppMessagesClient({
   channel: NotificationChannel | null;
   dispatches: NotificationDispatchSummary[];
 }) {
+  const [activeMode, setActiveMode] = useState<"api" | "standard">("api");
   const [openApiConfig, setOpenApiConfig] = useState(false);
 
   const apiConfigured = !!channel;
   const apiEnabled = !!channel?.enabled;
 
+  const modes = [
+    {
+      id: "api" as const,
+      label: "واتساب API المؤسسي",
+      subtitle: "Enterprise",
+      icon: Zap,
+      iconBg: "bg-blue-500/15 text-blue-400 border-blue-500/25",
+    },
+    {
+      id: "standard" as const,
+      label: "واتساب بزنس العادي",
+      subtitle: "Standard",
+      icon: Smartphone,
+      iconBg: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      <ApiModeContent
-        channel={channel}
-        configured={apiConfigured}
-        enabled={apiEnabled}
-        onOpenConfig={() => setOpenApiConfig(true)}
-        dispatches={dispatches}
-      />
+      {/* Mode Selector Tabs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {modes.map((m) => {
+          const Icon = m.icon;
+          const isActive = activeMode === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setActiveMode(m.id)}
+              className={`text-start p-4 sm:p-5 rounded-2xl border transition-all duration-150 relative cursor-pointer outline-none select-none flex flex-col justify-between ${
+                isActive
+                  ? "bg-surface border-accent shadow-[0_4px_20px_rgba(0,0,0,0.05)] ring-1 ring-accent/15"
+                  : "bg-surface/50 border-[hsl(var(--hairline))] hover:bg-surface hover:border-[hsl(var(--hairline-strong))]"
+              }`}
+            >
+              {isActive && (
+                <div className="absolute top-4 left-4 size-5 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center text-accent">
+                  <CheckCircle2 className="size-3" />
+                </div>
+              )}
+
+              <div className="flex items-start gap-3">
+                <div className={`size-11 sm:size-12 rounded-xl flex items-center justify-center shrink-0 border ${m.iconBg}`}>
+                  <Icon className="size-5 sm:size-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="font-bold text-fg text-sm sm:text-base">
+                      {m.label}
+                    </h3>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-fg-faint bg-surface-2 px-2 py-0.5 rounded-full">
+                      {m.subtitle}
+                    </span>
+                  </div>
+
+                  {m.id === "api" ? (
+                    <StatusBadge configured={apiConfigured} enabled={apiEnabled} />
+                  ) : (
+                    <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-amber-500/15 text-black border border-amber-500/25 mt-1">
+                      قريباً
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeMode === "api" ? (
+        <ApiModeContent
+          channel={channel}
+          configured={apiConfigured}
+          enabled={apiEnabled}
+          onOpenConfig={() => setOpenApiConfig(true)}
+          dispatches={dispatches}
+        />
+      ) : (
+        <StandardModeContent />
+      )}
 
       {/* ── Config Dialog (API) ────────────────────────────────────── */}
       <WhatsAppConfigDialog
@@ -77,6 +152,20 @@ function ApiModeContent({
 
   return (
     <div className="space-y-4">
+      {/* Enterprise API Warning Banner */}
+      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:p-5 flex items-start gap-3">
+        <AlertTriangle className="size-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <h4 className="font-bold text-fg text-sm">تنبيه حول واتساب API المؤسسي (Enterprise)</h4>
+          <p className="text-xs text-fg-muted leading-relaxed" dir="rtl">
+            لا يمكن بدء المحادثات مع العملاء إلا باستخدام **قوالب رسائل معتمدة من ميتا**. ومع ذلك، إذا قام العميل بإرسال رسالة إليك خلال الـ 24 ساعة الماضية، يمكنك الرد عليه بحرية وبدون استخدام قوالب.
+          </p>
+          <p className="text-[11px] text-fg-faint leading-relaxed font-mono" dir="ltr">
+            ⚠️ WhatsApp Business API (Enterprise): Cannot initiate conversations with customers unless using Meta-approved message templates. However, if the customer has sent a message within the last 24 hours, you can reply using regular free-form messages.
+          </p>
+        </div>
+      </div>
+
       {/* Config Overview Card */}
       <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] overflow-hidden">
         {/* Header */}
@@ -161,6 +250,78 @@ function ApiModeContent({
   );
 }
 
+/* ─── Standard Mode Content ──────────────────────────────────────────── */
+
+function StandardModeContent() {
+  return (
+    <div className="space-y-4">
+      {/* Feature List Card */}
+      <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] overflow-hidden">
+        <div className="p-4 sm:p-5 border-b border-[hsl(var(--hairline))]">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl flex items-center justify-center bg-emerald-500/15 text-emerald-400 shrink-0">
+              <Smartphone className="size-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-fg text-sm sm:text-base">
+                واتساب بزنس العادي
+              </h3>
+              <p className="text-xs text-fg-muted">
+                تواصل مباشر بدون قوالب معتمدة من ميتا
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          {/* Feature cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+            <FeatureCard
+              icon={<MessageCircle className="size-4" />}
+              title="محادثات مباشرة"
+              description="أرسل رسائل نصية، صور، وملفات مباشرة للعملاء بدون أي قيود على القوالب."
+            />
+            <FeatureCard
+              icon={<FileText className="size-4" />}
+              title="بدون قوالب"
+              description="لا يتطلب موافقة ميتا على أي قالب — تواصل فوري وحر مع عملائك."
+            />
+            <FeatureCard
+              icon={<Clock className="size-4" />}
+              title="بدون نافذة زمنية"
+              description="تواصل في أي وقت بدون قيود نافذة الـ 24 ساعة المفروضة على API المؤسسي."
+            />
+            <FeatureCard
+              icon={<Shield className="size-4" />}
+              title="إعداد بسيط"
+              description="فقط ربط رقم واتساب بزنس العادي — بدون مطورين أو بنية تحتية معقدة."
+            />
+          </div>
+
+          {/* Coming Soon Banner */}
+          <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <div className="size-10 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shrink-0">
+                <Zap className="size-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-fg text-sm mb-1">
+                  قريباً — قيد التطوير
+                </h4>
+                <p className="text-xs text-fg-muted leading-relaxed">
+                  نعمل حالياً على دمج واتساب بزنس العادي في المنصة. سيتيح لك هذا
+                  الخيار إرسال رسائل مباشرة لعملائك بدون الحاجة لقوالب ميتا
+                  المعتمدة. سنعلمك فور جاهزيته.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Shared Sub-Components ──────────────────────────────────────────── */
 
 function ConfigItem({
@@ -186,6 +347,32 @@ function ConfigItem({
         dir={mono ? "ltr" : undefined}
       >
         {value}
+      </div>
+    </div>
+  );
+}
+
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-xl bg-surface-2 border border-[hsl(var(--hairline))] p-3 sm:p-4 flex items-start gap-3">
+      <div className="size-8 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-400 shrink-0">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <h4 className="font-bold text-fg text-xs sm:text-sm mb-0.5">
+          {title}
+        </h4>
+        <p className="text-[11px] sm:text-xs text-fg-muted leading-relaxed">
+          {description}
+        </p>
       </div>
     </div>
   );

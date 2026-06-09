@@ -5,6 +5,13 @@
 
 ---
 
+# 2026-06-09 11:45
+
+- 📨 **Restored WhatsApp Standard Mode & Enterprise Warning Banner — Razex Xelite**
+  - **Restored Dual Mode Selector**: Restored the selector tabs at the top of [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) allowing admins to toggle between "واتساب API المؤسسي" (Enterprise) and "واتساب بزنس العادي" (Standard).
+  - **Enterprise Warning Banner**: Added a detailed alert banner outlining Meta requirements: Enterprise API mode cannot initiate conversations without approved templates, except within a 24-hour reply window where free-form messages are permitted.
+  - **Restored Standard Mode Details**: Restored the "واتساب بزنس العادي" tab content describing direct free-form messaging, no templates, no time window restrictions, and the "قريباً" (Coming soon) configuration status.
+
 # 2026-06-08 22:23
 
 - 📋 **Meta/Karzoun Approved Templates Dropdown Support — Razex Xelite**
