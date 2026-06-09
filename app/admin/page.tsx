@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, ShieldCheck, Sparkles, PackageCheck } from "lucide-react";
+import { ShoppingBag, ShieldCheck, PackageCheck } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { DashboardTabs } from "@/components/admin/dashboard-tabs";
 import { StatCard } from "@/components/admin/stat-card";
@@ -98,7 +98,7 @@ export default async function AdminDashboardPage() {
         <div className="xl:col-span-8 grid gap-4 lg:gap-5">
           <DashboardTabs />
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+          <section className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
             <StatCard
               label="الطلبات المُسلّمة"
               value={analytics.fulfilled}
@@ -116,7 +116,6 @@ export default async function AdminDashboardPage() {
               icon={ShieldCheck}
               filledBlocks={Math.min(8, Math.max(1, analytics.accountsAvailable))}
             />
-            <UpgradeCard />
           </section>
 
           <DashboardChart days={analytics.daily} />
@@ -158,42 +157,4 @@ export default async function AdminDashboardPage() {
   );
 }
 
-/**
- * "Upgrade" CTA tile — matches the dark card with gradient sphere from the
- * original reference image.
- */
-function UpgradeCard() {
-  return (
-    <article className="relative overflow-hidden rounded-3xl surface-dark p-5 sm:p-6 flex flex-col justify-between min-h-[180px]">
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -top-10 -end-10 size-40 rounded-full opacity-50 blur-2xl"
-        style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.55), transparent 70%)" }}
-      />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -bottom-12 -start-12 size-44 rounded-full opacity-40 blur-3xl"
-        style={{ background: "radial-gradient(circle, hsl(220 70% 50% / 0.35), transparent 70%)" }}
-      />
 
-      <div className="relative">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 text-white px-2.5 py-1 text-[10px] font-semibold tracking-widest uppercase">
-          <Sparkles className="size-3 text-accent" />
-          جديد
-        </span>
-        <h3 className="mt-3 text-white font-display text-xl font-bold leading-tight">
-          ارتقِ بمتجرك
-          <br />
-          إلى المستوى التالي
-        </h3>
-      </div>
-
-      <Link
-        href="/admin/settings"
-        className="relative mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-full bg-bg text-fg text-sm font-bold hover:bg-accent hover:text-accent-fg active:scale-[0.98] transition-all"
-      >
-        ترقية الخطة ▶
-      </Link>
-    </article>
-  );
-}

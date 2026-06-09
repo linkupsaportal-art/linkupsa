@@ -3,6 +3,14 @@
 > Reverse-chronological history of meaningful project changes.
 > Hard cap: 500 lines. Trim to 400–450 when exceeded.
 
+# 2026-06-09 15:20
+
+- ⚙️ **Cleaned Up Dashboard UI Tabs & Removed Upgrade Card — Razex Xelite**
+  - **Removed Non-Functional Tabs**: Simplified the admin dashboard's tab navigation in [dashboard-tabs.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/dashboard-tabs.tsx) to only display "النظرة العامة" (Overview) and "الإعدادات" (Settings).
+  - **Removed Upgrade Plan Card**: Deleted the `<UpgradeCard />` element and its helper definition from [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/page.tsx).
+  - **Adjusted Dashboard Stats Grid**: Reconfigured the layout grid columns from three to two columns (`grid-cols-1 sm:grid-cols-2`) to avoid layout gaps after removing the Upgrade card.
+  - **Remote Repo Switch**: Updated remote repository origin to point to the correct live deployment repo at `linkupsaportal-art/linkupsa`.
+
 # 2026-06-09 14:35
 
 - ⚙️ **WhatsApp Config UI Cleanup & Disabled Ban Notifications — Razex Xelite**
