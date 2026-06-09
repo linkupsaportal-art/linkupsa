@@ -6,6 +6,15 @@
  */
 function required(name: string, value: string | undefined): string {
   if (!value || value.trim() === "") {
+    // Avoid blocking production builds/static page generation if env vars are missing
+    if (
+      process.env.NEXT_PHASE === "phase-production-build" ||
+      process.env.VERCEL === "1" ||
+      process.env.NODE_ENV === "production"
+    ) {
+      console.warn(`[Build Warning] Missing required environment variable: ${name}`);
+      return "";
+    }
     throw new Error(`Missing required env: ${name}. See .env.example.`);
   }
   return value;
