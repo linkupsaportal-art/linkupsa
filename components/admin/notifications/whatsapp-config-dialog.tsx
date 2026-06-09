@@ -129,7 +129,7 @@ export function WhatsAppConfigDialog({
                 value={form.host}
                 onChange={(e) => set("host", e.target.value)}
                 dir="ltr"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 font-mono"
+                className="h-11 px-4 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all font-mono font-semibold"
               />
             </Field>
             <Field label="Integration ID" hint="من قناة الواتساب في كرزون شات">
@@ -137,7 +137,7 @@ export function WhatsAppConfigDialog({
                 value={form.integration_id}
                 onChange={(e) => set("integration_id", e.target.value)}
                 dir="ltr"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 font-mono"
+                className="h-11 px-4 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all font-mono font-semibold"
               />
             </Field>
           </div>
@@ -153,43 +153,17 @@ export function WhatsAppConfigDialog({
               rows={3}
               dir="ltr"
               placeholder="eyJhbGciOiJIUzI1NiIs..."
-              className="px-3 py-2 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent/60 font-mono resize-none break-all"
+              className="px-4 py-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all font-mono resize-none break-all font-medium leading-relaxed placeholder:text-fg-faint"
             />
           </Field>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Field label="قالب الطلب الجاهز">
-              <input
-                value={form.default_template}
-                onChange={(e) => set("default_template", e.target.value)}
-                dir="ltr"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 font-mono"
-              />
-            </Field>
-            <Field label="قالب الحظر">
-              <input
-                value={form.ban_template}
-                onChange={(e) => set("ban_template", e.target.value)}
-                dir="ltr"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 font-mono"
-              />
-            </Field>
-            <Field label="لغة القوالب">
-              <input
-                value={form.language}
-                onChange={(e) => set("language", e.target.value)}
-                dir="ltr"
-                placeholder="ar"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60 font-mono"
-              />
-            </Field>
-          </div>
+
 
           <Field label="اسم المتجر (يظهر في الرسائل)" hint="مثال: PortalIosa">
             <input
               value={form.store_name}
               onChange={(e) => set("store_name", e.target.value)}
-              className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent/60"
+              className="h-11 px-4 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-sm w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all font-semibold"
             />
           </Field>
 

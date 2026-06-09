@@ -2,16 +2,40 @@ import { PickupForm } from "./pickup-form";
 import { getPickupSessionSettings } from "@/lib/db/platform-settings";
 import { getTelegramBotSettings } from "@/lib/db/telegram-bot";
 import { env } from "@/lib/env";
+import { createServiceClient } from "@/lib/supabase/server";
 
-export const metadata = {
-  title: "استلام الطلب",
-  description: "أدخل رقم الطلب وآخر 4 أرقام من جوالك للاستلام",
-};
+export async function generateMetadata() {
+  const sb = createServiceClient();
+  const { data: profile } = await sb
+    .from("profiles")
+    .select("store_name")
+    .eq("email", "Linkup.saudi@gmail.com")
+    .limit(1)
+    .maybeSingle();
+
+  const storeName = profile?.store_name || "متجرنا";
+
+  return {
+    title: `استلام طلبك | ${storeName}`,
+    description: "أدخل رقم الطلب وآخر 4 أرقام من جوالك للاستلام",
+  };
+}
 
 export const dynamic = "force-dynamic";
 
 export default async function PickupPage() {
   const session = await getPickupSessionSettings();
+
+  const sb = createServiceClient();
+  const { data: profile } = await sb
+    .from("profiles")
+    .select("store_name, avatar_url")
+    .eq("email", "Linkup.saudi@gmail.com")
+    .limit(1)
+    .maybeSingle();
+
+  const storeName = profile?.store_name || "متجرنا";
+  const storeLogo = profile?.avatar_url || null;
 
   // Show the "Receive via Telegram" CTA only when the bot is fully
   // operational: enabled, has a token, has a username, has a webhook
@@ -41,12 +65,18 @@ export default async function PickupPage() {
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-          {/* Enhanced package icon with glowing 3D-like container */}
-          <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-accent text-accent-fg mb-4 shadow-[0_8px_32px_rgba(212,245,66,0.3)] border border-white/20">
-            <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M20 7L12 3 4 7m16 0v10l-8 4-8-4V7m16 0l-8 4m0 0L4 7m8 4v10" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+          {/* Enhanced package icon with glowing 3D-like container or dynamic store logo */}
+          {storeLogo ? (
+            <div className="inline-flex size-16 items-center justify-center rounded-2xl overflow-hidden mb-4 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-white/20 bg-white">
+              <img src={storeLogo} alt={storeName} className="size-full object-cover" />
+            </div>
+          ) : (
+            <div className="inline-flex size-16 items-center justify-center rounded-2xl bg-accent text-accent-fg mb-4 shadow-[0_8px_32px_rgba(212,245,66,0.3)] border border-white/20">
+              <svg className="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M20 7L12 3 4 7m16 0v10l-8 4-8-4V7m16 0l-8 4m0 0L4 7m8 4v10" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
 
           {/* Connected badge */}
           <div className="mb-3">
@@ -56,7 +86,9 @@ export default async function PickupPage() {
             </span>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-fg mb-2 tracking-tight">استلام طلبك</h1>
+          <h1 className="font-display text-3xl sm:text-4xl font-extrabold text-fg mb-2 tracking-tight">
+            استلام طلبك من {storeName}
+          </h1>
           <p className="text-sm text-fg-muted max-w-sm mx-auto leading-relaxed">
             أدخل رقم الطلب وآخر 4 أرقام من جوالك المسجل في الطلب للحصول على بيانات حسابك وأكواد التفعيل.
           </p>

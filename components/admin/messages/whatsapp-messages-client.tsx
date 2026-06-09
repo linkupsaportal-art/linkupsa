@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef, useMemo } from "react";
+import { useState, useTransition, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   MessageCircle,
   CheckCircle2,
@@ -18,11 +18,13 @@ import {
   Trash2,
   Copy,
   Search,
-  Smile,
   Eye,
   X,
   RefreshCw,
+  Send,
 } from "lucide-react";
+import { EmojiPickerPopover } from "./emoji-picker-popover";
+import { CustomSelect } from "@/components/ui/select";
 import type {
   NotificationChannel,
   NotificationDispatchSummary,
@@ -213,13 +215,12 @@ function ApiModeContent({
         {/* Config Details Grid */}
         {configured ? (
           <div className="p-4 sm:p-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <ConfigItem
                 label="الحالة"
                 value={enabled ? "مفعّل" : "موقوف"}
                 valueClass={enabled ? "text-accent" : "text-amber-500"}
               />
-              <ConfigItem label="قالب التسليم" value={tpl} mono />
               <ConfigItem label="السيرفر" value={host} mono />
               <ConfigItem label="اسم المتجر" value={storeName} />
             </div>
@@ -232,11 +233,7 @@ function ApiModeContent({
                   <strong className="text-fg block mb-1">كيف يعمل؟</strong>
                   <ul className="space-y-1 list-disc list-inside">
                     <li>
-                      عند تنفيذ أي طلب، يُرسل قالب{" "}
-                      <code className="text-[11px] bg-surface px-1 py-0.5 rounded font-mono">
-                        {tpl}
-                      </code>{" "}
-                      المعتمد من ميتا تلقائياً.
+                      عند تنفيذ أي طلب، يُرسل قالب الواتساب المعتمد من ميتا والمحدد في إعدادات ذلك المنتج تلقائياً.
                     </li>
                     <li>
                       إذا رد العميل خلال 24 ساعة، يمكن الرد برسائل حرة بدون
@@ -454,29 +451,24 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
     }, 50);
   }
 
-  // Emojis list
-  const emojisList = [
-    "👋", "🌸", "📦", "🎮", "🔑", "📥", "🎉", "⚡️", "🛡️", "💖",
-    "😊", "💡", "⚠️", "🔥", "🚀", "📢", "💬", "⭐", "👍", "👀"
-  ];
-
-  function injectEmoji(emoji: string) {
+  // Inject emoji from picker at cursor position
+  const handleEmojiInsert = useCallback((emoji: string) => {
     const textarea = bodyRef.current;
-    if (!textarea) return;
-
+    if (!textarea) {
+      setTplBody((prev) => prev + emoji);
+      return;
+    }
     const startPos = textarea.selectionStart;
     const endPos = textarea.selectionEnd;
     const textBefore = tplBody.substring(0, startPos);
-    const textAfter = tplBody.substring(endPos, tplBody.length);
-
+    const textAfter = tplBody.substring(endPos);
     setTplBody(textBefore + emoji + textAfter);
-
     setTimeout(() => {
       textarea.focus();
       const newCursorPos = startPos + emoji.length;
       textarea.setSelectionRange(newCursorPos, newCursorPos);
     }, 50);
-  }
+  }, [tplBody]);
 
   // Dynamic Variable buttons config
   const variableGroups = [
@@ -543,27 +535,42 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
     },
   ];
 
+  // Preview helper – replace {var} with styled highlight
+  const previewBody = useMemo(() => {
+    if (!tplBody) return "";
+    return tplBody.replace(/\{([^}]+)\}/g, "[$1]");
+  }, [tplBody]);
+
+  // Count variables used
+  const varsUsed = useMemo(() => {
+    const matches = tplBody.match(/\{([^}]+)\}/g);
+    return matches ? matches.length : 0;
+  }, [tplBody]);
+
   return (
     <div className="space-y-6">
       {/* Action Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-[hsl(var(--hairline))]">
-        <div>
-          <h3 className="font-bold text-fg text-sm sm:text-base mb-1">
-            إدارة قوالب الرسائل
-          </h3>
-          <p className="text-xs text-fg-muted">
-            قم بإنشاء وتنظيم قوالب رسائل احترافية للواتساب والبريد الإلكتروني.
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-surface border border-[hsl(var(--hairline))]">
+        <div className="flex items-center gap-3">
+          <div className="size-11 rounded-xl flex items-center justify-center bg-emerald-500/12 text-emerald-400 shrink-0 border border-emerald-500/20">
+            <FileText className="size-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-fg text-sm sm:text-base mb-0.5">
+              إدارة قوالب الرسائل
+            </h3>
+            <p className="text-xs text-fg-muted">
+              قم بإنشاء وتنظيم قوالب رسائل احترافية للواتساب والبريد الإلكتروني.
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-accent text-accent-fg text-xs font-semibold hover:bg-accent-hi transition-colors cursor-pointer"
-          >
-            <Plus className="size-4" />
-            إضافة قالب جديد
-          </button>
-        </div>
+        <button
+          onClick={handleOpenCreate}
+          className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hi transition-all cursor-pointer shadow-sm shadow-accent/10 hover:shadow-md hover:shadow-accent/15 self-start sm:self-auto"
+        >
+          <Plus className="size-4" />
+          إضافة قالب جديد
+        </button>
       </div>
 
       {/* Templates Filter bar */}
@@ -574,7 +581,7 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="البحث في القوالب…"
-            className="h-10 w-full ps-9 pe-8 rounded-xl border border-[hsl(var(--hairline-strong))] bg-surface text-xs text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+            className="h-10 w-full ps-9 pe-8 rounded-xl border border-[hsl(var(--hairline-strong))] bg-surface text-xs text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent/50 transition-shadow"
           />
           {search && (
             <button
@@ -587,45 +594,61 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
+          <span className="text-[11px] text-fg-faint font-semibold">
+            {filteredTemplates.length} قالب
+          </span>
+          <CustomSelect
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as any)}
-            className="h-10 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs text-fg focus:outline-none w-full sm:w-auto cursor-pointer"
-          >
-            <option value="newest">الأحدث</option>
-            <option value="oldest">الأقدم</option>
-          </select>
+            onChange={(val) => setSortOrder(val as "newest" | "oldest")}
+            options={[
+              { value: "newest", label: "الأحدث" },
+              { value: "oldest", label: "الأقدم" },
+            ]}
+            className="w-full sm:w-36"
+          />
         </div>
       </div>
 
       {/* Templates Cards Grid */}
       {filteredTemplates.length === 0 ? (
-        <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-12 text-center text-sm text-fg-muted">
-          لا توجد قوالب مطابقة للبحث.
+        <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-12 text-center">
+          <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-surface-2 mb-4">
+            <FileText className="size-6 text-fg-muted" />
+          </div>
+          <h3 className="font-semibold text-fg mb-1">لا توجد قوالب مطابقة</h3>
+          <p className="text-sm text-fg-muted">حاول تعديل كلمات البحث أو أنشئ قالباً جديداً.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredTemplates.map((tpl) => (
             <div
               key={tpl.id}
-              className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] hover:border-[hsl(var(--hairline-strong))] transition-all duration-200 overflow-hidden flex flex-col justify-between"
+              className="group rounded-2xl bg-surface border border-[hsl(var(--hairline))] hover:border-accent/25 hover:shadow-lg hover:shadow-accent/[0.03] transition-all duration-300 overflow-hidden flex flex-col justify-between"
             >
               <div className="p-4 sm:p-5 space-y-3">
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h4 className="font-bold text-fg text-sm sm:text-base">
-                    {tpl.name}
-                  </h4>
-                  <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-emerald-500/10 text-black border border-emerald-500/20">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="size-8 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-400 shrink-0">
+                      <MessageCircle className="size-3.5" />
+                    </div>
+                    <h4 className="font-bold text-fg text-sm sm:text-base truncate">
+                      {tpl.name}
+                    </h4>
+                  </div>
+                  <span className="inline-flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
+                    <Send className="size-2.5" />
                     واتساب
                   </span>
                 </div>
 
-                <div className="bg-surface-2/60 border border-[hsl(var(--hairline))] rounded-xl p-3.5 text-xs text-fg-muted leading-relaxed font-sans whitespace-pre-wrap select-text">
+                {/* Message body preview — styled like a WhatsApp chat bubble */}
+                <div className="relative bg-[hsl(142_70%_30%/0.08)] border border-emerald-500/10 rounded-xl rounded-tr-sm p-3.5 text-xs text-fg-muted leading-relaxed font-sans whitespace-pre-wrap select-text max-h-40 overflow-y-auto">
                   {tpl.body}
+                  <div className="absolute top-0 end-0 w-0 h-0 border-l-8 border-l-transparent border-t-8 border-t-emerald-500/10" />
                 </div>
               </div>
 
-              <div className="px-4 sm:px-5 py-3 bg-surface-2/40 border-t border-[hsl(var(--hairline))] flex items-center justify-between gap-4">
+              <div className="px-4 sm:px-5 py-3 bg-surface-2/30 border-t border-[hsl(var(--hairline))] flex items-center justify-between gap-4">
                 <span className="text-[10px] text-fg-faint font-num">
                   آخر تحديث:{" "}
                   {new Date(tpl.created_at).toLocaleString("en-US", {
@@ -638,17 +661,17 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
                   })}
                 </span>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleOpenEdit(tpl)}
-                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+                    className="p-2 rounded-lg text-fg-muted hover:text-accent hover:bg-accent/10 transition-colors cursor-pointer"
                     title="تعديل القالب"
                   >
                     <Pencil className="size-3.5" />
                   </button>
                   <button
                     onClick={() => handleDuplicate(tpl)}
-                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+                    className="p-2 rounded-lg text-fg-muted hover:text-blue-400 hover:bg-blue-500/10 transition-colors cursor-pointer"
                     title="تكرار القالب"
                   >
                     <Copy className="size-3.5" />
@@ -669,14 +692,16 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
 
       {/* ── Custom Template Builder Dialog ───────────────────────────── */}
       <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
-        <DialogContent className="theme-admin max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="theme-admin max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
-              <MessageCircle className="size-4 text-emerald-400" />
+              <div className="size-7 rounded-lg flex items-center justify-center bg-emerald-500/12 text-emerald-400 border border-emerald-500/20">
+                <MessageCircle className="size-3.5" />
+              </div>
               {currentTpl ? "تعديل القالب" : "إضافة قالب جديد"}
             </DialogTitle>
             <DialogDescription>
-              اكتب محتوى الرسالة، ويمكنك إدراج المتغيرات الديناميكية بالنقر عليها.
+              اكتب محتوى الرسالة، ويمكنك إدراج المتغيرات الديناميكية والإيموجي بالنقر عليها.
             </DialogDescription>
           </DialogHeader>
 
@@ -686,43 +711,58 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
                 value={tplName}
                 onChange={(e) => setTplName(e.target.value)}
                 placeholder="مثال: طلب جديد شات جي تي بي مشترك"
-                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent/60"
+                className="h-11 px-4 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all font-semibold placeholder:text-fg-faint"
               />
             </Field>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-              {/* Text Area Content Builder */}
-              <div className="lg:col-span-3 space-y-4">
-                <Field label="محتوى القالب *">
-                  <textarea
-                    ref={bodyRef}
-                    value={tplBody}
-                    onChange={(e) => setTplBody(e.target.value)}
-                    rows={12}
-                    placeholder="مرحباً عزيزي {customer_name}..."
-                    className="px-3 py-2.5 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent/60 font-sans resize-none leading-relaxed"
-                  />
-                </Field>
-
-                {/* Emojis Ingestion panel */}
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-fg-muted inline-flex items-center gap-1">
-                    <Smile className="size-3.5" />
-                    رموز تعبيرية وإيموجي
-                  </label>
-                  <div className="flex flex-wrap gap-1 bg-surface-2/40 border border-[hsl(var(--hairline))] p-2.5 rounded-xl">
-                    {emojisList.map((emoji) => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        onClick={() => injectEmoji(emoji)}
-                        className="size-8 text-sm hover:bg-surface border border-transparent hover:border-[hsl(var(--hairline-strong))] rounded-lg transition-all flex items-center justify-center cursor-pointer select-none"
-                      >
-                        {emoji}
-                      </button>
-                    ))}
+              {/* Editor + Toolbar */}
+              <div className="lg:col-span-3 space-y-3">
+                {/* Toolbar */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <label className="text-xs font-semibold text-fg-muted">محتوى القالب *</label>
+                  <div className="flex items-center gap-2">
+                    <EmojiPickerPopover onEmojiSelect={handleEmojiInsert} />
+                    <span className="text-[10px] text-fg-faint font-num bg-surface-2 px-2 py-1 rounded-md border border-[hsl(var(--hairline))]">
+                      {tplBody.length} حرف • {varsUsed} متغير
+                    </span>
                   </div>
                 </div>
+
+                <textarea
+                  ref={bodyRef}
+                  value={tplBody}
+                  onChange={(e) => setTplBody(e.target.value)}
+                  rows={14}
+                  dir="rtl"
+                  placeholder="مرحباً عزيزي {customer_name} 👋\n\nشكرًا لطلبك من متجر {store_name}..."
+                  className="px-4 py-3.5 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 font-sans resize-none leading-relaxed transition-all placeholder:text-fg-faint font-medium"
+                />
+
+                {/* Live Preview */}
+                {tplBody && (
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-fg-faint flex items-center gap-1">
+                      <Eye className="size-3" />
+                      معاينة حية
+                    </label>
+                    <div className="relative bg-[hsl(142_70%_30%/0.06)] border border-emerald-500/10 rounded-xl rounded-tr-sm p-4 text-xs text-fg leading-relaxed whitespace-pre-wrap">
+                      {tplBody.split(/\{([^}]+)\}/).map((part, i) =>
+                        i % 2 === 0 ? (
+                          <span key={i}>{part}</span>
+                        ) : (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-0.5 h-5 px-1.5 mx-0.5 rounded bg-accent/15 text-accent text-[10px] font-bold border border-accent/20"
+                          >
+                            {part}
+                          </span>
+                        )
+                      )}
+                      <div className="absolute top-0 end-0 w-0 h-0 border-l-8 border-l-transparent border-t-8 border-t-emerald-500/10" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Variable Injection panels */}
@@ -730,19 +770,19 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
                 <label className="text-[11px] font-bold text-fg-muted block">
                   المتغيرات المتاحة
                 </label>
-                <div className="h-[380px] overflow-y-auto border border-[hsl(var(--hairline))] rounded-xl bg-surface-2/30 p-3.5 space-y-3.5">
+                <div className="h-[440px] overflow-y-auto border border-[hsl(var(--hairline))] rounded-xl bg-surface-2/30 p-3.5 space-y-3.5 scrollbar-thin">
                   {variableGroups.map((group) => (
                     <div key={group.title} className="space-y-1.5">
                       <span className="text-[10px] font-bold text-fg-faint uppercase tracking-wider block">
                         {group.title}
                       </span>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {group.variables.map((v) => (
                           <button
                             key={v.key}
                             type="button"
                             onClick={() => injectVariable(v.key)}
-                            className="h-7 px-2.5 bg-accent/10 border border-accent/20 hover:border-accent/40 rounded-lg text-[10px] font-semibold text-black transition-colors cursor-pointer select-none"
+                            className="h-7 px-2.5 bg-surface border border-[hsl(var(--hairline-strong))] hover:border-accent/35 hover:bg-accent/5 rounded-lg text-[10px] font-bold text-fg-muted hover:text-accent transition-all cursor-pointer select-none font-mono"
                           >
                             {v.label}
                           </button>
@@ -755,7 +795,7 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+              <div className="flex items-start gap-2 text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-3 py-2.5 rounded-xl">
                 <AlertTriangle className="size-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -772,9 +812,19 @@ function StandardModeContent({ channel }: { channel: NotificationChannel | null 
             <button
               onClick={handleSaveTemplate}
               disabled={isPending}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-fg text-bg text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hi transition-all disabled:opacity-50 cursor-pointer shadow-sm shadow-accent/10"
             >
-              {isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
+              {isPending ? (
+                <>
+                  <RefreshCw className="size-3.5 animate-spin" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-3.5" />
+                  حفظ القالب
+                </>
+              )}
             </button>
           </DialogFooter>
         </DialogContent>

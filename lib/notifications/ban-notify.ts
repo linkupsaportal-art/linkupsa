@@ -86,15 +86,6 @@ export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
     ? `${flatBaseReason} — مدة الحظر: ${durationLabel}`
     : flatBaseReason;
 
-  // ─── WhatsApp ──────────────────────────────────────────────────────────
-  void sendBanWhatsApp({
-    cfg: waCfg,
-    mobile: cleanMobile,
-    storeName,
-    customerName,
-    reasonForWhatsApp,
-  });
-
   // ─── Email ─────────────────────────────────────────────────────────────
   void sendBanEmailIfEnabled(sb, {
     customerEmail,
@@ -114,35 +105,6 @@ export async function notifyPhoneBan(args: NotifyBanArgs): Promise<void> {
 }
 
 /* ─────────────────────── helpers ─────────────────────── */
-
-async function sendBanWhatsApp(args: {
-  cfg: Record<string, unknown>;
-  mobile: string;
-  storeName: string;
-  customerName: string;
-  reasonForWhatsApp: string;
-}): Promise<void> {
-  const c = args.cfg;
-  const provider = c.provider as string | undefined;
-  const appToken = c.app_token as string | undefined;
-  const integrationId = c.integration_id as string | undefined;
-  if (provider !== "karzoun" || !appToken || !integrationId) return;
-  await sendKarzounWhatsApp({
-    to: args.mobile,
-    template: (c.ban_template as string | undefined) ?? "phone_ban_alert_v1",
-    params: [args.storeName, args.customerName, args.reasonForWhatsApp],
-    config: {
-      host: c.host as string | undefined,
-      appToken,
-      integrationId,
-      defaultTemplate:
-        (c.ban_template as string | undefined) ?? "phone_ban_alert_v1",
-      language: (c.language as string | undefined) ?? "ar",
-    },
-  }).catch(() => {
-    /* best-effort */
-  });
-}
 
 async function sendBanEmailIfEnabled(
   sb: ReturnType<typeof createServiceClient>,

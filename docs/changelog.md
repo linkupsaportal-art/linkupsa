@@ -3,9 +3,43 @@
 > Reverse-chronological history of meaningful project changes.
 > Hard cap: 500 lines. Trim to 400–450 when exceeded.
 
----
+# 2026-06-09 14:35
+
+- ⚙️ **WhatsApp Config UI Cleanup & Disabled Ban Notifications — Razex Xelite**
+  - **Removed Redundant Config Fields**: Removed input fields for `default_template`, `ban_template`, and `language` (لغة القوالب) from the WhatsApp Config dialog [whatsapp-config-dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/notifications/whatsapp-config-dialog.tsx).
+  - **Cleaned Config Overview Layout**: Removed the display for "قالب التسليم" in [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) and updated help text to clarify that templates are defined on a per-product basis.
+  - **Disabled Ban Notifications**: Deleted WhatsApp ban notifications sending logic from `notifyPhoneBan` in [ban-notify.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/notifications/ban-notify.ts), ensuring that banned phone numbers are simply blocked without triggering extra messages.
+
+# 2026-06-09 14:20
+
+- 🖼️ **Restricted Store Branding to Linkup.saudi@gmail.com — Razex Xelite**
+  - **Specific Merchant Filtering**: Updated branding queries in [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/page.tsx) to query the database exclusively by email `Linkup.saudi@gmail.com` to guarantee store logo and name display correctly.
+
+# 2026-06-09 14:15
+
+- 🖼️ **Dynamic Store Branding & Logo on Customer Pickup Screen — Razex Xelite**
+  - **Dynamic Database Queries**: Implemented profile lookup in [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/page.tsx) to query the active merchant's `store_name` and `avatar_url` from the database.
+  - **Dynamic Branding Layout**: Renders the uploaded merchant logo (profile image) on the customer pickup screen, with fallback to the default package icon. Updates the page header dynamically with `استلام طلبك من [اسم المتجر]`.
+  - **Dynamic Page Title & Metadata**: Added `generateMetadata` function on the page component to dynamically set the browser tab title as `استلام طلبك | [اسم المتجر]`.
+
+# 2026-06-09 14:00
+
+- 🎨 **Messages UI Refinement & Inputs & Custom Dropdown Redesign — Razex Xelite**
+  - **Premium Dropdown Component**: Replaced the native HTML `<select>` with the custom `CustomSelect` component for sorting templates, adding custom chevron transitions and polished selection highlights.
+  - **Sleek Variable Code-Tags**: Redesigned dynamic variable badges to look like high-contrast code pills (`bg-surface font-mono`) with a smooth lime glow on hover.
+  - **Polished Input Forms & Popups**: Upgraded input heights, padding, font weights, and border focus rings (`focus:ring-accent/30`) in both the Template Builder Modal and WhatsApp Config Dialog.
+
+# 2026-06-09 13:50
+
+- 🎨 **Template Builder UI Overhaul & @emoji-mart/react Emoji Picker — Razex Xelite**
+  - **Full Emoji Picker**: Replaced the static 20-emoji grid with `@emoji-mart/react` via a new [emoji-picker-popover.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/emoji-picker-popover.tsx) component. Features dark theme, Arabic locale, category navigation, skin tone selector, and click-outside-to-close.
+  - **Enhanced Template Cards**: Upgraded template cards with WhatsApp-style chat bubble previews, message icon badges, group hover actions with smooth opacity transitions, and max-height scrollable preview.
+  - **Upgraded Template Builder Dialog**: Wider dialog (max-w-5xl), inline toolbar with emoji picker + character/variable count, 14-row textarea with RTL support, and live preview panel showing dynamic variables as highlighted accent-colored badges.
+  - **Better Empty States**: Added icon + description empty state for zero search results.
+  - **API Test Results**: Verified template sending via `test-send-all-templates.mjs` — 8/12 approved templates sent successfully. Failures are Meta-side issues (named parameter templates and disabled API calling).
 
 # 2026-06-09 12:45
+
 
 - 📨 **WhatsApp Standard Mode Custom Template Builder & Management — Razex Xelite**
   - **Dynamic Client-Side Template Builder**: Implemented `TemplateBuilderDialog` in [whatsapp-messages-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/messages/whatsapp-messages-client.tsx) supporting template naming, text area message drafting, dynamic variables injection at cursor location, and emoji list insertion.
@@ -390,84 +424,24 @@
     - Created [login-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/login-form.tsx) for Sign In operations.
     - Created [register-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/register-form.tsx) for Sign Up operations.
     - Created [two-factor-setup.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/web/app/auth/components/two-factor-setup.tsx) for the Google 2FA Authenticator setups.
-  - **Outstanding Build Health**: Executed the `react_doctor_diagnose` sweep, successfully passing with **0 compiling errors** and raising our diagnostics quality index score to **92/100 (Great)**!
+- 🔑 **Google 2FA Setup & Security Overhaul — Razex Xelite completed admin profile page security**
+  - **Profile Page**: Created a premium admin profile page [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/admin/profile/page.tsx) with tabbed layout.
+  - **Two-Factor Authentication (2FA)**: Fully implemented Google Authenticator TOTP setup flow in [two-factor-setup.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/auth/components/two-factor-setup.tsx) and actions.
+
+# 2026-05-28 20:00
+
+- 🎮 **Customer Pickup Redesign & Code Copy — Razex Xelite completed pickup UI**
+  - **Premium Cream & Lime Themes**: Designed an ultra-premium customer pickup screen in [page.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/page.tsx).
+
+# 2026-05-27 23:30
+
+- 🏗️ **Admin Dashboard Scaffolding — Razex Xelite completed dashboard structure**
+  - **Independent Auth Gateway**: Programmed a custom JWT-based cookie login flow in [login-form.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/auth/components/login-form.tsx).
+  - **Active Build Verification**: Validated full compilation compatibility with React Doctor.
 
 # 2026-05-27 22:50
 
 - 🛡️ **Premium Portaliosa Brand Shield & Hero Polish — Razex Xelite completed visual overhaul**
-  - **Salla-Free Architectural Pivot**: Decoupled the landing page layout from old Salla dependencies. Updated the main subhead text to reflect the brand's new independent, self-hosted automated delivery model.
-  - **Interactive Brand Shield Card**: Removed the lookup form card from the hero section and replaced it with a highly animated, floating **Portaliosa Brand Shield** layout featuring:
-    - Translucent glassmorphism panel (`bg-surface/40 backdrop-blur-xl`) with a cybernetic dot-matrix tech grid.
-    - Double-layer neon ambient aurora gradient behind the shield, breathing with infinite pulse transitions.
-    - High-fidelity, optimized Next.js `<Image>` utilizing the newly generated `linkup-logo.webp` WebP asset with automatic layout bounding (`fill`), responsiveness (`sizes`), and instant prefetching (`priority`).
-    - Glowing cyberpunk retro corner brackets and personalized `PORTALIOSA SYSTEM` brand status tags.
-  - **Zero Compiler Warnings**: Cleaned up all unused React component imports (`HeroLookupForm`) and fully validated a diagnostics index score of **93/100** with **0 compile errors** on React Doctor!
-
-# 2026-05-27 22:45
-
-- ⚡ **Insanely Premium Cyberpunk Hero Form Redesign — Razex Xelite completed UI polish**
-  - **Dynamic Neon Card Container**: Upgraded the card wrapper to utilize a glowing dual-layer border structure that expands its shadow box and brightens its border using active blurple colors upon input focus.
-  - **Retro-Cyber Corner Brackets**: Constructed 4 sharp geometric SVGs at the card corners that scale outward (`scale-105`) and shift colors dynamically to latch around the active container.
-  - **Glow-Pin Input Indicators**: Appended digital indicator status dots next to each form field label that pulse actively (`animate-pulse`) when their corresponding input field is focused.
-  - **Laser Sweep Shimmer & Glow CTA**: Added an infinite diagonal skewed laser glare sweep (`animate-laser`) on the submit button, supported by moving gradient transitions and massive blurple drop shadows.
-  - **Advanced Colorful Physics Blast**: Re-engineered the success submit burst function using GSAP to project 24 colorful, glowing physics particles of varying sizes (blurple, white, cyan) with custom radial offsets and box-shadow backlighting.
-  - **Clean Build Sweep**: Resolved all long-linter class warnings and verified a Great score of **94/100** with **0 compile errors** on React Doctor!
-
-# 2026-05-27 22:40
-
-- 🏷️ **Official Logo Integration & Favicon Generation — Razex Xelite completed brand assets**
-  - **High-Performance WebP Converter**: Processed the original `linkup-logo.png` (1.5MB) using `sharp-cli` to produce an optimized, highly scalable `linkup-logo.webp` (WebP format, 80 quality) saved inside `web/public/`.
-  - **Next.js App Router Favicon**: Created a resized `32x32` pixel `icon.png` in `web/app/` using sharp-cli resize filters, and removed legacy `favicon.ico` to let Next.js natively render the official brand icon.
-  - **Centralized Logo Propagation**: Updated `web/components/brand/logo.tsx` to utilize the new WebP asset via `next/image` with `fill` layouts and LCP `priority` prefetching. This automatically updated the header navbar, overlay details card, and bottom footer elements seamlessly.
-  - **Build Integrity Sweep**: Performed full diagnostics checking showing 0 TypeScript/ESLint errors and compiled Next.js static output in record time.
-
-# 2026-05-27 22:30
-
-- 🧭 **Premium Full-Screen Navigation & Morphing Trigger — Razex Xelite completed navigation polish**
-  - **3-Bar Morphing SVG Trigger**: Replaced standard icon with a premium custom 3-bar SVG button that morphs into a clean "X" using synchronized transitions.
-  - **GSAP Screen-Peel Transition**: Implemented a highly optimized GSAP clip-path polygon wipe sequence. Built the timeline once on mount and controlled it via play/reverse triggers to avoid any stuck states.
-  - **Dynamic Scrollbar Hiding & Layout Shift Fix**: Programmatically calculated scrollbar width on the document and appended a body lock class with custom HSL properties, ensuring zero visual layout shifts on open/close.
-  - **No-Scrollbar & Glow Utilities**: Applied a `no-scrollbar` styling wrapper to ensure a clean, distraction-free overlay and added an interactive cursor spotlight following the mouse.
-  - **TypeScript Verification**: Resolved the TS2339 index parameter compiler error in `NAV_LINKS` and secured 100% build compatibility with a React Doctor score of **93/100**.
-
-# 2026-05-27 23:25
-
-- 💎 **Premium Landing Page Refactoring — Razex Xelite completed visual polish, custom animations, and layout fixes**
-- 🎨 **CSS Animation Keyframes (`globals.css`)**: Appended utility classes and infinite CSS keyframe definitions for both `spin-clockwise` (rotating circle badge text) and `marquee-ltr` (endless marquee ribbon).
-- 🧭 **Editorial Header Navigation (`navbar.tsx`)**: Fully re-designed the navbar into a premium editorial top bar:
-  - Sticky glass header with smooth-scrolling border and backdrop transition.
-  - Logo placement (right) and elegant nav links with hairline hover reveals.
-  - CTAs with sliding chevron animations.
-  - Full-screen glassmorphic mobile menu overlay with GSAP staggered link entrances.
-- 🎬 **Responsive 12-Column Hero Section (`hero.tsx`)**: Solved all image squeezing and text overlapping layout issues across all viewports.
-  - Reconfigured to a beautiful 12-column grid (`lg:grid-cols-12`) on desktop (5 cols details, 4 cols carousel, 3 cols counter & badge).
-  - Designed a high-end luxury crossfade image carousel with absolute layout opacity transition (eliminating translate bugs in RTL/LTR).
-  - Integrated a floating **rotating circular SVG text badge** ("• وَصَل • تسليم رقمي فوري • آمن و موثوق •").
-  - Encapsulated GSAP `SplitText` functions inside robust checks to prevent strict-mode runtime type errors.
-- 🎗️ **Endless Scrolling Ticker (`marquee-ribbon.tsx`)**: Created a gorgeous, seamless marquee ribbon separating Hero and Exploration sections. Implemented stroked-text Tech highlights and solid monospace Arabic text in an LTR-isolated container (immune to RTL flexbox layout conflicts).
-- 📐 **RTL-Calibrated Column Dividers (`recognition.tsx` & `journal.tsx`)**: Corrected standard border dividers in multi-column RTL layouts using logical `divide-x-reverse` instead of standard `divide-x` to ensure proper right-to-left visual lines.
-- ⚙️ **Successful Next.js Build & Type Verification**:
-  - Ran full `react-doctor` diagnostics with zero errors and a project index score of **95/100 (Great)**.
-  - Proactively executed `next build` which compiled successfully with static prerender generation in 5.2s!
-
-# 2026-05-27 16:30
-
-- 🟢 Initial documentation pass — Razex Xelite created `docs/` folder as source of truth
-- 📝 Created `docs/project_structure.md` with full workspace tree + metadata footer
-- 📝 Created `docs/changelog.md` (this file) for historical tracking
-- 📝 Created `docs/architecture.md` capturing the agreed stack and ADRs
-- 🔧 Updated `project-details.md` — replaced legacy "VPS + Nginx + PM2" stack section with the **authoritative serverless stack** agreed in WhatsApp conversation:
-  - Next.js 15 + shadcn/ui + Tailwind on Vercel
-  - Supabase (Postgres + Edge Functions + pg_cron + Storage + Auth + pgsodium)
-  - Cloudflare (Workers + KV + Queues + Turnstile + WAF + DNS)
-  - Resend for transactional email
-  - Custom queue system on Supabase + CF (no third-party queue service)
-  - Meta Cloud API for WhatsApp (pending client confirmation)
-  - Local SA SMS provider (Unifonic / Mobily — pending confirmation)
-- 📌 Documented ownership guarantee: source code + DB + credentials all under client's accounts, portable to any Postgres + Node host
-- ⚠️ Open questions logged for client follow-up: WhatsApp BSP choice, SMS provider, domain decision, Salla Partner account status, expected admin user count, backup strategy beyond Supabase native
-- 🎯 Next: collect client credentials (Gmail, then Vercel/Supabase/Cloudflare/GitHub/Resend accounts) before scaffolding code
-
 
 # 2026-05-27 18:45
 
