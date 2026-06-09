@@ -13,6 +13,7 @@ digital-delivery-platform/
 ├── 📄 conversation.md               ( محادثة WhatsApp مع العميل — تفاوض الميزانية والاتفاق على الستاك Vercel + Supabase + Cloudflare بدون VPS )
 ├── 📄 project-details.md            ( المواصفات الكاملة بالعربية — الواجهات الثلاث، 6 أنواع منتجات، الأمان، الربط المستقل، الستاك المعتمد )
 ├── 📄 .gitignore                    ( استثناءات git الافتراضية لـ Next.js + node_modules + .next )
+├── 📄 .npmrc                        ( تكوين npm لتجاوز تعارضات peer dependencies لـ React 19 في Vercel )
 ├── 📄 eslint.config.mjs             ( تكوين ESLint flat config — يمتد من eslint-config-next )
 ├── 📄 next-env.d.ts                 ( تعريفات TypeScript المُولّدة من Next.js — لا تُعدَّل يدوياً )
 ├── 📄 next.config.ts                ( إعدادات Next.js — strict mode + optimizePackageImports لـ lucide & gsap )
