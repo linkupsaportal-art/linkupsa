@@ -51,6 +51,30 @@ export async function saveWhatsAppConfigAction(input: {
   return { ok: true };
 }
 
+export async function saveWhatsAppTemplatesAction(templates: any[]): Promise<ActionResult> {
+  const storeId = await getActiveStoreId();
+  if (!storeId) return { ok: false, error: "لا يوجد متجر مرتبط حالياً" };
+
+  const { getNotificationChannel, upsertNotificationChannel } = await import("@/lib/db/notifications");
+  const channelRow = await getNotificationChannel({ storeId, channel: "whatsapp" });
+  
+  const currentConfig = channelRow?.config ?? {};
+  const newConfig = {
+    ...currentConfig,
+    custom_templates: templates,
+  };
+
+  await upsertNotificationChannel({
+    storeId,
+    channel: "whatsapp",
+    enabled: channelRow ? channelRow.enabled : false,
+    config: newConfig,
+  });
+
+  revalidatePath("/admin/messages/whatsapp");
+  return { ok: true };
+}
+
 export async function testWhatsAppConnectionAction(input: {
   host?: string;
   appToken: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useEffect, useRef, useMemo } from "react";
 import {
   MessageCircle,
   CheckCircle2,
@@ -13,12 +13,30 @@ import {
   FileText,
   Clock,
   AlertTriangle,
+  Plus,
+  Pencil,
+  Trash2,
+  Copy,
+  Search,
+  Smile,
+  Eye,
+  X,
+  RefreshCw,
 } from "lucide-react";
 import type {
   NotificationChannel,
   NotificationDispatchSummary,
 } from "@/lib/db/notifications";
 import { WhatsAppConfigDialog } from "@/components/admin/notifications/whatsapp-config-dialog";
+import { saveWhatsAppTemplatesAction } from "@/app/admin/notifications/actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /* ─── Main Component ─────────────────────────────────────────────────── */
 
@@ -112,7 +130,7 @@ export function WhatsAppMessagesClient({
           dispatches={dispatches}
         />
       ) : (
-        <StandardModeContent />
+        <StandardModeContent channel={channel} />
       )}
 
       {/* ── Config Dialog (API) ────────────────────────────────────── */}
@@ -252,72 +270,515 @@ function ApiModeContent({
 
 /* ─── Standard Mode Content ──────────────────────────────────────────── */
 
-function StandardModeContent() {
+/* ─── Standard Mode Content ──────────────────────────────────────────── */
+
+type CustomTemplate = {
+  id: string;
+  name: string;
+  body: string;
+  created_at: string;
+};
+
+const DEFAULT_TEMPLATES: CustomTemplate[] = [
+  {
+    id: "tpl_1",
+    name: "طلب لعبة",
+    body: "مرحباً عزيزي {customer_name} 👋\n\nشكرًا لطلبك من متجر {store_name} 🌸\n\nتفاصيل طلبك كالتالي:\n📦 رقم الطلب: #{order_number}\n🎮 اسم المنتج: {product_name}\n🎮 معرف اللاعب: {player_id}\n🔑 مفتاح اللعبة: {game_key}\n\nرابط استلام الطلب والتعليمات 📥:\n{pickup_url}\n\nاستمتع باللعب! 🎉",
+    created_at: "2026-04-17T13:10:00Z",
+  },
+  {
+    id: "tpl_2",
+    name: "طلب جديد شات جي تي بي مشترك",
+    body: "مرحباً عزيزي {customer_name} 👋\n\nتم تفعيل اشتراكك في ChatGPT المشترك بنجاح! ⚡️\n\nتفاصيل الحساب 🔐:\n📧 البريد الإلكتروني: {email}\n🔑 كلمة المرور: {password}\n🛡️ رمز التحقق: {code_2fa}\n\nرابط الاستلام والتعليمات 📥:\n{pickup_url}",
+    created_at: "2026-04-17T13:09:00Z",
+  },
+  {
+    id: "tpl_3",
+    name: "طلب تقييم لعبة",
+    body: "عزيزي {customer_name}،\n\nنأمل أن تكون مستمتعاً بـ {product_name} 🎮!\n\nيسعدنا جداً تقييمك لخدمتنا عبر الرابط:\n{store_url}/reviews\n\nتقييمك يساعدنا على تقديم الأفضل دائماً 🤍",
+    created_at: "2026-03-27T05:41:00Z",
+  },
+  {
+    id: "tpl_4",
+    name: "طلب تقييم",
+    body: "مرحباً {customer_name} 👋\n\nتمت خدمتك أسرع من البرق! ⚡️\nيهمنا تقييمك الجميل 💖\n\nشاركنا صورة للتقييم وراح يتم إضافة 20 يوم مجاناً على اشتراكك مباشرة! 🎉",
+    created_at: "2026-03-27T05:41:00Z",
+  },
+];
+
+function StandardModeContent({ channel }: { channel: NotificationChannel | null }) {
+  const [templates, setTemplates] = useState<CustomTemplate[]>([]);
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [isPending, startTransition] = useTransition();
+
+  // Builder Modal States
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [currentTpl, setCurrentTpl] = useState<CustomTemplate | null>(null);
+  const [tplName, setTplName] = useState("");
+  const [tplBody, setTplBody] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Textarea Ref for Variable Injection
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load custom templates on mount
+  useEffect(() => {
+    const custom = (channel?.config?.custom_templates as CustomTemplate[] | undefined) ?? [];
+    if (custom.length === 0) {
+      setTemplates(DEFAULT_TEMPLATES);
+    } else {
+      setTemplates(custom);
+    }
+  }, [channel]);
+
+  // Persist templates helper
+  function saveTemplates(list: CustomTemplate[]) {
+    startTransition(async () => {
+      const res = await saveWhatsAppTemplatesAction(list);
+      if (!res.ok) {
+        setError("فشل حفظ التغييرات في قاعدة البيانات.");
+      } else {
+        setTemplates(list);
+      }
+    });
+  }
+
+  // Search and Filter templates
+  const filteredTemplates = useMemo(() => {
+    let list = templates.filter(
+      (t) =>
+        t.name.toLowerCase().includes(search.toLowerCase()) ||
+        t.body.toLowerCase().includes(search.toLowerCase())
+    );
+
+    list.sort((a, b) => {
+      const timeA = new Date(a.created_at).getTime();
+      const timeB = new Date(b.created_at).getTime();
+      return sortOrder === "newest" ? timeB - timeA : timeA - timeB;
+    });
+
+    return list;
+  }, [templates, search, sortOrder]);
+
+  // Open builder for creating a new template
+  function handleOpenCreate() {
+    setCurrentTpl(null);
+    setTplName("");
+    setTplBody("");
+    setError(null);
+    setBuilderOpen(true);
+  }
+
+  // Open builder for editing a template
+  function handleOpenEdit(tpl: CustomTemplate) {
+    setCurrentTpl(tpl);
+    setTplName(tpl.name);
+    setTplBody(tpl.body);
+    setError(null);
+    setBuilderOpen(true);
+  }
+
+  // Duplicate a template
+  function handleDuplicate(tpl: CustomTemplate) {
+    const dup: CustomTemplate = {
+      id: "tpl_" + Math.random().toString(36).substr(2, 9),
+      name: `${tpl.name} - نسخة`,
+      body: tpl.body,
+      created_at: new Date().toISOString(),
+    };
+    saveTemplates([dup, ...templates]);
+  }
+
+  // Delete a template
+  function handleDelete(id: string) {
+    if (confirm("هل أنت متأكد تماماً من رغبتك في حذف هذا القالب؟")) {
+      const list = templates.filter((t) => t.id !== id);
+      saveTemplates(list);
+    }
+  }
+
+  // Save template from Dialog
+  function handleSaveTemplate() {
+    if (!tplName.trim()) {
+      setError("اسم القالب مطلوب.");
+      return;
+    }
+    if (!tplBody.trim()) {
+      setError("محتوى القالب مطلوب.");
+      return;
+    }
+
+    let updatedList: CustomTemplate[];
+
+    if (currentTpl) {
+      // Edit
+      updatedList = templates.map((t) =>
+        t.id === currentTpl.id
+          ? { ...t, name: tplName, body: tplBody, created_at: new Date().toISOString() }
+          : t
+      );
+    } else {
+      // Create new
+      const newTpl: CustomTemplate = {
+        id: "tpl_" + Math.random().toString(36).substr(2, 9),
+        name: tplName,
+        body: tplBody,
+        created_at: new Date().toISOString(),
+      };
+      updatedList = [newTpl, ...templates];
+    }
+
+    setBuilderOpen(false);
+    saveTemplates(updatedList);
+  }
+
+  // Inject dynamic variables at cursor position
+  function injectVariable(variableName: string) {
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const textBefore = tplBody.substring(0, startPos);
+    const textAfter = tplBody.substring(endPos, tplBody.length);
+
+    const injected = `{${variableName}}`;
+    setTplBody(textBefore + injected + textAfter);
+
+    // Reset cursor position
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = startPos + injected.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 50);
+  }
+
+  // Emojis list
+  const emojisList = [
+    "👋", "🌸", "📦", "🎮", "🔑", "📥", "🎉", "⚡️", "🛡️", "💖",
+    "😊", "💡", "⚠️", "🔥", "🚀", "📢", "💬", "⭐", "👍", "👀"
+  ];
+
+  function injectEmoji(emoji: string) {
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+    const textBefore = tplBody.substring(0, startPos);
+    const textAfter = tplBody.substring(endPos, tplBody.length);
+
+    setTplBody(textBefore + emoji + textAfter);
+
+    setTimeout(() => {
+      textarea.focus();
+      const newCursorPos = startPos + emoji.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 50);
+  }
+
+  // Dynamic Variable buttons config
+  const variableGroups = [
+    {
+      title: "معلومات المتجر",
+      variables: [
+        { key: "store_name", label: "اسم المتجر" },
+        { key: "store_url", label: "رابط المتجر" },
+        { key: "store_phone", label: "هاتف المتجر" },
+      ],
+    },
+    {
+      title: "معلومات العميل",
+      variables: [
+        { key: "customer_name", label: "اسم العميل" },
+        { key: "customer_phone", label: "هاتف العميل" },
+        { key: "customer_email", label: "بريد العميل" },
+      ],
+    },
+    {
+      title: "معلومات الطلب",
+      variables: [
+        { key: "order_number", label: "رقم الطلب" },
+        { key: "order_status", label: "حالة الطلب" },
+        { key: "product_name", label: "اسم المنتج" },
+        { key: "product_options", label: "خيارات المنتج" },
+        { key: "pickup_url", label: "رابط الاستلام" },
+      ],
+    },
+    {
+      title: "معلومات SMM",
+      variables: [
+        { key: "smm_order_id", label: "رقم تنفيذ الطلب" },
+        { key: "smm_status", label: "حالة التنفيذ" },
+      ],
+    },
+    {
+      title: "الحسابات الرقمية",
+      variables: [
+        { key: "username", label: "اسم المستخدم" },
+        { key: "password", label: "كلمة المرور" },
+        { key: "email", label: "البريد الإلكتروني" },
+        { key: "code_2fa", label: "رمز التحقق 2FA" },
+        { key: "data_link", label: "رابط البيانات" },
+        { key: "usage_limit", label: "حد الاستخدام" },
+      ],
+    },
+    {
+      title: "شحن الألعاب",
+      variables: [
+        { key: "charging_type", label: "نوع الشحن" },
+        { key: "player_id", label: "معرف اللاعب" },
+        { key: "game_key", label: "مفتاح اللعبة" },
+        { key: "card_code", label: "كود البطاقة" },
+        { key: "provider_order_id", label: "رقم طلب المزود" },
+      ],
+    },
+    {
+      title: "الأكواد",
+      variables: [
+        { key: "code_value", label: "قيمة الكود" },
+        { key: "code_type", label: "نوع الكود" },
+      ],
+    },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Feature List Card */}
-      <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-[hsl(var(--hairline))]">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl flex items-center justify-center bg-emerald-500/15 text-emerald-400 shrink-0">
-              <Smartphone className="size-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-fg text-sm sm:text-base">
-                واتساب بزنس العادي
-              </h3>
-              <p className="text-xs text-fg-muted">
-                تواصل مباشر بدون قوالب معتمدة من ميتا
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Action Header bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-[hsl(var(--hairline))]">
+        <div>
+          <h3 className="font-bold text-fg text-sm sm:text-base mb-1">
+            إدارة قوالب الرسائل
+          </h3>
+          <p className="text-xs text-fg-muted">
+            قم بإنشاء وتنظيم قوالب رسائل احترافية للواتساب والبريد الإلكتروني.
+          </p>
         </div>
-
-        <div className="p-4 sm:p-5">
-          {/* Feature cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-            <FeatureCard
-              icon={<MessageCircle className="size-4" />}
-              title="محادثات مباشرة"
-              description="أرسل رسائل نصية، صور، وملفات مباشرة للعملاء بدون أي قيود على القوالب."
-            />
-            <FeatureCard
-              icon={<FileText className="size-4" />}
-              title="بدون قوالب"
-              description="لا يتطلب موافقة ميتا على أي قالب — تواصل فوري وحر مع عملائك."
-            />
-            <FeatureCard
-              icon={<Clock className="size-4" />}
-              title="بدون نافذة زمنية"
-              description="تواصل في أي وقت بدون قيود نافذة الـ 24 ساعة المفروضة على API المؤسسي."
-            />
-            <FeatureCard
-              icon={<Shield className="size-4" />}
-              title="إعداد بسيط"
-              description="فقط ربط رقم واتساب بزنس العادي — بدون مطورين أو بنية تحتية معقدة."
-            />
-          </div>
-
-          {/* Coming Soon Banner */}
-          <div className="rounded-xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <div className="size-10 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-400 shrink-0">
-                <Zap className="size-5" />
-              </div>
-              <div>
-                <h4 className="font-bold text-fg text-sm mb-1">
-                  قريباً — قيد التطوير
-                </h4>
-                <p className="text-xs text-fg-muted leading-relaxed">
-                  نعمل حالياً على دمج واتساب بزنس العادي في المنصة. سيتيح لك هذا
-                  الخيار إرسال رسائل مباشرة لعملائك بدون الحاجة لقوالب ميتا
-                  المعتمدة. سنعلمك فور جاهزيته.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-accent text-accent-fg text-xs font-semibold hover:bg-accent-hi transition-colors cursor-pointer"
+          >
+            <Plus className="size-4" />
+            إضافة قالب جديد
+          </button>
         </div>
       </div>
+
+      {/* Templates Filter bar */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-fg-faint" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="البحث في القوالب…"
+            className="h-10 w-full ps-9 pe-8 rounded-xl border border-[hsl(var(--hairline-strong))] bg-surface text-xs text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute end-2 top-1/2 -translate-y-1/2 text-fg-faint hover:text-fg transition-colors"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as any)}
+            className="h-10 px-3 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs text-fg focus:outline-none w-full sm:w-auto cursor-pointer"
+          >
+            <option value="newest">الأحدث</option>
+            <option value="oldest">الأقدم</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Templates Cards Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] p-12 text-center text-sm text-fg-muted">
+          لا توجد قوالب مطابقة للبحث.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredTemplates.map((tpl) => (
+            <div
+              key={tpl.id}
+              className="rounded-2xl bg-surface border border-[hsl(var(--hairline))] hover:border-[hsl(var(--hairline-strong))] transition-all duration-200 overflow-hidden flex flex-col justify-between"
+            >
+              <div className="p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <h4 className="font-bold text-fg text-sm sm:text-base">
+                    {tpl.name}
+                  </h4>
+                  <span className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-bold bg-emerald-500/10 text-black border border-emerald-500/20">
+                    واتساب
+                  </span>
+                </div>
+
+                <div className="bg-surface-2/60 border border-[hsl(var(--hairline))] rounded-xl p-3.5 text-xs text-fg-muted leading-relaxed font-sans whitespace-pre-wrap select-text">
+                  {tpl.body}
+                </div>
+              </div>
+
+              <div className="px-4 sm:px-5 py-3 bg-surface-2/40 border-t border-[hsl(var(--hairline))] flex items-center justify-between gap-4">
+                <span className="text-[10px] text-fg-faint font-num">
+                  آخر تحديث:{" "}
+                  {new Date(tpl.created_at).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}
+                </span>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleOpenEdit(tpl)}
+                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+                    title="تعديل القالب"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDuplicate(tpl)}
+                    className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+                    title="تكرار القالب"
+                  >
+                    <Copy className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(tpl.id)}
+                    className="p-2 rounded-lg text-fg-muted hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                    title="حذف القالب"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Custom Template Builder Dialog ───────────────────────────── */}
+      <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
+        <DialogContent className="theme-admin max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
+              <MessageCircle className="size-4 text-emerald-400" />
+              {currentTpl ? "تعديل القالب" : "إضافة قالب جديد"}
+            </DialogTitle>
+            <DialogDescription>
+              اكتب محتوى الرسالة، ويمكنك إدراج المتغيرات الديناميكية بالنقر عليها.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <Field label="اسم القالب *">
+              <input
+                value={tplName}
+                onChange={(e) => setTplName(e.target.value)}
+                placeholder="مثال: طلب جديد شات جي تي بي مشترك"
+                className="h-10 px-3 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent/60"
+              />
+            </Field>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+              {/* Text Area Content Builder */}
+              <div className="lg:col-span-3 space-y-4">
+                <Field label="محتوى القالب *">
+                  <textarea
+                    ref={bodyRef}
+                    value={tplBody}
+                    onChange={(e) => setTplBody(e.target.value)}
+                    rows={12}
+                    placeholder="مرحباً عزيزي {customer_name}..."
+                    className="px-3 py-2.5 rounded-xl bg-surface-2 border border-[hsl(var(--hairline-strong))] text-xs w-full focus:outline-none focus:border-accent/60 font-sans resize-none leading-relaxed"
+                  />
+                </Field>
+
+                {/* Emojis Ingestion panel */}
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-fg-muted inline-flex items-center gap-1">
+                    <Smile className="size-3.5" />
+                    رموز تعبيرية وإيموجي
+                  </label>
+                  <div className="flex flex-wrap gap-1 bg-surface-2/40 border border-[hsl(var(--hairline))] p-2.5 rounded-xl">
+                    {emojisList.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => injectEmoji(emoji)}
+                        className="size-8 text-sm hover:bg-surface border border-transparent hover:border-[hsl(var(--hairline-strong))] rounded-lg transition-all flex items-center justify-center cursor-pointer select-none"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Variable Injection panels */}
+              <div className="lg:col-span-2 space-y-3">
+                <label className="text-[11px] font-bold text-fg-muted block">
+                  المتغيرات المتاحة
+                </label>
+                <div className="h-[380px] overflow-y-auto border border-[hsl(var(--hairline))] rounded-xl bg-surface-2/30 p-3.5 space-y-3.5">
+                  {variableGroups.map((group) => (
+                    <div key={group.title} className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-fg-faint uppercase tracking-wider block">
+                        {group.title}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {group.variables.map((v) => (
+                          <button
+                            key={v.key}
+                            type="button"
+                            onClick={() => injectVariable(v.key)}
+                            className="h-7 px-2.5 bg-accent/10 border border-accent/20 hover:border-accent/40 rounded-lg text-[10px] font-semibold text-black transition-colors cursor-pointer select-none"
+                          >
+                            {v.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="flex items-start gap-2 text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+                <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <button
+              onClick={() => setBuilderOpen(false)}
+              className="h-10 px-4 rounded-xl bg-surface border border-[hsl(var(--hairline-strong))] text-xs font-semibold text-fg hover:bg-surface-2 transition-colors cursor-pointer"
+            >
+              إلغاء
+            </button>
+            <button
+              onClick={handleSaveTemplate}
+              disabled={isPending}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-fg text-bg text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+            >
+              {isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -508,3 +969,13 @@ function DispatchTable({
     </div>
   );
 }
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5 w-full">
+      <label className="text-xs font-semibold text-fg-muted">{label}</label>
+      {children}
+    </div>
+  );
+}
+
