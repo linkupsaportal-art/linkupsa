@@ -60,7 +60,7 @@ export async function lookupOrderAction(
       otp_request_count,
       otp_request_limit,
       archived_at,
-      product:products(name, handler_type),
+      product:products(name, handler_type, description, youtube_url),
       option:product_options(name),
       account:accounts(
         email,
@@ -123,6 +123,8 @@ export async function lookupOrderAction(
     orderId: order.id,
     orderNumber: String(order.salla_reference_id ?? order.salla_order_id),
     productName: productData.name,
+    productDescription: productData.description ?? undefined,
+    productYoutubeUrl: productData.youtube_url ?? undefined,
     handlerType: productData.handler_type,
     optionName: optionData?.name ?? null,
     lastFour,

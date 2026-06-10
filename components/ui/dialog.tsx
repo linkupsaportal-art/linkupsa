@@ -43,6 +43,11 @@ export const DialogContent = React.forwardRef<
       className={cn(
         "theme-admin",
         "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 p-6 rounded-3xl",
+        // Long forms (e.g. product editor) must scroll inside the dialog —
+        // without this the content overflows the viewport and the footer
+        // buttons become unreachable. The scrollbar itself is hidden: the
+        // default bar clips the rounded corners and looks broken.
+        "max-h-[85dvh] overflow-y-auto overscroll-contain no-scrollbar",
         "bg-white border border-[hsl(220_18%_14%/0.10)]",
         "shadow-[0_24px_60px_-30px_rgba(15,23,32,0.55),0_2px_6px_-2px_rgba(15,23,32,0.10)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

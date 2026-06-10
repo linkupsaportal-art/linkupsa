@@ -13,6 +13,9 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 import { findActiveBan } from "@/lib/db/phone-bans";
+import { matchProductForOrder } from "./product-matcher";
+import { getOrigin, sendOrderReadyNotification } from "./order-notifier";
+import { retryPendingAllocations } from "./allocation-retry";
 
 const SALLA_API = "https://api.salla.dev/admin/v2";
 
@@ -29,6 +32,7 @@ const SKIP_SLUGS = new Set(["cancelled", "refunded", "failed", "pending_payment"
 type SallaOrderItem = {
   name: string;
   quantity: number;
+  sku?: string | null;
   product?: { id?: number; name?: string };
   options?: Array<{ name?: string; value?: string }>;
 };
@@ -68,7 +72,13 @@ export async function processInbox(): Promise<{
     .order("received_at", { ascending: true })
     .limit(20);
 
-  if (fetchErr || !events?.length) return stats;
+  if (fetchErr || !events?.length) {
+    // Even with an empty inbox, heal paid orders stuck without an account
+    // (mapping fixed later, restocked accounts, SKU-entered product numbers).
+    const { healed } = await retryPendingAllocations(sb);
+    stats.fulfilled += healed;
+    return stats;
+  }
 
   // Get the store's access token
   const merchantId = events[0].merchant as number;
@@ -161,33 +171,17 @@ export async function processInbox(): Promise<{
         ? `${order.customer.mobile_code}${order.customer.mobile}`
         : String(order.customer.mobile);
 
-      // Map Salla product to our product
+      // Map Salla product to our product — by internal id OR by the SKU the
+      // merchant sees on the Salla product page (both are accepted).
       const firstItem = order.items?.[0];
       const sallaProductId = firstItem?.product?.id ?? null;
       const sallaOptionValue = firstItem?.options?.[0]?.value ?? null;
 
-      // Find our product mapping
-      let productId: string | null = null;
-      let productOptionId: string | null = null;
-
-      if (sallaProductId) {
-        const { data: product } = await sb
-          .from("products")
-          .select("id")
-          .eq("salla_product_id", sallaProductId)
-          .single();
-        productId = product?.id ?? null;
-
-        if (productId && sallaOptionValue) {
-          const { data: option } = await sb
-            .from("product_options")
-            .select("id")
-            .eq("product_id", productId)
-            .eq("salla_option_value", sallaOptionValue)
-            .single();
-          productOptionId = option?.id ?? null;
-        }
-      }
+      const { productId, productOptionId } = await matchProductForOrder(sb, {
+        sallaProductId,
+        sallaSku: firstItem?.sku ?? null,
+        sallaOptionValue,
+      });
 
       // Upsert the order
       const { data: upserted, error: upsertErr } = await sb
@@ -253,7 +247,7 @@ export async function processInbox(): Promise<{
           if (allocated) {
             stats.fulfilled++;
             // Multi-channel notification — email + WhatsApp + Telegram mirror (operator)
-            await sendNotification({
+            await sendOrderReadyNotification({
               orderId: upserted.id,
               storeId: merchantId,
               email: order.customer.email,
@@ -274,6 +268,10 @@ export async function processInbox(): Promise<{
       stats.errors++;
     }
   }
+
+  // Self-healing pass — re-map and allocate paid orders stuck in 'pending'.
+  const { healed } = await retryPendingAllocations(sb);
+  stats.fulfilled += healed;
 
   return stats;
 }
@@ -324,6 +322,7 @@ function buildOrderFromInvoice(
       items: items.map((item) => ({
         name: (item.name as string) ?? "",
         quantity: (item.quantity as number) ?? 1,
+        sku: item.sku != null ? String(item.sku) : null,
         product: { id: item.product_id as number | undefined, name: item.name as string | undefined },
         options: [],
       })),
@@ -395,72 +394,5 @@ async function markEvent(
     .eq("id", id);
 }
 
-/* ============================================================
- * Notification helpers
- * ============================================================ */
-
-import { notifyOrderReady } from "@/lib/notifications/dispatch";
-
-/** Resolves the public origin for pickup links. */
-function getOrigin(): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "https://www.portaliosa.com";
-}
-
-async function sendNotification(args: {
-  orderId: string;
-  storeId: number;
-  email: string | null | undefined;
-  mobile: string | null | undefined;
-  customerName: string;
-  orderNumber: string;
-  productName: string;
-  productId: string | null;
-  origin: string;
-}): Promise<void> {
-  // Resolve the product's per-channel toggles and template overrides.
-  // Default to email-only when we couldn't map the order to one of our
-  // products (best-effort fallback).
-  let channels = { email: true, whatsapp: false };
-  let whatsappTemplate: string | undefined;
-  let emailTemplate: string | undefined;
-
-  if (args.productId) {
-    const sb = createServiceClient();
-    const { data: product } = await sb
-      .from("products")
-      .select("notification_channels")
-      .eq("id", args.productId)
-      .single();
-    if (product?.notification_channels) {
-      const nc = product.notification_channels as {
-        email?: boolean;
-        whatsapp?: boolean;
-        whatsapp_template?: string;
-        email_template?: string;
-      };
-      channels = { ...channels, email: nc.email ?? true, whatsapp: nc.whatsapp ?? false };
-      if (nc.whatsapp_template && nc.whatsapp_template !== "none") {
-        whatsappTemplate = nc.whatsapp_template;
-      }
-      if (nc.email_template && nc.email_template !== "none") {
-        emailTemplate = nc.email_template;
-      }
-    }
-  }
-
-  await notifyOrderReady({
-    orderId: args.orderId,
-    storeId: args.storeId,
-    customerName: args.customerName,
-    customerEmail: args.email ?? null,
-    customerMobile: args.mobile ?? null,
-    orderNumber: args.orderNumber,
-    productName: args.productName,
-    productNotificationChannels: channels,
-    pickupUrl: `${args.origin}/pickup`,
-    whatsappTemplate,
-    emailTemplate,
-  });
-}
+/* Notification helpers now live in ./order-notifier (shared with the
+ * allocation-retry pass). */

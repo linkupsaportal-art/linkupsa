@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { PickupResult } from "./types";
 import type { PickupSessionSettings } from "@/lib/db/platform-settings";
+import { RichDescription, YoutubeEmbed, extractYoutubeId } from "@/components/ui/rich-description";
 import { TotpCodeBlock } from "./totp-code-block";
 import { useIdleTimeout } from "./use-idle-timeout";
 import { IdleLockOverlay } from "./idle-lock-overlay";
@@ -191,6 +192,22 @@ export function OrderDetails({
             تعليمات واستخدام الحساب
           </div>
           <div className="whitespace-pre-wrap font-medium">{result.instructions}</div>
+        </div>
+      )}
+
+      {/* Product explanation — text with YouTube videos embedded inline */}
+      {(result.productDescription || result.productYoutubeUrl) && (
+        <div className="rounded-2xl bg-surface border border-[hsl(var(--hairline-strong))] p-5 text-sm text-fg leading-relaxed space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-fg-muted uppercase tracking-wider">
+            <FileText className="size-4 text-accent-fg/80" />
+            شرح المنتج
+          </div>
+          {result.productDescription && (
+            <RichDescription text={result.productDescription} className="font-medium" />
+          )}
+          {result.productYoutubeUrl && extractYoutubeId(result.productYoutubeUrl) && (
+            <YoutubeEmbed videoId={extractYoutubeId(result.productYoutubeUrl)!} />
+          )}
         </div>
       )}
 

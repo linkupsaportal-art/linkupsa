@@ -4,6 +4,10 @@ export type PickupResult = {
   orderId: string;
   orderNumber: string;
   productName: string;
+  /** Product explanation — may contain inline YouTube links rendered as embedded players. */
+  productDescription?: string;
+  /** Standalone product video, shown after the description. */
+  productYoutubeUrl?: string;
   handlerType: HandlerType;
   optionName: string | null;
   /** Echo of the customer's input — needed by the TOTP refresh action so

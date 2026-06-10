@@ -3,6 +3,16 @@
 > Reverse-chronological history of meaningful project changes.
 > Hard cap: 500 lines. Trim to 400–450 when exceeded.
 
+# 2026-06-10 22:30
+
+- 🛠️ **Client Bug Batch: Modal Scroll, Product Save, SKU Order Matching, Inline YouTube — Razex Xelite**
+  - **Dialog Scroll Fix**: Added `max-h-[85dvh] overflow-y-auto overscroll-contain` to `DialogContent` in [dialog.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/dialog.tsx) — long modals (product editor) now scroll with the mouse wheel and the Save button is always reachable.
+  - **Product Save Error**: Root cause of `Could not find the 'youtube_url' column of 'products'` is a missing DB column; prepared migration `ALTER TABLE products ADD COLUMN youtube_url text` (must be applied to Supabase before deploy).
+  - **SKU Order Matching**: New [product-matcher.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/product-matcher.ts) matches incoming orders by Salla internal product id **or** the SKU shown on the Salla product page (merchants naturally enter the SKU). [order-ingestor.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/order-ingestor.ts) now carries `sku` through invoice payloads.
+  - **Self-Healing Allocation Retry**: New [allocation-retry.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/allocation-retry.ts) runs with every inbox drain (cron, every minute): re-maps paid orders stuck in `pending` and re-runs `allocate_account`, fixing the "الطلب قيد المعالجة" dead-end when the product link or stock is fixed after the order arrived.
+  - **Shared Notifier**: Extracted notification dispatch into [order-notifier.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/lib/salla/order-notifier.ts) (used by ingestor + retry pass).
+  - **Inline YouTube in Description**: New [rich-description.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/ui/rich-description.tsx) renders YouTube links pasted anywhere inside the description as embedded players at their exact position (text → video → text → video). Product form shows a live preview ([products-client.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/components/admin/products/products-client.tsx)); the customer pickup page now displays the product explanation with inline videos ([order-details.tsx](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/order-details.tsx), [actions.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/actions.ts), [types.ts](file:///c:/Users/MSI-PC/OneDrive/Documents/freelancing/digital-delivery-platform/app/pickup/types.ts)).
+
 # 2026-06-09 16:05
 
 - ⚙️ **Configurable Support Link & Telegram Override in settings — Razex Xelite**

@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { RichDescription, extractYoutubeId, splitDescription } from "@/components/ui/rich-description";
 
 const HANDLER_TYPES: HandlerType[] = [
   "2fa_account",
@@ -619,16 +620,10 @@ function ProductForm({
 
       <div className="space-y-4">
         <Field label="الوصف">
-          <textarea
-            name="description"
-            defaultValue={product?.description ?? ""}
-            rows={5}
-            placeholder="أدخل وصفاً تفصيلياً للمنتج…"
-            className="form-input resize-y"
-          />
+          <DescriptionField defaultValue={product?.description ?? ""} />
         </Field>
 
-        <Field label="رابط فيديو يوتيوب">
+        <Field label="رابط فيديو يوتيوب (اختياري — يظهر بعد الوصف)">
           <YoutubeField defaultValue={product?.youtube_url ?? ""} />
         </Field>
       </div>
@@ -662,18 +657,32 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** Extracts a YouTube video ID from common URL formats. */
-function extractYoutubeId(url: string): string | null {
-  if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-    /^([a-zA-Z0-9_-]{11})$/,
-  ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m?.[1]) return m[1];
-  }
-  return null;
+/**
+ * Description textarea with a live preview: YouTube links pasted anywhere
+ * inside the text render as embedded players inline, at their position.
+ */
+function DescriptionField({ defaultValue }: { defaultValue: string }) {
+  const [text, setText] = useState(defaultValue);
+  const hasVideos = splitDescription(text).some((s) => s.kind === "video");
+
+  return (
+    <div className="space-y-2">
+      <textarea
+        name="description"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={6}
+        placeholder={"أدخل وصفاً تفصيلياً للمنتج…\nالصق رابط يوتيوب في أي سطر ليظهر كفيديو مدمج مكانه."}
+        className="form-input resize-y"
+      />
+      {hasVideos && (
+        <div className="rounded-xl border border-[hsl(var(--hairline))] bg-surface-2/50 p-3.5 space-y-2">
+          <p className="text-[11px] font-semibold text-fg-muted uppercase tracking-wider">معاينة الوصف</p>
+          <RichDescription text={text} className="text-sm text-fg" />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function YoutubeField({ defaultValue }: { defaultValue: string }) {
