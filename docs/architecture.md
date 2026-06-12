@@ -12,7 +12,7 @@ Three guiding principles:
 
 1. **Serverless / Edge-first** — لا نملك سيرفر، لا ندير nginx، لا ندفع مقابل وقت معطل
 2. **Atomic & Idempotent** — كل webhook، كل توزيع حساب، كل إشعار يقدر يتكرر بأمان
-3. **Portable** — لو بكرة العميل قرر يخرج من Supabase، الـ schema + الـ migrations + الـ code كلها معه
+3. **Portable** — لو بكرة العميل قرر يخرج من Supabase، الـ schema + الـ migrations + الـg code كلها معه
 
 ---
 
